@@ -1,0 +1,9279 @@
+{
+  "station": "Port Noarlunga",
+  "state": "South Australia",
+  "latitude": -35.1333,
+  "longitude": 138.4667,
+  "year": 2026,
+  "datum": "Lowest Astronomical Tide",
+  "timezone_note": "Times are local: UTC+09:30 standard time or UTC+10:30 daylight saving time when in effect.",
+  "source": "Bureau of Meteorology tide predictions, Commonwealth of Australia 2025.",
+  "quality_note": "Predictions are of secondary quality.",
+  "disclaimer": "This product is based on Bureau of Meteorology information that has subsequently been modified. The Bureau does not necessarily support or endorse, or have any connection with, the product.",
+  "days": [
+    {
+      "date": "2026-01-01",
+      "weekday": "TH",
+      "tides": [
+        {
+          "time": "03:20",
+          "height_m": 1.92,
+          "type": "high"
+        },
+        {
+          "time": "11:19",
+          "height_m": 0.42,
+          "type": "low"
+        },
+        {
+          "time": "18:15",
+          "height_m": 1.25,
+          "type": "high"
+        },
+        {
+          "time": "21:44",
+          "height_m": 1.09,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-01-02",
+      "weekday": "FR",
+      "tides": [
+        {
+          "time": "04:26",
+          "height_m": 2.05,
+          "type": "high"
+        },
+        {
+          "time": "12:06",
+          "height_m": 0.27,
+          "type": "low"
+        },
+        {
+          "time": "18:45",
+          "height_m": 1.29,
+          "type": "high"
+        },
+        {
+          "time": "22:40",
+          "height_m": 1.01,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-01-03",
+      "weekday": "SA",
+      "tides": [
+        {
+          "time": "05:13",
+          "height_m": 2.14,
+          "type": "high"
+        },
+        {
+          "time": "12:42",
+          "height_m": 0.23,
+          "type": "low"
+        },
+        {
+          "time": "19:06",
+          "height_m": 1.28,
+          "type": "high"
+        },
+        {
+          "time": "23:15",
+          "height_m": 0.91,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-01-04",
+      "weekday": "SU",
+      "tides": [
+        {
+          "time": "05:47",
+          "height_m": 2.18,
+          "type": "high"
+        },
+        {
+          "time": "13:07",
+          "height_m": 0.27,
+          "type": "low"
+        },
+        {
+          "time": "19:15",
+          "height_m": 1.26,
+          "type": "high"
+        },
+        {
+          "time": "23:44",
+          "height_m": 0.8,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-01-05",
+      "weekday": "MO",
+      "tides": [
+        {
+          "time": "06:16",
+          "height_m": 2.19,
+          "type": "high"
+        },
+        {
+          "time": "13:25",
+          "height_m": 0.34,
+          "type": "low"
+        },
+        {
+          "time": "19:18",
+          "height_m": 1.3,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-01-06",
+      "weekday": "TU",
+      "tides": [
+        {
+          "time": "00:11",
+          "height_m": 0.7,
+          "type": "low"
+        },
+        {
+          "time": "06:42",
+          "height_m": 2.17,
+          "type": "high"
+        },
+        {
+          "time": "13:37",
+          "height_m": 0.39,
+          "type": "low"
+        },
+        {
+          "time": "19:24",
+          "height_m": 1.4,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-01-07",
+      "weekday": "WE",
+      "tides": [
+        {
+          "time": "00:41",
+          "height_m": 0.63,
+          "type": "low"
+        },
+        {
+          "time": "07:05",
+          "height_m": 2.12,
+          "type": "high"
+        },
+        {
+          "time": "13:49",
+          "height_m": 0.41,
+          "type": "low"
+        },
+        {
+          "time": "19:39",
+          "height_m": 1.53,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-01-08",
+      "weekday": "TH",
+      "tides": [
+        {
+          "time": "01:14",
+          "height_m": 0.61,
+          "type": "low"
+        },
+        {
+          "time": "07:30",
+          "height_m": 2.05,
+          "type": "high"
+        },
+        {
+          "time": "14:04",
+          "height_m": 0.4,
+          "type": "low"
+        },
+        {
+          "time": "20:03",
+          "height_m": 1.67,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-01-09",
+      "weekday": "FR",
+      "tides": [
+        {
+          "time": "01:50",
+          "height_m": 0.63,
+          "type": "low"
+        },
+        {
+          "time": "07:54",
+          "height_m": 1.95,
+          "type": "high"
+        },
+        {
+          "time": "14:23",
+          "height_m": 0.38,
+          "type": "low"
+        },
+        {
+          "time": "20:35",
+          "height_m": 1.79,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-01-10",
+      "weekday": "SA",
+      "tides": [
+        {
+          "time": "02:30",
+          "height_m": 0.68,
+          "type": "low"
+        },
+        {
+          "time": "08:22",
+          "height_m": 1.83,
+          "type": "high"
+        },
+        {
+          "time": "14:45",
+          "height_m": 0.39,
+          "type": "low"
+        },
+        {
+          "time": "21:12",
+          "height_m": 1.86,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-01-11",
+      "weekday": "SU",
+      "tides": [
+        {
+          "time": "03:15",
+          "height_m": 0.76,
+          "type": "low"
+        },
+        {
+          "time": "08:53",
+          "height_m": 1.66,
+          "type": "high"
+        },
+        {
+          "time": "15:11",
+          "height_m": 0.45,
+          "type": "low"
+        },
+        {
+          "time": "21:54",
+          "height_m": 1.86,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-01-12",
+      "weekday": "MO",
+      "tides": [
+        {
+          "time": "04:11",
+          "height_m": 0.86,
+          "type": "low"
+        },
+        {
+          "time": "09:27",
+          "height_m": 1.44,
+          "type": "high"
+        },
+        {
+          "time": "15:37",
+          "height_m": 0.58,
+          "type": "low"
+        },
+        {
+          "time": "22:45",
+          "height_m": 1.81,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-01-13",
+      "weekday": "TU",
+      "tides": [
+        {
+          "time": "05:37",
+          "height_m": 0.97,
+          "type": "low"
+        },
+        {
+          "time": "10:04",
+          "height_m": 1.19,
+          "type": "high"
+        },
+        {
+          "time": "15:57",
+          "height_m": 0.76,
+          "type": "low"
+        },
+        {
+          "time": "23:57",
+          "height_m": 1.71,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-01-14",
+      "weekday": "WE",
+      "tides": [
+        {
+          "time": "09:41",
+          "height_m": 0.91,
+          "type": "low"
+        },
+        {
+          "time": "12:31",
+          "height_m": 0.92,
+          "type": "high"
+        },
+        {
+          "time": "13:42",
+          "height_m": 0.92,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-01-15",
+      "weekday": "TH",
+      "tides": [
+        {
+          "time": "02:17",
+          "height_m": 1.67,
+          "type": "high"
+        },
+        {
+          "time": "11:06",
+          "height_m": 0.65,
+          "type": "low"
+        },
+        {
+          "time": "18:17",
+          "height_m": 1.16,
+          "type": "high"
+        },
+        {
+          "time": "21:05",
+          "height_m": 1.1,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-01-16",
+      "weekday": "FR",
+      "tides": [
+        {
+          "time": "04:01",
+          "height_m": 1.78,
+          "type": "high"
+        },
+        {
+          "time": "11:41",
+          "height_m": 0.45,
+          "type": "low"
+        },
+        {
+          "time": "18:14",
+          "height_m": 1.28,
+          "type": "high"
+        },
+        {
+          "time": "22:28",
+          "height_m": 0.99,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-01-17",
+      "weekday": "SA",
+      "tides": [
+        {
+          "time": "04:53",
+          "height_m": 1.91,
+          "type": "high"
+        },
+        {
+          "time": "12:09",
+          "height_m": 0.33,
+          "type": "low"
+        },
+        {
+          "time": "18:29",
+          "height_m": 1.36,
+          "type": "high"
+        },
+        {
+          "time": "23:08",
+          "height_m": 0.86,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-01-18",
+      "weekday": "SU",
+      "tides": [
+        {
+          "time": "05:29",
+          "height_m": 2.02,
+          "type": "high"
+        },
+        {
+          "time": "12:31",
+          "height_m": 0.27,
+          "type": "low"
+        },
+        {
+          "time": "18:42",
+          "height_m": 1.41,
+          "type": "high"
+        },
+        {
+          "time": "23:36",
+          "height_m": 0.74,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-01-19",
+      "weekday": "MO",
+      "tides": [
+        {
+          "time": "05:57",
+          "height_m": 2.11,
+          "type": "high"
+        },
+        {
+          "time": "12:50",
+          "height_m": 0.24,
+          "type": "low"
+        },
+        {
+          "time": "18:54",
+          "height_m": 1.46,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-01-20",
+      "weekday": "TU",
+      "tides": [
+        {
+          "time": "00:01",
+          "height_m": 0.63,
+          "type": "low"
+        },
+        {
+          "time": "06:22",
+          "height_m": 2.17,
+          "type": "high"
+        },
+        {
+          "time": "13:08",
+          "height_m": 0.23,
+          "type": "low"
+        },
+        {
+          "time": "19:10",
+          "height_m": 1.54,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-01-21",
+      "weekday": "WE",
+      "tides": [
+        {
+          "time": "00:30",
+          "height_m": 0.56,
+          "type": "low"
+        },
+        {
+          "time": "06:48",
+          "height_m": 2.18,
+          "type": "high"
+        },
+        {
+          "time": "13:28",
+          "height_m": 0.22,
+          "type": "low"
+        },
+        {
+          "time": "19:30",
+          "height_m": 1.62,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-01-22",
+      "weekday": "TH",
+      "tides": [
+        {
+          "time": "01:00",
+          "height_m": 0.53,
+          "type": "low"
+        },
+        {
+          "time": "07:14",
+          "height_m": 2.15,
+          "type": "high"
+        },
+        {
+          "time": "13:47",
+          "height_m": 0.24,
+          "type": "low"
+        },
+        {
+          "time": "19:52",
+          "height_m": 1.7,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-01-23",
+      "weekday": "FR",
+      "tides": [
+        {
+          "time": "01:31",
+          "height_m": 0.53,
+          "type": "low"
+        },
+        {
+          "time": "07:39",
+          "height_m": 2.07,
+          "type": "high"
+        },
+        {
+          "time": "14:05",
+          "height_m": 0.27,
+          "type": "low"
+        },
+        {
+          "time": "20:14",
+          "height_m": 1.79,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-01-24",
+      "weekday": "SA",
+      "tides": [
+        {
+          "time": "02:03",
+          "height_m": 0.56,
+          "type": "low"
+        },
+        {
+          "time": "08:02",
+          "height_m": 1.94,
+          "type": "high"
+        },
+        {
+          "time": "14:21",
+          "height_m": 0.31,
+          "type": "low"
+        },
+        {
+          "time": "20:37",
+          "height_m": 1.88,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-01-25",
+      "weekday": "SU",
+      "tides": [
+        {
+          "time": "02:37",
+          "height_m": 0.59,
+          "type": "low"
+        },
+        {
+          "time": "08:26",
+          "height_m": 1.79,
+          "type": "high"
+        },
+        {
+          "time": "14:36",
+          "height_m": 0.35,
+          "type": "low"
+        },
+        {
+          "time": "21:03",
+          "height_m": 1.96,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-01-26",
+      "weekday": "MO",
+      "tides": [
+        {
+          "time": "03:16",
+          "height_m": 0.64,
+          "type": "low"
+        },
+        {
+          "time": "08:51",
+          "height_m": 1.6,
+          "type": "high"
+        },
+        {
+          "time": "14:52",
+          "height_m": 0.4,
+          "type": "low"
+        },
+        {
+          "time": "21:35",
+          "height_m": 1.99,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-01-27",
+      "weekday": "TU",
+      "tides": [
+        {
+          "time": "04:06",
+          "height_m": 0.74,
+          "type": "low"
+        },
+        {
+          "time": "09:15",
+          "height_m": 1.35,
+          "type": "high"
+        },
+        {
+          "time": "15:05",
+          "height_m": 0.51,
+          "type": "low"
+        },
+        {
+          "time": "22:15",
+          "height_m": 1.91,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-01-28",
+      "weekday": "WE",
+      "tides": [
+        {
+          "time": "05:30",
+          "height_m": 0.9,
+          "type": "low"
+        },
+        {
+          "time": "09:14",
+          "height_m": 1.04,
+          "type": "high"
+        },
+        {
+          "time": "14:52",
+          "height_m": 0.65,
+          "type": "low"
+        },
+        {
+          "time": "23:09",
+          "height_m": 1.74,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-01-29",
+      "weekday": "TH",
+      "tides": [
+        {
+          "time": "12:48",
+          "height_m": 0.62,
+          "type": "unknown"
+        }
+      ]
+    },
+    {
+      "date": "2026-01-30",
+      "weekday": "FR",
+      "tides": [
+        {
+          "time": "03:25",
+          "height_m": 1.64,
+          "type": "high"
+        },
+        {
+          "time": "12:14",
+          "height_m": 0.38,
+          "type": "low"
+        },
+        {
+          "time": "19:30",
+          "height_m": 1.29,
+          "type": "high"
+        },
+        {
+          "time": "22:42",
+          "height_m": 1.19,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-01-31",
+      "weekday": "SA",
+      "tides": [
+        {
+          "time": "04:57",
+          "height_m": 1.84,
+          "type": "high"
+        },
+        {
+          "time": "12:31",
+          "height_m": 0.22,
+          "type": "low"
+        },
+        {
+          "time": "19:11",
+          "height_m": 1.35,
+          "type": "high"
+        },
+        {
+          "time": "23:28",
+          "height_m": 0.98,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-02-01",
+      "weekday": "SU",
+      "tides": [
+        {
+          "time": "05:39",
+          "height_m": 2.0,
+          "type": "high"
+        },
+        {
+          "time": "12:50",
+          "height_m": 0.19,
+          "type": "low"
+        },
+        {
+          "time": "19:11",
+          "height_m": 1.38,
+          "type": "high"
+        },
+        {
+          "time": "23:50",
+          "height_m": 0.82,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-02-02",
+      "weekday": "MO",
+      "tides": [
+        {
+          "time": "06:05",
+          "height_m": 2.07,
+          "type": "high"
+        },
+        {
+          "time": "13:00",
+          "height_m": 0.25,
+          "type": "low"
+        },
+        {
+          "time": "19:08",
+          "height_m": 1.41,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-02-03",
+      "weekday": "TU",
+      "tides": [
+        {
+          "time": "00:06",
+          "height_m": 0.68,
+          "type": "low"
+        },
+        {
+          "time": "06:22",
+          "height_m": 2.09,
+          "type": "high"
+        },
+        {
+          "time": "13:04",
+          "height_m": 0.31,
+          "type": "low"
+        },
+        {
+          "time": "19:02",
+          "height_m": 1.5,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-02-04",
+      "weekday": "WE",
+      "tides": [
+        {
+          "time": "00:24",
+          "height_m": 0.57,
+          "type": "low"
+        },
+        {
+          "time": "06:37",
+          "height_m": 2.08,
+          "type": "high"
+        },
+        {
+          "time": "13:08",
+          "height_m": 0.32,
+          "type": "low"
+        },
+        {
+          "time": "19:04",
+          "height_m": 1.65,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-02-05",
+      "weekday": "TH",
+      "tides": [
+        {
+          "time": "00:46",
+          "height_m": 0.49,
+          "type": "low"
+        },
+        {
+          "time": "06:53",
+          "height_m": 2.06,
+          "type": "high"
+        },
+        {
+          "time": "13:17",
+          "height_m": 0.3,
+          "type": "low"
+        },
+        {
+          "time": "19:19",
+          "height_m": 1.81,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-02-06",
+      "weekday": "FR",
+      "tides": [
+        {
+          "time": "01:14",
+          "height_m": 0.46,
+          "type": "low"
+        },
+        {
+          "time": "07:14",
+          "height_m": 2.0,
+          "type": "high"
+        },
+        {
+          "time": "13:31",
+          "height_m": 0.27,
+          "type": "low"
+        },
+        {
+          "time": "19:42",
+          "height_m": 1.94,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-02-07",
+      "weekday": "SA",
+      "tides": [
+        {
+          "time": "01:45",
+          "height_m": 0.48,
+          "type": "low"
+        },
+        {
+          "time": "07:36",
+          "height_m": 1.91,
+          "type": "high"
+        },
+        {
+          "time": "13:49",
+          "height_m": 0.26,
+          "type": "low"
+        },
+        {
+          "time": "20:07",
+          "height_m": 2.03,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-02-08",
+      "weekday": "SU",
+      "tides": [
+        {
+          "time": "02:15",
+          "height_m": 0.51,
+          "type": "low"
+        },
+        {
+          "time": "07:59",
+          "height_m": 1.8,
+          "type": "high"
+        },
+        {
+          "time": "14:07",
+          "height_m": 0.27,
+          "type": "low"
+        },
+        {
+          "time": "20:33",
+          "height_m": 2.06,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-02-09",
+      "weekday": "MO",
+      "tides": [
+        {
+          "time": "02:47",
+          "height_m": 0.57,
+          "type": "low"
+        },
+        {
+          "time": "08:22",
+          "height_m": 1.66,
+          "type": "high"
+        },
+        {
+          "time": "14:25",
+          "height_m": 0.32,
+          "type": "low"
+        },
+        {
+          "time": "21:00",
+          "height_m": 2.03,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-02-10",
+      "weekday": "TU",
+      "tides": [
+        {
+          "time": "03:20",
+          "height_m": 0.65,
+          "type": "low"
+        },
+        {
+          "time": "08:45",
+          "height_m": 1.49,
+          "type": "high"
+        },
+        {
+          "time": "14:41",
+          "height_m": 0.41,
+          "type": "low"
+        },
+        {
+          "time": "21:29",
+          "height_m": 1.93,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-02-11",
+      "weekday": "WE",
+      "tides": [
+        {
+          "time": "03:59",
+          "height_m": 0.78,
+          "type": "low"
+        },
+        {
+          "time": "09:00",
+          "height_m": 1.28,
+          "type": "high"
+        },
+        {
+          "time": "14:47",
+          "height_m": 0.54,
+          "type": "low"
+        },
+        {
+          "time": "21:59",
+          "height_m": 1.76,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-02-12",
+      "weekday": "TH",
+      "tides": [
+        {
+          "time": "05:00",
+          "height_m": 0.96,
+          "type": "low"
+        },
+        {
+          "time": "08:32",
+          "height_m": 1.05,
+          "type": "high"
+        },
+        {
+          "time": "14:19",
+          "height_m": 0.67,
+          "type": "low"
+        },
+        {
+          "time": "22:33",
+          "height_m": 1.52,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-02-13",
+      "weekday": "FR",
+      "tides": [
+        {
+          "time": "12:27",
+          "height_m": 0.64,
+          "type": "low"
+        },
+        {
+          "time": "20:32",
+          "height_m": 1.26,
+          "type": "high"
+        },
+        {
+          "time": "22:25",
+          "height_m": 1.25,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-02-14",
+      "weekday": "SA",
+      "tides": [
+        {
+          "time": "04:22",
+          "height_m": 1.54,
+          "type": "high"
+        },
+        {
+          "time": "12:00",
+          "height_m": 0.44,
+          "type": "low"
+        },
+        {
+          "time": "18:40",
+          "height_m": 1.31,
+          "type": "high"
+        },
+        {
+          "time": "23:07",
+          "height_m": 1.0,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-02-15",
+      "weekday": "SU",
+      "tides": [
+        {
+          "time": "05:07",
+          "height_m": 1.78,
+          "type": "high"
+        },
+        {
+          "time": "12:11",
+          "height_m": 0.29,
+          "type": "low"
+        },
+        {
+          "time": "18:32",
+          "height_m": 1.42,
+          "type": "high"
+        },
+        {
+          "time": "23:28",
+          "height_m": 0.81,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-02-16",
+      "weekday": "MO",
+      "tides": [
+        {
+          "time": "05:35",
+          "height_m": 1.95,
+          "type": "high"
+        },
+        {
+          "time": "12:23",
+          "height_m": 0.22,
+          "type": "low"
+        },
+        {
+          "time": "18:36",
+          "height_m": 1.51,
+          "type": "high"
+        },
+        {
+          "time": "23:45",
+          "height_m": 0.66,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-02-17",
+      "weekday": "TU",
+      "tides": [
+        {
+          "time": "05:56",
+          "height_m": 2.06,
+          "type": "high"
+        },
+        {
+          "time": "12:34",
+          "height_m": 0.21,
+          "type": "low"
+        },
+        {
+          "time": "18:40",
+          "height_m": 1.59,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-02-18",
+      "weekday": "WE",
+      "tides": [
+        {
+          "time": "00:04",
+          "height_m": 0.54,
+          "type": "low"
+        },
+        {
+          "time": "06:15",
+          "height_m": 2.11,
+          "type": "high"
+        },
+        {
+          "time": "12:45",
+          "height_m": 0.21,
+          "type": "low"
+        },
+        {
+          "time": "18:47",
+          "height_m": 1.7,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-02-19",
+      "weekday": "TH",
+      "tides": [
+        {
+          "time": "00:26",
+          "height_m": 0.46,
+          "type": "low"
+        },
+        {
+          "time": "06:34",
+          "height_m": 2.12,
+          "type": "high"
+        },
+        {
+          "time": "12:57",
+          "height_m": 0.22,
+          "type": "low"
+        },
+        {
+          "time": "19:00",
+          "height_m": 1.83,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-02-20",
+      "weekday": "FR",
+      "tides": [
+        {
+          "time": "00:53",
+          "height_m": 0.41,
+          "type": "low"
+        },
+        {
+          "time": "06:56",
+          "height_m": 2.06,
+          "type": "high"
+        },
+        {
+          "time": "13:12",
+          "height_m": 0.24,
+          "type": "low"
+        },
+        {
+          "time": "19:18",
+          "height_m": 1.94,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-02-21",
+      "weekday": "SA",
+      "tides": [
+        {
+          "time": "01:22",
+          "height_m": 0.4,
+          "type": "low"
+        },
+        {
+          "time": "07:18",
+          "height_m": 1.95,
+          "type": "high"
+        },
+        {
+          "time": "13:25",
+          "height_m": 0.28,
+          "type": "low"
+        },
+        {
+          "time": "19:38",
+          "height_m": 2.04,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-02-22",
+      "weekday": "SU",
+      "tides": [
+        {
+          "time": "01:50",
+          "height_m": 0.42,
+          "type": "low"
+        },
+        {
+          "time": "07:38",
+          "height_m": 1.8,
+          "type": "high"
+        },
+        {
+          "time": "13:35",
+          "height_m": 0.3,
+          "type": "low"
+        },
+        {
+          "time": "19:58",
+          "height_m": 2.12,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-02-23",
+      "weekday": "MO",
+      "tides": [
+        {
+          "time": "02:17",
+          "height_m": 0.45,
+          "type": "low"
+        },
+        {
+          "time": "07:55",
+          "height_m": 1.64,
+          "type": "high"
+        },
+        {
+          "time": "13:45",
+          "height_m": 0.3,
+          "type": "low"
+        },
+        {
+          "time": "20:18",
+          "height_m": 2.18,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-02-24",
+      "weekday": "TU",
+      "tides": [
+        {
+          "time": "02:45",
+          "height_m": 0.51,
+          "type": "low"
+        },
+        {
+          "time": "08:10",
+          "height_m": 1.48,
+          "type": "high"
+        },
+        {
+          "time": "13:56",
+          "height_m": 0.3,
+          "type": "low"
+        },
+        {
+          "time": "20:42",
+          "height_m": 2.15,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-02-25",
+      "weekday": "WE",
+      "tides": [
+        {
+          "time": "03:14",
+          "height_m": 0.63,
+          "type": "low"
+        },
+        {
+          "time": "08:19",
+          "height_m": 1.3,
+          "type": "high"
+        },
+        {
+          "time": "14:05",
+          "height_m": 0.35,
+          "type": "low"
+        },
+        {
+          "time": "21:06",
+          "height_m": 2.02,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-02-26",
+      "weekday": "TH",
+      "tides": [
+        {
+          "time": "03:47",
+          "height_m": 0.84,
+          "type": "low"
+        },
+        {
+          "time": "08:02",
+          "height_m": 1.12,
+          "type": "high"
+        },
+        {
+          "time": "13:54",
+          "height_m": 0.44,
+          "type": "low"
+        },
+        {
+          "time": "21:22",
+          "height_m": 1.76,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-02-27",
+      "weekday": "FR",
+      "tides": [
+        {
+          "time": "04:36",
+          "height_m": 1.14,
+          "type": "low"
+        },
+        {
+          "time": "05:09",
+          "height_m": 1.14,
+          "type": "high"
+        },
+        {
+          "time": "13:00",
+          "height_m": 0.46,
+          "type": "low"
+        },
+        {
+          "time": "20:38",
+          "height_m": 1.48,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-02-28",
+      "weekday": "SA",
+      "tides": [
+        {
+          "time": "00:52",
+          "height_m": 1.33,
+          "type": "low"
+        },
+        {
+          "time": "04:47",
+          "height_m": 1.47,
+          "type": "high"
+        },
+        {
+          "time": "12:24",
+          "height_m": 0.35,
+          "type": "low"
+        },
+        {
+          "time": "19:10",
+          "height_m": 1.41,
+          "type": "high"
+        },
+        {
+          "time": "23:39",
+          "height_m": 1.07,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-03-01",
+      "weekday": "SU",
+      "tides": [
+        {
+          "time": "05:19",
+          "height_m": 1.75,
+          "type": "high"
+        },
+        {
+          "time": "12:20",
+          "height_m": 0.26,
+          "type": "low"
+        },
+        {
+          "time": "18:46",
+          "height_m": 1.48,
+          "type": "high"
+        },
+        {
+          "time": "23:45",
+          "height_m": 0.83,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-03-02",
+      "weekday": "MO",
+      "tides": [
+        {
+          "time": "05:44",
+          "height_m": 1.91,
+          "type": "high"
+        },
+        {
+          "time": "12:25",
+          "height_m": 0.26,
+          "type": "low"
+        },
+        {
+          "time": "18:39",
+          "height_m": 1.56,
+          "type": "high"
+        },
+        {
+          "time": "23:55",
+          "height_m": 0.66,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-03-03",
+      "weekday": "TU",
+      "tides": [
+        {
+          "time": "06:00",
+          "height_m": 1.98,
+          "type": "high"
+        },
+        {
+          "time": "12:26",
+          "height_m": 0.32,
+          "type": "low"
+        },
+        {
+          "time": "18:32",
+          "height_m": 1.64,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-03-04",
+      "weekday": "WE",
+      "tides": [
+        {
+          "time": "00:04",
+          "height_m": 0.55,
+          "type": "low"
+        },
+        {
+          "time": "06:10",
+          "height_m": 1.98,
+          "type": "high"
+        },
+        {
+          "time": "12:25",
+          "height_m": 0.35,
+          "type": "low"
+        },
+        {
+          "time": "18:28",
+          "height_m": 1.77,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-03-05",
+      "weekday": "TH",
+      "tides": [
+        {
+          "time": "00:17",
+          "height_m": 0.46,
+          "type": "low"
+        },
+        {
+          "time": "06:18",
+          "height_m": 1.97,
+          "type": "high"
+        },
+        {
+          "time": "12:28",
+          "height_m": 0.33,
+          "type": "low"
+        },
+        {
+          "time": "18:32",
+          "height_m": 1.94,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-03-06",
+      "weekday": "FR",
+      "tides": [
+        {
+          "time": "00:36",
+          "height_m": 0.4,
+          "type": "low"
+        },
+        {
+          "time": "06:32",
+          "height_m": 1.94,
+          "type": "high"
+        },
+        {
+          "time": "12:38",
+          "height_m": 0.3,
+          "type": "low"
+        },
+        {
+          "time": "18:47",
+          "height_m": 2.07,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-03-07",
+      "weekday": "SA",
+      "tides": [
+        {
+          "time": "01:00",
+          "height_m": 0.38,
+          "type": "low"
+        },
+        {
+          "time": "06:51",
+          "height_m": 1.88,
+          "type": "high"
+        },
+        {
+          "time": "12:53",
+          "height_m": 0.28,
+          "type": "low"
+        },
+        {
+          "time": "19:09",
+          "height_m": 2.16,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-03-08",
+      "weekday": "SU",
+      "tides": [
+        {
+          "time": "01:27",
+          "height_m": 0.4,
+          "type": "low"
+        },
+        {
+          "time": "07:12",
+          "height_m": 1.79,
+          "type": "high"
+        },
+        {
+          "time": "13:10",
+          "height_m": 0.29,
+          "type": "low"
+        },
+        {
+          "time": "19:31",
+          "height_m": 2.18,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-03-09",
+      "weekday": "MO",
+      "tides": [
+        {
+          "time": "01:52",
+          "height_m": 0.43,
+          "type": "low"
+        },
+        {
+          "time": "07:32",
+          "height_m": 1.69,
+          "type": "high"
+        },
+        {
+          "time": "13:26",
+          "height_m": 0.31,
+          "type": "low"
+        },
+        {
+          "time": "19:53",
+          "height_m": 2.17,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-03-10",
+      "weekday": "TU",
+      "tides": [
+        {
+          "time": "02:15",
+          "height_m": 0.47,
+          "type": "low"
+        },
+        {
+          "time": "07:51",
+          "height_m": 1.59,
+          "type": "high"
+        },
+        {
+          "time": "13:41",
+          "height_m": 0.33,
+          "type": "low"
+        },
+        {
+          "time": "20:15",
+          "height_m": 2.13,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-03-11",
+      "weekday": "WE",
+      "tides": [
+        {
+          "time": "02:39",
+          "height_m": 0.52,
+          "type": "low"
+        },
+        {
+          "time": "08:09",
+          "height_m": 1.48,
+          "type": "high"
+        },
+        {
+          "time": "13:56",
+          "height_m": 0.37,
+          "type": "low"
+        },
+        {
+          "time": "20:36",
+          "height_m": 2.03,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-03-12",
+      "weekday": "TH",
+      "tides": [
+        {
+          "time": "03:04",
+          "height_m": 0.64,
+          "type": "low"
+        },
+        {
+          "time": "08:22",
+          "height_m": 1.33,
+          "type": "high"
+        },
+        {
+          "time": "14:05",
+          "height_m": 0.47,
+          "type": "low"
+        },
+        {
+          "time": "20:57",
+          "height_m": 1.85,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-03-13",
+      "weekday": "FR",
+      "tides": [
+        {
+          "time": "03:32",
+          "height_m": 0.84,
+          "type": "low"
+        },
+        {
+          "time": "08:13",
+          "height_m": 1.14,
+          "type": "high"
+        },
+        {
+          "time": "13:52",
+          "height_m": 0.61,
+          "type": "low"
+        },
+        {
+          "time": "21:06",
+          "height_m": 1.6,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-03-14",
+      "weekday": "SA",
+      "tides": [
+        {
+          "time": "04:00",
+          "height_m": 1.13,
+          "type": "low"
+        },
+        {
+          "time": "04:51",
+          "height_m": 1.13,
+          "type": "high"
+        },
+        {
+          "time": "12:30",
+          "height_m": 0.66,
+          "type": "low"
+        },
+        {
+          "time": "19:53",
+          "height_m": 1.35,
+          "type": "high"
+        },
+        {
+          "time": "23:41",
+          "height_m": 1.24,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-03-15",
+      "weekday": "SU",
+      "tides": [
+        {
+          "time": "04:32",
+          "height_m": 1.45,
+          "type": "high"
+        },
+        {
+          "time": "11:39",
+          "height_m": 0.5,
+          "type": "low"
+        },
+        {
+          "time": "18:16",
+          "height_m": 1.41,
+          "type": "high"
+        },
+        {
+          "time": "23:12",
+          "height_m": 0.97,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-03-16",
+      "weekday": "MO",
+      "tides": [
+        {
+          "time": "04:59",
+          "height_m": 1.73,
+          "type": "high"
+        },
+        {
+          "time": "11:41",
+          "height_m": 0.35,
+          "type": "low"
+        },
+        {
+          "time": "18:04",
+          "height_m": 1.56,
+          "type": "high"
+        },
+        {
+          "time": "23:22",
+          "height_m": 0.75,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-03-17",
+      "weekday": "TU",
+      "tides": [
+        {
+          "time": "05:22",
+          "height_m": 1.92,
+          "type": "high"
+        },
+        {
+          "time": "11:50",
+          "height_m": 0.29,
+          "type": "low"
+        },
+        {
+          "time": "18:05",
+          "height_m": 1.69,
+          "type": "high"
+        },
+        {
+          "time": "23:37",
+          "height_m": 0.59,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-03-18",
+      "weekday": "WE",
+      "tides": [
+        {
+          "time": "05:40",
+          "height_m": 2.01,
+          "type": "high"
+        },
+        {
+          "time": "11:59",
+          "height_m": 0.3,
+          "type": "low"
+        },
+        {
+          "time": "18:07",
+          "height_m": 1.81,
+          "type": "high"
+        },
+        {
+          "time": "23:54",
+          "height_m": 0.48,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-03-19",
+      "weekday": "TH",
+      "tides": [
+        {
+          "time": "05:56",
+          "height_m": 2.02,
+          "type": "high"
+        },
+        {
+          "time": "12:06",
+          "height_m": 0.32,
+          "type": "low"
+        },
+        {
+          "time": "18:11",
+          "height_m": 1.95,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-03-20",
+      "weekday": "FR",
+      "tides": [
+        {
+          "time": "00:15",
+          "height_m": 0.39,
+          "type": "low"
+        },
+        {
+          "time": "06:13",
+          "height_m": 1.98,
+          "type": "high"
+        },
+        {
+          "time": "12:16",
+          "height_m": 0.34,
+          "type": "low"
+        },
+        {
+          "time": "18:22",
+          "height_m": 2.1,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-03-21",
+      "weekday": "SA",
+      "tides": [
+        {
+          "time": "00:40",
+          "height_m": 0.34,
+          "type": "low"
+        },
+        {
+          "time": "06:33",
+          "height_m": 1.89,
+          "type": "high"
+        },
+        {
+          "time": "12:28",
+          "height_m": 0.36,
+          "type": "low"
+        },
+        {
+          "time": "18:40",
+          "height_m": 2.22,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-03-22",
+      "weekday": "SU",
+      "tides": [
+        {
+          "time": "01:08",
+          "height_m": 0.34,
+          "type": "low"
+        },
+        {
+          "time": "06:55",
+          "height_m": 1.75,
+          "type": "high"
+        },
+        {
+          "time": "12:39",
+          "height_m": 0.39,
+          "type": "low"
+        },
+        {
+          "time": "19:01",
+          "height_m": 2.29,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-03-23",
+      "weekday": "MO",
+      "tides": [
+        {
+          "time": "01:35",
+          "height_m": 0.38,
+          "type": "low"
+        },
+        {
+          "time": "07:13",
+          "height_m": 1.59,
+          "type": "high"
+        },
+        {
+          "time": "12:48",
+          "height_m": 0.39,
+          "type": "low"
+        },
+        {
+          "time": "19:22",
+          "height_m": 2.31,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-03-24",
+      "weekday": "TU",
+      "tides": [
+        {
+          "time": "01:59",
+          "height_m": 0.45,
+          "type": "low"
+        },
+        {
+          "time": "07:25",
+          "height_m": 1.45,
+          "type": "high"
+        },
+        {
+          "time": "12:58",
+          "height_m": 0.37,
+          "type": "low"
+        },
+        {
+          "time": "19:42",
+          "height_m": 2.29,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-03-25",
+      "weekday": "WE",
+      "tides": [
+        {
+          "time": "02:18",
+          "height_m": 0.54,
+          "type": "low"
+        },
+        {
+          "time": "07:33",
+          "height_m": 1.35,
+          "type": "high"
+        },
+        {
+          "time": "13:09",
+          "height_m": 0.35,
+          "type": "low"
+        },
+        {
+          "time": "20:02",
+          "height_m": 2.21,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-03-26",
+      "weekday": "TH",
+      "tides": [
+        {
+          "time": "02:37",
+          "height_m": 0.67,
+          "type": "low"
+        },
+        {
+          "time": "07:37",
+          "height_m": 1.27,
+          "type": "high"
+        },
+        {
+          "time": "13:19",
+          "height_m": 0.38,
+          "type": "low"
+        },
+        {
+          "time": "20:21",
+          "height_m": 2.04,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-03-27",
+      "weekday": "FR",
+      "tides": [
+        {
+          "time": "02:55",
+          "height_m": 0.86,
+          "type": "low"
+        },
+        {
+          "time": "07:24",
+          "height_m": 1.19,
+          "type": "high"
+        },
+        {
+          "time": "13:15",
+          "height_m": 0.48,
+          "type": "low"
+        },
+        {
+          "time": "20:29",
+          "height_m": 1.77,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-03-28",
+      "weekday": "SA",
+      "tides": [
+        {
+          "time": "02:48",
+          "height_m": 1.11,
+          "type": "low"
+        },
+        {
+          "time": "05:57",
+          "height_m": 1.2,
+          "type": "high"
+        },
+        {
+          "time": "12:33",
+          "height_m": 0.58,
+          "type": "low"
+        },
+        {
+          "time": "19:40",
+          "height_m": 1.51,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-03-29",
+      "weekday": "SU",
+      "tides": [
+        {
+          "time": "00:34",
+          "height_m": 1.22,
+          "type": "low"
+        },
+        {
+          "time": "05:00",
+          "height_m": 1.43,
+          "type": "high"
+        },
+        {
+          "time": "11:49",
+          "height_m": 0.56,
+          "type": "low"
+        },
+        {
+          "time": "18:22",
+          "height_m": 1.48,
+          "type": "high"
+        },
+        {
+          "time": "23:27",
+          "height_m": 1.0,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-03-30",
+      "weekday": "MO",
+      "tides": [
+        {
+          "time": "05:05",
+          "height_m": 1.67,
+          "type": "high"
+        },
+        {
+          "time": "11:35",
+          "height_m": 0.49,
+          "type": "low"
+        },
+        {
+          "time": "17:55",
+          "height_m": 1.63,
+          "type": "high"
+        },
+        {
+          "time": "23:27",
+          "height_m": 0.75,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-03-31",
+      "weekday": "TU",
+      "tides": [
+        {
+          "time": "05:21",
+          "height_m": 1.82,
+          "type": "high"
+        },
+        {
+          "time": "11:34",
+          "height_m": 0.46,
+          "type": "low"
+        },
+        {
+          "time": "17:47",
+          "height_m": 1.8,
+          "type": "high"
+        },
+        {
+          "time": "23:37",
+          "height_m": 0.59,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-04-01",
+      "weekday": "WE",
+      "tides": [
+        {
+          "time": "05:35",
+          "height_m": 1.88,
+          "type": "high"
+        },
+        {
+          "time": "11:35",
+          "height_m": 0.47,
+          "type": "low"
+        },
+        {
+          "time": "17:46",
+          "height_m": 1.95,
+          "type": "high"
+        },
+        {
+          "time": "23:49",
+          "height_m": 0.49,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-04-02",
+      "weekday": "TH",
+      "tides": [
+        {
+          "time": "05:47",
+          "height_m": 1.88,
+          "type": "high"
+        },
+        {
+          "time": "11:39",
+          "height_m": 0.46,
+          "type": "low"
+        },
+        {
+          "time": "17:50",
+          "height_m": 2.09,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-04-03",
+      "weekday": "FR",
+      "tides": [
+        {
+          "time": "00:04",
+          "height_m": 0.43,
+          "type": "low"
+        },
+        {
+          "time": "05:59",
+          "height_m": 1.86,
+          "type": "high"
+        },
+        {
+          "time": "11:47",
+          "height_m": 0.45,
+          "type": "low"
+        },
+        {
+          "time": "18:00",
+          "height_m": 2.21,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-04-04",
+      "weekday": "SA",
+      "tides": [
+        {
+          "time": "00:23",
+          "height_m": 0.4,
+          "type": "low"
+        },
+        {
+          "time": "06:14",
+          "height_m": 1.82,
+          "type": "high"
+        },
+        {
+          "time": "12:00",
+          "height_m": 0.43,
+          "type": "low"
+        },
+        {
+          "time": "18:18",
+          "height_m": 2.29,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-04-05",
+      "weekday": "SU",
+      "tides": [
+        {
+          "time": "00:45",
+          "height_m": 0.39,
+          "type": "low"
+        },
+        {
+          "time": "05:33",
+          "height_m": 1.75,
+          "type": "high"
+        },
+        {
+          "time": "11:17",
+          "height_m": 0.43,
+          "type": "low"
+        },
+        {
+          "time": "17:40",
+          "height_m": 2.31,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-04-06",
+      "weekday": "MO",
+      "tides": [
+        {
+          "time": "00:11",
+          "height_m": 0.41,
+          "type": "low"
+        },
+        {
+          "time": "05:55",
+          "height_m": 1.67,
+          "type": "high"
+        },
+        {
+          "time": "11:35",
+          "height_m": 0.45,
+          "type": "low"
+        },
+        {
+          "time": "18:01",
+          "height_m": 2.28,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-04-07",
+      "weekday": "TU",
+      "tides": [
+        {
+          "time": "00:33",
+          "height_m": 0.45,
+          "type": "low"
+        },
+        {
+          "time": "06:14",
+          "height_m": 1.59,
+          "type": "high"
+        },
+        {
+          "time": "11:52",
+          "height_m": 0.46,
+          "type": "low"
+        },
+        {
+          "time": "18:22",
+          "height_m": 2.24,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-04-08",
+      "weekday": "WE",
+      "tides": [
+        {
+          "time": "00:55",
+          "height_m": 0.48,
+          "type": "low"
+        },
+        {
+          "time": "06:32",
+          "height_m": 1.53,
+          "type": "high"
+        },
+        {
+          "time": "12:09",
+          "height_m": 0.47,
+          "type": "low"
+        },
+        {
+          "time": "18:44",
+          "height_m": 2.18,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-04-09",
+      "weekday": "TH",
+      "tides": [
+        {
+          "time": "01:16",
+          "height_m": 0.54,
+          "type": "low"
+        },
+        {
+          "time": "06:50",
+          "height_m": 1.46,
+          "type": "high"
+        },
+        {
+          "time": "12:27",
+          "height_m": 0.5,
+          "type": "low"
+        },
+        {
+          "time": "19:06",
+          "height_m": 2.08,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-04-10",
+      "weekday": "FR",
+      "tides": [
+        {
+          "time": "01:43",
+          "height_m": 0.64,
+          "type": "low"
+        },
+        {
+          "time": "07:08",
+          "height_m": 1.35,
+          "type": "high"
+        },
+        {
+          "time": "12:42",
+          "height_m": 0.6,
+          "type": "low"
+        },
+        {
+          "time": "19:30",
+          "height_m": 1.91,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-04-11",
+      "weekday": "SA",
+      "tides": [
+        {
+          "time": "02:17",
+          "height_m": 0.83,
+          "type": "low"
+        },
+        {
+          "time": "07:15",
+          "height_m": 1.18,
+          "type": "high"
+        },
+        {
+          "time": "12:37",
+          "height_m": 0.77,
+          "type": "low"
+        },
+        {
+          "time": "19:48",
+          "height_m": 1.67,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-04-12",
+      "weekday": "SU",
+      "tides": [
+        {
+          "time": "10:37",
+          "height_m": 0.87,
+          "type": "low"
+        },
+        {
+          "time": "18:33",
+          "height_m": 1.39,
+          "type": "high"
+        },
+        {
+          "time": "22:10",
+          "height_m": 1.32,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-04-13",
+      "weekday": "MO",
+      "tides": [
+        {
+          "time": "02:27",
+          "height_m": 1.42,
+          "type": "high"
+        },
+        {
+          "time": "09:37",
+          "height_m": 0.71,
+          "type": "low"
+        },
+        {
+          "time": "16:21",
+          "height_m": 1.51,
+          "type": "high"
+        },
+        {
+          "time": "21:35",
+          "height_m": 1.03,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-04-14",
+      "weekday": "TU",
+      "tides": [
+        {
+          "time": "03:18",
+          "height_m": 1.69,
+          "type": "high"
+        },
+        {
+          "time": "09:45",
+          "height_m": 0.56,
+          "type": "low"
+        },
+        {
+          "time": "16:10",
+          "height_m": 1.73,
+          "type": "high"
+        },
+        {
+          "time": "21:53",
+          "height_m": 0.77,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-04-15",
+      "weekday": "WE",
+      "tides": [
+        {
+          "time": "03:49",
+          "height_m": 1.86,
+          "type": "high"
+        },
+        {
+          "time": "09:59",
+          "height_m": 0.5,
+          "type": "low"
+        },
+        {
+          "time": "16:15",
+          "height_m": 1.92,
+          "type": "high"
+        },
+        {
+          "time": "22:15",
+          "height_m": 0.59,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-04-16",
+      "weekday": "TH",
+      "tides": [
+        {
+          "time": "04:15",
+          "height_m": 1.92,
+          "type": "high"
+        },
+        {
+          "time": "10:12",
+          "height_m": 0.51,
+          "type": "low"
+        },
+        {
+          "time": "16:23",
+          "height_m": 2.08,
+          "type": "high"
+        },
+        {
+          "time": "22:37",
+          "height_m": 0.46,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-04-17",
+      "weekday": "FR",
+      "tides": [
+        {
+          "time": "04:35",
+          "height_m": 1.89,
+          "type": "high"
+        },
+        {
+          "time": "10:23",
+          "height_m": 0.54,
+          "type": "low"
+        },
+        {
+          "time": "16:32",
+          "height_m": 2.23,
+          "type": "high"
+        },
+        {
+          "time": "23:01",
+          "height_m": 0.38,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-04-18",
+      "weekday": "SA",
+      "tides": [
+        {
+          "time": "04:55",
+          "height_m": 1.81,
+          "type": "high"
+        },
+        {
+          "time": "10:34",
+          "height_m": 0.56,
+          "type": "low"
+        },
+        {
+          "time": "16:47",
+          "height_m": 2.37,
+          "type": "high"
+        },
+        {
+          "time": "23:29",
+          "height_m": 0.35,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-04-19",
+      "weekday": "SU",
+      "tides": [
+        {
+          "time": "05:17",
+          "height_m": 1.7,
+          "type": "high"
+        },
+        {
+          "time": "10:46",
+          "height_m": 0.57,
+          "type": "low"
+        },
+        {
+          "time": "17:10",
+          "height_m": 2.44,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-04-20",
+      "weekday": "MO",
+      "tides": [
+        {
+          "time": "00:00",
+          "height_m": 0.37,
+          "type": "low"
+        },
+        {
+          "time": "05:41",
+          "height_m": 1.56,
+          "type": "high"
+        },
+        {
+          "time": "11:00",
+          "height_m": 0.58,
+          "type": "low"
+        },
+        {
+          "time": "17:36",
+          "height_m": 2.45,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-04-21",
+      "weekday": "TU",
+      "tides": [
+        {
+          "time": "00:30",
+          "height_m": 0.46,
+          "type": "low"
+        },
+        {
+          "time": "06:00",
+          "height_m": 1.41,
+          "type": "high"
+        },
+        {
+          "time": "11:13",
+          "height_m": 0.58,
+          "type": "low"
+        },
+        {
+          "time": "18:00",
+          "height_m": 2.39,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-04-22",
+      "weekday": "WE",
+      "tides": [
+        {
+          "time": "00:56",
+          "height_m": 0.57,
+          "type": "low"
+        },
+        {
+          "time": "06:12",
+          "height_m": 1.31,
+          "type": "high"
+        },
+        {
+          "time": "11:26",
+          "height_m": 0.56,
+          "type": "low"
+        },
+        {
+          "time": "18:23",
+          "height_m": 2.3,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-04-23",
+      "weekday": "TH",
+      "tides": [
+        {
+          "time": "01:13",
+          "height_m": 0.69,
+          "type": "low"
+        },
+        {
+          "time": "06:18",
+          "height_m": 1.27,
+          "type": "high"
+        },
+        {
+          "time": "11:41",
+          "height_m": 0.55,
+          "type": "low"
+        },
+        {
+          "time": "18:44",
+          "height_m": 2.18,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-04-24",
+      "weekday": "FR",
+      "tides": [
+        {
+          "time": "01:28",
+          "height_m": 0.8,
+          "type": "low"
+        },
+        {
+          "time": "06:27",
+          "height_m": 1.27,
+          "type": "high"
+        },
+        {
+          "time": "11:58",
+          "height_m": 0.61,
+          "type": "low"
+        },
+        {
+          "time": "19:04",
+          "height_m": 2.0,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-04-25",
+      "weekday": "SA",
+      "tides": [
+        {
+          "time": "01:47",
+          "height_m": 0.94,
+          "type": "low"
+        },
+        {
+          "time": "06:36",
+          "height_m": 1.23,
+          "type": "high"
+        },
+        {
+          "time": "12:05",
+          "height_m": 0.77,
+          "type": "low"
+        },
+        {
+          "time": "19:19",
+          "height_m": 1.75,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-04-26",
+      "weekday": "SU",
+      "tides": [
+        {
+          "time": "02:14",
+          "height_m": 1.12,
+          "type": "low"
+        },
+        {
+          "time": "05:21",
+          "height_m": 1.17,
+          "type": "high"
+        },
+        {
+          "time": "11:01",
+          "height_m": 0.96,
+          "type": "low"
+        },
+        {
+          "time": "18:23",
+          "height_m": 1.48,
+          "type": "high"
+        },
+        {
+          "time": "23:33",
+          "height_m": 1.31,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-04-27",
+      "weekday": "MO",
+      "tides": [
+        {
+          "time": "02:42",
+          "height_m": 1.33,
+          "type": "high"
+        },
+        {
+          "time": "09:23",
+          "height_m": 0.94,
+          "type": "low"
+        },
+        {
+          "time": "16:05",
+          "height_m": 1.53,
+          "type": "high"
+        },
+        {
+          "time": "21:43",
+          "height_m": 1.08,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-04-28",
+      "weekday": "TU",
+      "tides": [
+        {
+          "time": "03:12",
+          "height_m": 1.54,
+          "type": "high"
+        },
+        {
+          "time": "09:12",
+          "height_m": 0.82,
+          "type": "low"
+        },
+        {
+          "time": "15:39",
+          "height_m": 1.8,
+          "type": "high"
+        },
+        {
+          "time": "21:50",
+          "height_m": 0.82,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-04-29",
+      "weekday": "WE",
+      "tides": [
+        {
+          "time": "03:39",
+          "height_m": 1.69,
+          "type": "high"
+        },
+        {
+          "time": "09:25",
+          "height_m": 0.72,
+          "type": "low"
+        },
+        {
+          "time": "15:46",
+          "height_m": 2.04,
+          "type": "high"
+        },
+        {
+          "time": "22:09",
+          "height_m": 0.63,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-04-30",
+      "weekday": "TH",
+      "tides": [
+        {
+          "time": "04:03",
+          "height_m": 1.77,
+          "type": "high"
+        },
+        {
+          "time": "09:41",
+          "height_m": 0.67,
+          "type": "low"
+        },
+        {
+          "time": "16:00",
+          "height_m": 2.22,
+          "type": "high"
+        },
+        {
+          "time": "22:30",
+          "height_m": 0.53,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-05-01",
+      "weekday": "FR",
+      "tides": [
+        {
+          "time": "04:25",
+          "height_m": 1.78,
+          "type": "high"
+        },
+        {
+          "time": "09:57",
+          "height_m": 0.66,
+          "type": "low"
+        },
+        {
+          "time": "16:16",
+          "height_m": 2.33,
+          "type": "high"
+        },
+        {
+          "time": "22:50",
+          "height_m": 0.48,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-05-02",
+      "weekday": "SA",
+      "tides": [
+        {
+          "time": "04:45",
+          "height_m": 1.75,
+          "type": "high"
+        },
+        {
+          "time": "10:13",
+          "height_m": 0.65,
+          "type": "low"
+        },
+        {
+          "time": "16:34",
+          "height_m": 2.39,
+          "type": "high"
+        },
+        {
+          "time": "23:13",
+          "height_m": 0.46,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-05-03",
+      "weekday": "SU",
+      "tides": [
+        {
+          "time": "05:05",
+          "height_m": 1.71,
+          "type": "high"
+        },
+        {
+          "time": "10:30",
+          "height_m": 0.64,
+          "type": "low"
+        },
+        {
+          "time": "16:56",
+          "height_m": 2.41,
+          "type": "high"
+        },
+        {
+          "time": "23:36",
+          "height_m": 0.46,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-05-04",
+      "weekday": "MO",
+      "tides": [
+        {
+          "time": "05:28",
+          "height_m": 1.66,
+          "type": "high"
+        },
+        {
+          "time": "10:52",
+          "height_m": 0.65,
+          "type": "low"
+        },
+        {
+          "time": "17:20",
+          "height_m": 2.38,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-05-05",
+      "weekday": "TU",
+      "tides": [
+        {
+          "time": "00:02",
+          "height_m": 0.49,
+          "type": "low"
+        },
+        {
+          "time": "05:51",
+          "height_m": 1.6,
+          "type": "high"
+        },
+        {
+          "time": "11:14",
+          "height_m": 0.65,
+          "type": "low"
+        },
+        {
+          "time": "17:46",
+          "height_m": 2.33,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-05-06",
+      "weekday": "WE",
+      "tides": [
+        {
+          "time": "00:29",
+          "height_m": 0.53,
+          "type": "low"
+        },
+        {
+          "time": "06:14",
+          "height_m": 1.55,
+          "type": "high"
+        },
+        {
+          "time": "11:36",
+          "height_m": 0.66,
+          "type": "low"
+        },
+        {
+          "time": "18:11",
+          "height_m": 2.28,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-05-07",
+      "weekday": "TH",
+      "tides": [
+        {
+          "time": "00:54",
+          "height_m": 0.57,
+          "type": "low"
+        },
+        {
+          "time": "06:36",
+          "height_m": 1.51,
+          "type": "high"
+        },
+        {
+          "time": "12:00",
+          "height_m": 0.68,
+          "type": "low"
+        },
+        {
+          "time": "18:36",
+          "height_m": 2.21,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-05-08",
+      "weekday": "FR",
+      "tides": [
+        {
+          "time": "01:20",
+          "height_m": 0.62,
+          "type": "low"
+        },
+        {
+          "time": "07:00",
+          "height_m": 1.46,
+          "type": "high"
+        },
+        {
+          "time": "12:25",
+          "height_m": 0.73,
+          "type": "low"
+        },
+        {
+          "time": "19:04",
+          "height_m": 2.12,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-05-09",
+      "weekday": "SA",
+      "tides": [
+        {
+          "time": "01:54",
+          "height_m": 0.7,
+          "type": "low"
+        },
+        {
+          "time": "07:32",
+          "height_m": 1.4,
+          "type": "high"
+        },
+        {
+          "time": "12:52",
+          "height_m": 0.84,
+          "type": "low"
+        },
+        {
+          "time": "19:36",
+          "height_m": 1.98,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-05-10",
+      "weekday": "SU",
+      "tides": [
+        {
+          "time": "02:43",
+          "height_m": 0.83,
+          "type": "low"
+        },
+        {
+          "time": "08:25",
+          "height_m": 1.3,
+          "type": "high"
+        },
+        {
+          "time": "13:20",
+          "height_m": 1.04,
+          "type": "low"
+        },
+        {
+          "time": "20:21",
+          "height_m": 1.76,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-05-11",
+      "weekday": "MO",
+      "tides": [
+        {
+          "time": "04:37",
+          "height_m": 0.97,
+          "type": "low"
+        },
+        {
+          "time": "23:15",
+          "height_m": 1.53,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-05-12",
+      "weekday": "TU",
+      "tides": [
+        {
+          "time": "07:17",
+          "height_m": 0.93,
+          "type": "low"
+        },
+        {
+          "time": "14:25",
+          "height_m": 1.61,
+          "type": "high"
+        },
+        {
+          "time": "20:20",
+          "height_m": 1.13,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-05-13",
+      "weekday": "WE",
+      "tides": [
+        {
+          "time": "02:00",
+          "height_m": 1.62,
+          "type": "high"
+        },
+        {
+          "time": "08:19",
+          "height_m": 0.83,
+          "type": "low"
+        },
+        {
+          "time": "14:52",
+          "height_m": 1.89,
+          "type": "high"
+        },
+        {
+          "time": "21:12",
+          "height_m": 0.85,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-05-14",
+      "weekday": "TH",
+      "tides": [
+        {
+          "time": "03:05",
+          "height_m": 1.74,
+          "type": "high"
+        },
+        {
+          "time": "08:55",
+          "height_m": 0.79,
+          "type": "low"
+        },
+        {
+          "time": "15:17",
+          "height_m": 2.12,
+          "type": "high"
+        },
+        {
+          "time": "21:49",
+          "height_m": 0.63,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-05-15",
+      "weekday": "FR",
+      "tides": [
+        {
+          "time": "03:48",
+          "height_m": 1.77,
+          "type": "high"
+        },
+        {
+          "time": "09:22",
+          "height_m": 0.79,
+          "type": "low"
+        },
+        {
+          "time": "15:40",
+          "height_m": 2.29,
+          "type": "high"
+        },
+        {
+          "time": "22:23",
+          "height_m": 0.49,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-05-16",
+      "weekday": "SA",
+      "tides": [
+        {
+          "time": "04:23",
+          "height_m": 1.72,
+          "type": "high"
+        },
+        {
+          "time": "09:42",
+          "height_m": 0.81,
+          "type": "low"
+        },
+        {
+          "time": "16:01",
+          "height_m": 2.42,
+          "type": "high"
+        },
+        {
+          "time": "22:56",
+          "height_m": 0.43,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-05-17",
+      "weekday": "SU",
+      "tides": [
+        {
+          "time": "04:52",
+          "height_m": 1.62,
+          "type": "high"
+        },
+        {
+          "time": "10:00",
+          "height_m": 0.82,
+          "type": "low"
+        },
+        {
+          "time": "16:27",
+          "height_m": 2.51,
+          "type": "high"
+        },
+        {
+          "time": "23:30",
+          "height_m": 0.42,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-05-18",
+      "weekday": "MO",
+      "tides": [
+        {
+          "time": "05:20",
+          "height_m": 1.51,
+          "type": "high"
+        },
+        {
+          "time": "10:18",
+          "height_m": 0.81,
+          "type": "low"
+        },
+        {
+          "time": "16:56",
+          "height_m": 2.53,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-05-19",
+      "weekday": "TU",
+      "tides": [
+        {
+          "time": "00:06",
+          "height_m": 0.47,
+          "type": "low"
+        },
+        {
+          "time": "05:47",
+          "height_m": 1.41,
+          "type": "high"
+        },
+        {
+          "time": "10:40",
+          "height_m": 0.8,
+          "type": "low"
+        },
+        {
+          "time": "17:29",
+          "height_m": 2.49,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-05-20",
+      "weekday": "WE",
+      "tides": [
+        {
+          "time": "00:42",
+          "height_m": 0.57,
+          "type": "low"
+        },
+        {
+          "time": "06:10",
+          "height_m": 1.33,
+          "type": "high"
+        },
+        {
+          "time": "11:00",
+          "height_m": 0.79,
+          "type": "low"
+        },
+        {
+          "time": "17:59",
+          "height_m": 2.4,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-05-21",
+      "weekday": "TH",
+      "tides": [
+        {
+          "time": "01:11",
+          "height_m": 0.69,
+          "type": "low"
+        },
+        {
+          "time": "06:27",
+          "height_m": 1.3,
+          "type": "high"
+        },
+        {
+          "time": "11:23",
+          "height_m": 0.79,
+          "type": "low"
+        },
+        {
+          "time": "18:26",
+          "height_m": 2.28,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-05-22",
+      "weekday": "FR",
+      "tides": [
+        {
+          "time": "01:31",
+          "height_m": 0.79,
+          "type": "low"
+        },
+        {
+          "time": "06:42",
+          "height_m": 1.32,
+          "type": "high"
+        },
+        {
+          "time": "11:50",
+          "height_m": 0.82,
+          "type": "low"
+        },
+        {
+          "time": "18:51",
+          "height_m": 2.15,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-05-23",
+      "weekday": "SA",
+      "tides": [
+        {
+          "time": "01:48",
+          "height_m": 0.86,
+          "type": "low"
+        },
+        {
+          "time": "07:10",
+          "height_m": 1.38,
+          "type": "high"
+        },
+        {
+          "time": "12:26",
+          "height_m": 0.9,
+          "type": "low"
+        },
+        {
+          "time": "19:19",
+          "height_m": 1.99,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-05-24",
+      "weekday": "SU",
+      "tides": [
+        {
+          "time": "02:15",
+          "height_m": 0.91,
+          "type": "low"
+        },
+        {
+          "time": "08:00",
+          "height_m": 1.43,
+          "type": "high"
+        },
+        {
+          "time": "13:14",
+          "height_m": 1.07,
+          "type": "low"
+        },
+        {
+          "time": "19:54",
+          "height_m": 1.78,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-05-25",
+      "weekday": "MO",
+      "tides": [
+        {
+          "time": "03:07",
+          "height_m": 0.99,
+          "type": "low"
+        },
+        {
+          "time": "10:00",
+          "height_m": 1.46,
+          "type": "high"
+        },
+        {
+          "time": "14:53",
+          "height_m": 1.31,
+          "type": "low"
+        },
+        {
+          "time": "20:59",
+          "height_m": 1.53,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-05-26",
+      "weekday": "TU",
+      "tides": [
+        {
+          "time": "05:11",
+          "height_m": 1.06,
+          "type": "low"
+        },
+        {
+          "time": "12:52",
+          "height_m": 1.67,
+          "type": "high"
+        },
+        {
+          "time": "19:57",
+          "height_m": 1.22,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-05-27",
+      "weekday": "WE",
+      "tides": [
+        {
+          "time": "00:56",
+          "height_m": 1.43,
+          "type": "high"
+        },
+        {
+          "time": "07:01",
+          "height_m": 1.02,
+          "type": "low"
+        },
+        {
+          "time": "14:01",
+          "height_m": 1.95,
+          "type": "high"
+        },
+        {
+          "time": "21:00",
+          "height_m": 0.96,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-05-28",
+      "weekday": "TH",
+      "tides": [
+        {
+          "time": "02:38",
+          "height_m": 1.52,
+          "type": "high"
+        },
+        {
+          "time": "08:05",
+          "height_m": 0.96,
+          "type": "low"
+        },
+        {
+          "time": "14:45",
+          "height_m": 2.17,
+          "type": "high"
+        },
+        {
+          "time": "21:39",
+          "height_m": 0.75,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-05-29",
+      "weekday": "FR",
+      "tides": [
+        {
+          "time": "03:31",
+          "height_m": 1.61,
+          "type": "high"
+        },
+        {
+          "time": "08:48",
+          "height_m": 0.91,
+          "type": "low"
+        },
+        {
+          "time": "15:19",
+          "height_m": 2.31,
+          "type": "high"
+        },
+        {
+          "time": "22:13",
+          "height_m": 0.62,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-05-30",
+      "weekday": "SA",
+      "tides": [
+        {
+          "time": "04:10",
+          "height_m": 1.65,
+          "type": "high"
+        },
+        {
+          "time": "09:21",
+          "height_m": 0.89,
+          "type": "low"
+        },
+        {
+          "time": "15:49",
+          "height_m": 2.38,
+          "type": "high"
+        },
+        {
+          "time": "22:42",
+          "height_m": 0.56,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-05-31",
+      "weekday": "SU",
+      "tides": [
+        {
+          "time": "04:41",
+          "height_m": 1.65,
+          "type": "high"
+        },
+        {
+          "time": "09:47",
+          "height_m": 0.87,
+          "type": "low"
+        },
+        {
+          "time": "16:17",
+          "height_m": 2.41,
+          "type": "high"
+        },
+        {
+          "time": "23:09",
+          "height_m": 0.54,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-06-01",
+      "weekday": "MO",
+      "tides": [
+        {
+          "time": "05:07",
+          "height_m": 1.63,
+          "type": "high"
+        },
+        {
+          "time": "10:14",
+          "height_m": 0.85,
+          "type": "low"
+        },
+        {
+          "time": "16:45",
+          "height_m": 2.42,
+          "type": "high"
+        },
+        {
+          "time": "23:36",
+          "height_m": 0.54,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-06-02",
+      "weekday": "TU",
+      "tides": [
+        {
+          "time": "05:33",
+          "height_m": 1.61,
+          "type": "high"
+        },
+        {
+          "time": "10:41",
+          "height_m": 0.82,
+          "type": "low"
+        },
+        {
+          "time": "17:15",
+          "height_m": 2.4,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-06-03",
+      "weekday": "WE",
+      "tides": [
+        {
+          "time": "00:04",
+          "height_m": 0.56,
+          "type": "low"
+        },
+        {
+          "time": "06:00",
+          "height_m": 1.6,
+          "type": "high"
+        },
+        {
+          "time": "11:11",
+          "height_m": 0.8,
+          "type": "low"
+        },
+        {
+          "time": "17:45",
+          "height_m": 2.37,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-06-04",
+      "weekday": "TH",
+      "tides": [
+        {
+          "time": "00:33",
+          "height_m": 0.57,
+          "type": "low"
+        },
+        {
+          "time": "06:27",
+          "height_m": 1.59,
+          "type": "high"
+        },
+        {
+          "time": "11:41",
+          "height_m": 0.8,
+          "type": "low"
+        },
+        {
+          "time": "18:15",
+          "height_m": 2.33,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-06-05",
+      "weekday": "FR",
+      "tides": [
+        {
+          "time": "01:03",
+          "height_m": 0.6,
+          "type": "low"
+        },
+        {
+          "time": "06:56",
+          "height_m": 1.58,
+          "type": "high"
+        },
+        {
+          "time": "12:13",
+          "height_m": 0.82,
+          "type": "low"
+        },
+        {
+          "time": "18:45",
+          "height_m": 2.27,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-06-06",
+      "weekday": "SA",
+      "tides": [
+        {
+          "time": "01:32",
+          "height_m": 0.63,
+          "type": "low"
+        },
+        {
+          "time": "07:28",
+          "height_m": 1.59,
+          "type": "high"
+        },
+        {
+          "time": "12:46",
+          "height_m": 0.88,
+          "type": "low"
+        },
+        {
+          "time": "19:15",
+          "height_m": 2.2,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-06-07",
+      "weekday": "SU",
+      "tides": [
+        {
+          "time": "02:05",
+          "height_m": 0.68,
+          "type": "low"
+        },
+        {
+          "time": "08:06",
+          "height_m": 1.6,
+          "type": "high"
+        },
+        {
+          "time": "13:28",
+          "height_m": 0.97,
+          "type": "low"
+        },
+        {
+          "time": "19:51",
+          "height_m": 2.08,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-06-08",
+      "weekday": "MO",
+      "tides": [
+        {
+          "time": "02:44",
+          "height_m": 0.74,
+          "type": "low"
+        },
+        {
+          "time": "09:00",
+          "height_m": 1.63,
+          "type": "high"
+        },
+        {
+          "time": "14:25",
+          "height_m": 1.09,
+          "type": "low"
+        },
+        {
+          "time": "20:39",
+          "height_m": 1.91,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-06-09",
+      "weekday": "TU",
+      "tides": [
+        {
+          "time": "03:36",
+          "height_m": 0.83,
+          "type": "low"
+        },
+        {
+          "time": "10:19",
+          "height_m": 1.68,
+          "type": "high"
+        },
+        {
+          "time": "16:04",
+          "height_m": 1.21,
+          "type": "low"
+        },
+        {
+          "time": "21:58",
+          "height_m": 1.7,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-06-10",
+      "weekday": "WE",
+      "tides": [
+        {
+          "time": "04:51",
+          "height_m": 0.94,
+          "type": "low"
+        },
+        {
+          "time": "11:58",
+          "height_m": 1.81,
+          "type": "high"
+        },
+        {
+          "time": "18:36",
+          "height_m": 1.15,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-06-11",
+      "weekday": "TH",
+      "tides": [
+        {
+          "time": "00:14",
+          "height_m": 1.54,
+          "type": "high"
+        },
+        {
+          "time": "06:21",
+          "height_m": 1.01,
+          "type": "low"
+        },
+        {
+          "time": "13:19",
+          "height_m": 2.0,
+          "type": "high"
+        },
+        {
+          "time": "20:25",
+          "height_m": 0.93,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-06-12",
+      "weekday": "FR",
+      "tides": [
+        {
+          "time": "02:15",
+          "height_m": 1.52,
+          "type": "high"
+        },
+        {
+          "time": "07:36",
+          "height_m": 1.05,
+          "type": "low"
+        },
+        {
+          "time": "14:19",
+          "height_m": 2.18,
+          "type": "high"
+        },
+        {
+          "time": "21:31",
+          "height_m": 0.7,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-06-13",
+      "weekday": "SA",
+      "tides": [
+        {
+          "time": "03:40",
+          "height_m": 1.54,
+          "type": "high"
+        },
+        {
+          "time": "08:31",
+          "height_m": 1.06,
+          "type": "low"
+        },
+        {
+          "time": "15:07",
+          "height_m": 2.33,
+          "type": "high"
+        },
+        {
+          "time": "22:23",
+          "height_m": 0.55,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-06-14",
+      "weekday": "SU",
+      "tides": [
+        {
+          "time": "04:37",
+          "height_m": 1.53,
+          "type": "high"
+        },
+        {
+          "time": "09:13",
+          "height_m": 1.07,
+          "type": "low"
+        },
+        {
+          "time": "15:48",
+          "height_m": 2.42,
+          "type": "high"
+        },
+        {
+          "time": "23:08",
+          "height_m": 0.48,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-06-15",
+      "weekday": "MO",
+      "tides": [
+        {
+          "time": "05:20",
+          "height_m": 1.48,
+          "type": "high"
+        },
+        {
+          "time": "09:45",
+          "height_m": 1.04,
+          "type": "low"
+        },
+        {
+          "time": "16:25",
+          "height_m": 2.48,
+          "type": "high"
+        },
+        {
+          "time": "23:47",
+          "height_m": 0.48,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-06-16",
+      "weekday": "TU",
+      "tides": [
+        {
+          "time": "05:52",
+          "height_m": 1.42,
+          "type": "high"
+        },
+        {
+          "time": "10:15",
+          "height_m": 0.99,
+          "type": "low"
+        },
+        {
+          "time": "17:01",
+          "height_m": 2.49,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-06-17",
+      "weekday": "WE",
+      "tides": [
+        {
+          "time": "00:23",
+          "height_m": 0.53,
+          "type": "low"
+        },
+        {
+          "time": "06:15",
+          "height_m": 1.39,
+          "type": "high"
+        },
+        {
+          "time": "10:46",
+          "height_m": 0.94,
+          "type": "low"
+        },
+        {
+          "time": "17:35",
+          "height_m": 2.46,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-06-18",
+      "weekday": "TH",
+      "tides": [
+        {
+          "time": "00:52",
+          "height_m": 0.61,
+          "type": "low"
+        },
+        {
+          "time": "06:32",
+          "height_m": 1.39,
+          "type": "high"
+        },
+        {
+          "time": "11:18",
+          "height_m": 0.91,
+          "type": "low"
+        },
+        {
+          "time": "18:06",
+          "height_m": 2.38,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-06-19",
+      "weekday": "FR",
+      "tides": [
+        {
+          "time": "01:15",
+          "height_m": 0.69,
+          "type": "low"
+        },
+        {
+          "time": "06:47",
+          "height_m": 1.45,
+          "type": "high"
+        },
+        {
+          "time": "11:52",
+          "height_m": 0.9,
+          "type": "low"
+        },
+        {
+          "time": "18:33",
+          "height_m": 2.28,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-06-20",
+      "weekday": "SA",
+      "tides": [
+        {
+          "time": "01:30",
+          "height_m": 0.75,
+          "type": "low"
+        },
+        {
+          "time": "07:08",
+          "height_m": 1.56,
+          "type": "high"
+        },
+        {
+          "time": "12:30",
+          "height_m": 0.92,
+          "type": "low"
+        },
+        {
+          "time": "19:00",
+          "height_m": 2.17,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-06-21",
+      "weekday": "SU",
+      "tides": [
+        {
+          "time": "01:45",
+          "height_m": 0.76,
+          "type": "low"
+        },
+        {
+          "time": "07:40",
+          "height_m": 1.69,
+          "type": "high"
+        },
+        {
+          "time": "13:15",
+          "height_m": 0.98,
+          "type": "low"
+        },
+        {
+          "time": "19:28",
+          "height_m": 2.04,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-06-22",
+      "weekday": "MO",
+      "tides": [
+        {
+          "time": "02:07",
+          "height_m": 0.75,
+          "type": "low"
+        },
+        {
+          "time": "08:25",
+          "height_m": 1.81,
+          "type": "high"
+        },
+        {
+          "time": "14:11",
+          "height_m": 1.07,
+          "type": "low"
+        },
+        {
+          "time": "20:03",
+          "height_m": 1.88,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-06-23",
+      "weekday": "TU",
+      "tides": [
+        {
+          "time": "02:39",
+          "height_m": 0.78,
+          "type": "low"
+        },
+        {
+          "time": "09:24",
+          "height_m": 1.89,
+          "type": "high"
+        },
+        {
+          "time": "15:27",
+          "height_m": 1.18,
+          "type": "low"
+        },
+        {
+          "time": "20:51",
+          "height_m": 1.68,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-06-24",
+      "weekday": "WE",
+      "tides": [
+        {
+          "time": "03:22",
+          "height_m": 0.86,
+          "type": "low"
+        },
+        {
+          "time": "10:40",
+          "height_m": 1.94,
+          "type": "high"
+        },
+        {
+          "time": "17:30",
+          "height_m": 1.23,
+          "type": "low"
+        },
+        {
+          "time": "22:14",
+          "height_m": 1.45,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-06-25",
+      "weekday": "TH",
+      "tides": [
+        {
+          "time": "04:26",
+          "height_m": 0.99,
+          "type": "low"
+        },
+        {
+          "time": "12:13",
+          "height_m": 2.0,
+          "type": "high"
+        },
+        {
+          "time": "19:57",
+          "height_m": 1.1,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-06-26",
+      "weekday": "FR",
+      "tides": [
+        {
+          "time": "01:01",
+          "height_m": 1.33,
+          "type": "high"
+        },
+        {
+          "time": "06:14",
+          "height_m": 1.1,
+          "type": "low"
+        },
+        {
+          "time": "13:41",
+          "height_m": 2.09,
+          "type": "high"
+        },
+        {
+          "time": "21:17",
+          "height_m": 0.89,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-06-27",
+      "weekday": "SA",
+      "tides": [
+        {
+          "time": "03:15",
+          "height_m": 1.4,
+          "type": "high"
+        },
+        {
+          "time": "07:52",
+          "height_m": 1.12,
+          "type": "low"
+        },
+        {
+          "time": "14:46",
+          "height_m": 2.19,
+          "type": "high"
+        },
+        {
+          "time": "22:07",
+          "height_m": 0.73,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-06-28",
+      "weekday": "SU",
+      "tides": [
+        {
+          "time": "04:13",
+          "height_m": 1.49,
+          "type": "high"
+        },
+        {
+          "time": "08:55",
+          "height_m": 1.08,
+          "type": "low"
+        },
+        {
+          "time": "15:34",
+          "height_m": 2.26,
+          "type": "high"
+        },
+        {
+          "time": "22:45",
+          "height_m": 0.63,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-06-29",
+      "weekday": "MO",
+      "tides": [
+        {
+          "time": "04:49",
+          "height_m": 1.54,
+          "type": "high"
+        },
+        {
+          "time": "09:38",
+          "height_m": 1.02,
+          "type": "low"
+        },
+        {
+          "time": "16:13",
+          "height_m": 2.32,
+          "type": "high"
+        },
+        {
+          "time": "23:15",
+          "height_m": 0.58,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-06-30",
+      "weekday": "TU",
+      "tides": [
+        {
+          "time": "05:16",
+          "height_m": 1.57,
+          "type": "high"
+        },
+        {
+          "time": "10:11",
+          "height_m": 0.94,
+          "type": "low"
+        },
+        {
+          "time": "16:45",
+          "height_m": 2.36,
+          "type": "high"
+        },
+        {
+          "time": "23:41",
+          "height_m": 0.56,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-07-01",
+      "weekday": "WE",
+      "tides": [
+        {
+          "time": "05:39",
+          "height_m": 1.6,
+          "type": "high"
+        },
+        {
+          "time": "10:42",
+          "height_m": 0.87,
+          "type": "low"
+        },
+        {
+          "time": "17:15",
+          "height_m": 2.39,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-07-02",
+      "weekday": "TH",
+      "tides": [
+        {
+          "time": "00:06",
+          "height_m": 0.54,
+          "type": "low"
+        },
+        {
+          "time": "06:02",
+          "height_m": 1.64,
+          "type": "high"
+        },
+        {
+          "time": "11:15",
+          "height_m": 0.82,
+          "type": "low"
+        },
+        {
+          "time": "17:45",
+          "height_m": 2.4,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-07-03",
+      "weekday": "FR",
+      "tides": [
+        {
+          "time": "00:31",
+          "height_m": 0.54,
+          "type": "low"
+        },
+        {
+          "time": "06:29",
+          "height_m": 1.68,
+          "type": "high"
+        },
+        {
+          "time": "11:47",
+          "height_m": 0.8,
+          "type": "low"
+        },
+        {
+          "time": "18:15",
+          "height_m": 2.38,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-07-04",
+      "weekday": "SA",
+      "tides": [
+        {
+          "time": "00:58",
+          "height_m": 0.54,
+          "type": "low"
+        },
+        {
+          "time": "06:58",
+          "height_m": 1.73,
+          "type": "high"
+        },
+        {
+          "time": "12:22",
+          "height_m": 0.82,
+          "type": "low"
+        },
+        {
+          "time": "18:44",
+          "height_m": 2.32,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-07-05",
+      "weekday": "SU",
+      "tides": [
+        {
+          "time": "01:23",
+          "height_m": 0.56,
+          "type": "low"
+        },
+        {
+          "time": "07:27",
+          "height_m": 1.79,
+          "type": "high"
+        },
+        {
+          "time": "12:58",
+          "height_m": 0.86,
+          "type": "low"
+        },
+        {
+          "time": "19:12",
+          "height_m": 2.23,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-07-06",
+      "weekday": "MO",
+      "tides": [
+        {
+          "time": "01:47",
+          "height_m": 0.59,
+          "type": "low"
+        },
+        {
+          "time": "07:58",
+          "height_m": 1.85,
+          "type": "high"
+        },
+        {
+          "time": "13:38",
+          "height_m": 0.91,
+          "type": "low"
+        },
+        {
+          "time": "19:42",
+          "height_m": 2.12,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-07-07",
+      "weekday": "TU",
+      "tides": [
+        {
+          "time": "02:12",
+          "height_m": 0.63,
+          "type": "low"
+        },
+        {
+          "time": "08:32",
+          "height_m": 1.93,
+          "type": "high"
+        },
+        {
+          "time": "14:25",
+          "height_m": 0.96,
+          "type": "low"
+        },
+        {
+          "time": "20:16",
+          "height_m": 1.95,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-07-08",
+      "weekday": "WE",
+      "tides": [
+        {
+          "time": "02:41",
+          "height_m": 0.7,
+          "type": "low"
+        },
+        {
+          "time": "09:16",
+          "height_m": 1.99,
+          "type": "high"
+        },
+        {
+          "time": "15:29",
+          "height_m": 1.03,
+          "type": "low"
+        },
+        {
+          "time": "21:02",
+          "height_m": 1.72,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-07-09",
+      "weekday": "TH",
+      "tides": [
+        {
+          "time": "03:14",
+          "height_m": 0.82,
+          "type": "low"
+        },
+        {
+          "time": "10:12",
+          "height_m": 2.02,
+          "type": "high"
+        },
+        {
+          "time": "17:06",
+          "height_m": 1.08,
+          "type": "low"
+        },
+        {
+          "time": "22:10",
+          "height_m": 1.44,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-07-10",
+      "weekday": "FR",
+      "tides": [
+        {
+          "time": "03:52",
+          "height_m": 0.99,
+          "type": "low"
+        },
+        {
+          "time": "11:32",
+          "height_m": 2.01,
+          "type": "high"
+        },
+        {
+          "time": "19:51",
+          "height_m": 1.0,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-07-11",
+      "weekday": "SA",
+      "tides": [
+        {
+          "time": "01:31",
+          "height_m": 1.21,
+          "type": "high"
+        },
+        {
+          "time": "04:48",
+          "height_m": 1.18,
+          "type": "low"
+        },
+        {
+          "time": "13:26",
+          "height_m": 2.05,
+          "type": "high"
+        },
+        {
+          "time": "21:52",
+          "height_m": 0.75,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-07-12",
+      "weekday": "SU",
+      "tides": [
+        {
+          "time": "04:53",
+          "height_m": 1.35,
+          "type": "high"
+        },
+        {
+          "time": "07:47",
+          "height_m": 1.27,
+          "type": "low"
+        },
+        {
+          "time": "15:00",
+          "height_m": 2.17,
+          "type": "high"
+        },
+        {
+          "time": "22:50",
+          "height_m": 0.54,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-07-13",
+      "weekday": "MO",
+      "tides": [
+        {
+          "time": "05:30",
+          "height_m": 1.44,
+          "type": "high"
+        },
+        {
+          "time": "09:17",
+          "height_m": 1.21,
+          "type": "low"
+        },
+        {
+          "time": "16:00",
+          "height_m": 2.3,
+          "type": "high"
+        },
+        {
+          "time": "23:31",
+          "height_m": 0.45,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-07-14",
+      "weekday": "TU",
+      "tides": [
+        {
+          "time": "05:57",
+          "height_m": 1.46,
+          "type": "high"
+        },
+        {
+          "time": "10:05",
+          "height_m": 1.12,
+          "type": "low"
+        },
+        {
+          "time": "16:42",
+          "height_m": 2.37,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-07-15",
+      "weekday": "WE",
+      "tides": [
+        {
+          "time": "00:01",
+          "height_m": 0.46,
+          "type": "low"
+        },
+        {
+          "time": "06:12",
+          "height_m": 1.45,
+          "type": "high"
+        },
+        {
+          "time": "10:37",
+          "height_m": 1.01,
+          "type": "low"
+        },
+        {
+          "time": "17:13",
+          "height_m": 2.4,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-07-16",
+      "weekday": "TH",
+      "tides": [
+        {
+          "time": "00:21",
+          "height_m": 0.52,
+          "type": "low"
+        },
+        {
+          "time": "06:17",
+          "height_m": 1.47,
+          "type": "high"
+        },
+        {
+          "time": "11:05",
+          "height_m": 0.91,
+          "type": "low"
+        },
+        {
+          "time": "17:38",
+          "height_m": 2.38,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-07-17",
+      "weekday": "FR",
+      "tides": [
+        {
+          "time": "00:33",
+          "height_m": 0.59,
+          "type": "low"
+        },
+        {
+          "time": "06:21",
+          "height_m": 1.56,
+          "type": "high"
+        },
+        {
+          "time": "11:34",
+          "height_m": 0.84,
+          "type": "low"
+        },
+        {
+          "time": "18:00",
+          "height_m": 2.33,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-07-18",
+      "weekday": "SA",
+      "tides": [
+        {
+          "time": "00:44",
+          "height_m": 0.63,
+          "type": "low"
+        },
+        {
+          "time": "06:31",
+          "height_m": 1.69,
+          "type": "high"
+        },
+        {
+          "time": "12:06",
+          "height_m": 0.82,
+          "type": "low"
+        },
+        {
+          "time": "18:21",
+          "height_m": 2.24,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-07-19",
+      "weekday": "SU",
+      "tides": [
+        {
+          "time": "00:56",
+          "height_m": 0.63,
+          "type": "low"
+        },
+        {
+          "time": "06:52",
+          "height_m": 1.85,
+          "type": "high"
+        },
+        {
+          "time": "12:40",
+          "height_m": 0.83,
+          "type": "low"
+        },
+        {
+          "time": "18:44",
+          "height_m": 2.15,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-07-20",
+      "weekday": "MO",
+      "tides": [
+        {
+          "time": "01:10",
+          "height_m": 0.61,
+          "type": "low"
+        },
+        {
+          "time": "07:21",
+          "height_m": 1.99,
+          "type": "high"
+        },
+        {
+          "time": "13:17",
+          "height_m": 0.87,
+          "type": "low"
+        },
+        {
+          "time": "19:08",
+          "height_m": 2.03,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-07-21",
+      "weekday": "TU",
+      "tides": [
+        {
+          "time": "01:30",
+          "height_m": 0.58,
+          "type": "low"
+        },
+        {
+          "time": "07:55",
+          "height_m": 2.08,
+          "type": "high"
+        },
+        {
+          "time": "14:00",
+          "height_m": 0.92,
+          "type": "low"
+        },
+        {
+          "time": "19:36",
+          "height_m": 1.9,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-07-22",
+      "weekday": "WE",
+      "tides": [
+        {
+          "time": "01:54",
+          "height_m": 0.6,
+          "type": "low"
+        },
+        {
+          "time": "08:34",
+          "height_m": 2.12,
+          "type": "high"
+        },
+        {
+          "time": "14:47",
+          "height_m": 1.01,
+          "type": "low"
+        },
+        {
+          "time": "20:08",
+          "height_m": 1.72,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-07-23",
+      "weekday": "TH",
+      "tides": [
+        {
+          "time": "02:20",
+          "height_m": 0.68,
+          "type": "low"
+        },
+        {
+          "time": "09:19",
+          "height_m": 2.08,
+          "type": "high"
+        },
+        {
+          "time": "15:50",
+          "height_m": 1.11,
+          "type": "low"
+        },
+        {
+          "time": "20:43",
+          "height_m": 1.49,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-07-24",
+      "weekday": "FR",
+      "tides": [
+        {
+          "time": "02:47",
+          "height_m": 0.83,
+          "type": "low"
+        },
+        {
+          "time": "10:17",
+          "height_m": 1.97,
+          "type": "high"
+        },
+        {
+          "time": "18:08",
+          "height_m": 1.17,
+          "type": "low"
+        },
+        {
+          "time": "21:18",
+          "height_m": 1.23,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-07-25",
+      "weekday": "SA",
+      "tides": [
+        {
+          "time": "03:02",
+          "height_m": 1.02,
+          "type": "low"
+        },
+        {
+          "time": "12:04",
+          "height_m": 1.86,
+          "type": "high"
+        },
+        {
+          "time": "21:53",
+          "height_m": 0.97,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-07-26",
+      "weekday": "SU",
+      "tides": [
+        {
+          "time": "14:30",
+          "height_m": 1.92,
+          "type": "high"
+        },
+        {
+          "time": "22:26",
+          "height_m": 0.75,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-07-27",
+      "weekday": "MO",
+      "tides": [
+        {
+          "time": "04:49",
+          "height_m": 1.39,
+          "type": "high"
+        },
+        {
+          "time": "08:56",
+          "height_m": 1.16,
+          "type": "low"
+        },
+        {
+          "time": "15:37",
+          "height_m": 2.07,
+          "type": "high"
+        },
+        {
+          "time": "22:55",
+          "height_m": 0.59,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-07-28",
+      "weekday": "TU",
+      "tides": [
+        {
+          "time": "05:05",
+          "height_m": 1.5,
+          "type": "high"
+        },
+        {
+          "time": "09:48",
+          "height_m": 1.02,
+          "type": "low"
+        },
+        {
+          "time": "16:16",
+          "height_m": 2.2,
+          "type": "high"
+        },
+        {
+          "time": "23:18",
+          "height_m": 0.52,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-07-29",
+      "weekday": "WE",
+      "tides": [
+        {
+          "time": "05:21",
+          "height_m": 1.57,
+          "type": "high"
+        },
+        {
+          "time": "10:19",
+          "height_m": 0.9,
+          "type": "low"
+        },
+        {
+          "time": "16:45",
+          "height_m": 2.29,
+          "type": "high"
+        },
+        {
+          "time": "23:36",
+          "height_m": 0.49,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-07-30",
+      "weekday": "TH",
+      "tides": [
+        {
+          "time": "05:34",
+          "height_m": 1.64,
+          "type": "high"
+        },
+        {
+          "time": "10:45",
+          "height_m": 0.8,
+          "type": "low"
+        },
+        {
+          "time": "17:11",
+          "height_m": 2.35,
+          "type": "high"
+        },
+        {
+          "time": "23:52",
+          "height_m": 0.47,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-07-31",
+      "weekday": "FR",
+      "tides": [
+        {
+          "time": "05:48",
+          "height_m": 1.71,
+          "type": "high"
+        },
+        {
+          "time": "11:13",
+          "height_m": 0.73,
+          "type": "low"
+        },
+        {
+          "time": "17:34",
+          "height_m": 2.37,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-08-01",
+      "weekday": "SA",
+      "tides": [
+        {
+          "time": "00:10",
+          "height_m": 0.47,
+          "type": "low"
+        },
+        {
+          "time": "06:08",
+          "height_m": 1.8,
+          "type": "high"
+        },
+        {
+          "time": "11:43",
+          "height_m": 0.7,
+          "type": "low"
+        },
+        {
+          "time": "18:00",
+          "height_m": 2.34,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-08-02",
+      "weekday": "SU",
+      "tides": [
+        {
+          "time": "00:30",
+          "height_m": 0.47,
+          "type": "low"
+        },
+        {
+          "time": "06:31",
+          "height_m": 1.89,
+          "type": "high"
+        },
+        {
+          "time": "12:15",
+          "height_m": 0.71,
+          "type": "low"
+        },
+        {
+          "time": "18:24",
+          "height_m": 2.26,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-08-03",
+      "weekday": "MO",
+      "tides": [
+        {
+          "time": "00:48",
+          "height_m": 0.5,
+          "type": "low"
+        },
+        {
+          "time": "06:56",
+          "height_m": 1.97,
+          "type": "high"
+        },
+        {
+          "time": "12:47",
+          "height_m": 0.73,
+          "type": "low"
+        },
+        {
+          "time": "18:48",
+          "height_m": 2.14,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-08-04",
+      "weekday": "TU",
+      "tides": [
+        {
+          "time": "01:06",
+          "height_m": 0.53,
+          "type": "low"
+        },
+        {
+          "time": "07:19",
+          "height_m": 2.05,
+          "type": "high"
+        },
+        {
+          "time": "13:21",
+          "height_m": 0.76,
+          "type": "low"
+        },
+        {
+          "time": "19:12",
+          "height_m": 2.0,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-08-05",
+      "weekday": "WE",
+      "tides": [
+        {
+          "time": "01:21",
+          "height_m": 0.55,
+          "type": "low"
+        },
+        {
+          "time": "07:45",
+          "height_m": 2.12,
+          "type": "high"
+        },
+        {
+          "time": "13:58",
+          "height_m": 0.79,
+          "type": "low"
+        },
+        {
+          "time": "19:37",
+          "height_m": 1.83,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-08-06",
+      "weekday": "TH",
+      "tides": [
+        {
+          "time": "01:38",
+          "height_m": 0.59,
+          "type": "low"
+        },
+        {
+          "time": "08:15",
+          "height_m": 2.16,
+          "type": "high"
+        },
+        {
+          "time": "14:42",
+          "height_m": 0.86,
+          "type": "low"
+        },
+        {
+          "time": "20:02",
+          "height_m": 1.61,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-08-07",
+      "weekday": "FR",
+      "tides": [
+        {
+          "time": "01:55",
+          "height_m": 0.67,
+          "type": "low"
+        },
+        {
+          "time": "08:54",
+          "height_m": 2.11,
+          "type": "high"
+        },
+        {
+          "time": "15:45",
+          "height_m": 1.01,
+          "type": "low"
+        },
+        {
+          "time": "20:20",
+          "height_m": 1.33,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-08-08",
+      "weekday": "SA",
+      "tides": [
+        {
+          "time": "02:00",
+          "height_m": 0.8,
+          "type": "low"
+        },
+        {
+          "time": "09:45",
+          "height_m": 1.95,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-08-09",
+      "weekday": "SU",
+      "tides": [
+        {
+          "time": "00:23",
+          "height_m": 0.88,
+          "type": "low"
+        },
+        {
+          "time": "12:55",
+          "height_m": 1.77,
+          "type": "high"
+        },
+        {
+          "time": "22:54",
+          "height_m": 0.65,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-08-10",
+      "weekday": "MO",
+      "tides": [
+        {
+          "time": "06:20",
+          "height_m": 1.41,
+          "type": "high"
+        },
+        {
+          "time": "08:52",
+          "height_m": 1.36,
+          "type": "low"
+        },
+        {
+          "time": "15:31",
+          "height_m": 1.98,
+          "type": "high"
+        },
+        {
+          "time": "23:10",
+          "height_m": 0.45,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-08-11",
+      "weekday": "TU",
+      "tides": [
+        {
+          "time": "05:46",
+          "height_m": 1.5,
+          "type": "high"
+        },
+        {
+          "time": "10:02",
+          "height_m": 1.14,
+          "type": "low"
+        },
+        {
+          "time": "16:21",
+          "height_m": 2.17,
+          "type": "high"
+        },
+        {
+          "time": "23:30",
+          "height_m": 0.38,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-08-12",
+      "weekday": "WE",
+      "tides": [
+        {
+          "time": "05:50",
+          "height_m": 1.55,
+          "type": "high"
+        },
+        {
+          "time": "10:31",
+          "height_m": 0.97,
+          "type": "low"
+        },
+        {
+          "time": "16:51",
+          "height_m": 2.26,
+          "type": "high"
+        },
+        {
+          "time": "23:45",
+          "height_m": 0.43,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-08-13",
+      "weekday": "TH",
+      "tides": [
+        {
+          "time": "05:51",
+          "height_m": 1.57,
+          "type": "high"
+        },
+        {
+          "time": "10:50",
+          "height_m": 0.85,
+          "type": "low"
+        },
+        {
+          "time": "17:10",
+          "height_m": 2.27,
+          "type": "high"
+        },
+        {
+          "time": "23:49",
+          "height_m": 0.51,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-08-14",
+      "weekday": "FR",
+      "tides": [
+        {
+          "time": "05:45",
+          "height_m": 1.64,
+          "type": "high"
+        },
+        {
+          "time": "11:07",
+          "height_m": 0.75,
+          "type": "low"
+        },
+        {
+          "time": "17:23",
+          "height_m": 2.24,
+          "type": "high"
+        },
+        {
+          "time": "23:51",
+          "height_m": 0.56,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-08-15",
+      "weekday": "SA",
+      "tides": [
+        {
+          "time": "05:43",
+          "height_m": 1.78,
+          "type": "high"
+        },
+        {
+          "time": "11:28",
+          "height_m": 0.68,
+          "type": "low"
+        },
+        {
+          "time": "17:36",
+          "height_m": 2.2,
+          "type": "high"
+        },
+        {
+          "time": "23:58",
+          "height_m": 0.55,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-08-16",
+      "weekday": "SU",
+      "tides": [
+        {
+          "time": "05:54",
+          "height_m": 1.95,
+          "type": "high"
+        },
+        {
+          "time": "11:54",
+          "height_m": 0.66,
+          "type": "low"
+        },
+        {
+          "time": "17:54",
+          "height_m": 2.12,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-08-17",
+      "weekday": "MO",
+      "tides": [
+        {
+          "time": "00:09",
+          "height_m": 0.52,
+          "type": "low"
+        },
+        {
+          "time": "06:15",
+          "height_m": 2.08,
+          "type": "high"
+        },
+        {
+          "time": "12:24",
+          "height_m": 0.67,
+          "type": "low"
+        },
+        {
+          "time": "18:15",
+          "height_m": 2.03,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-08-18",
+      "weekday": "TU",
+      "tides": [
+        {
+          "time": "00:25",
+          "height_m": 0.49,
+          "type": "low"
+        },
+        {
+          "time": "06:43",
+          "height_m": 2.17,
+          "type": "high"
+        },
+        {
+          "time": "12:55",
+          "height_m": 0.71,
+          "type": "low"
+        },
+        {
+          "time": "18:36",
+          "height_m": 1.92,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-08-19",
+      "weekday": "WE",
+      "tides": [
+        {
+          "time": "00:44",
+          "height_m": 0.48,
+          "type": "low"
+        },
+        {
+          "time": "07:11",
+          "height_m": 2.2,
+          "type": "high"
+        },
+        {
+          "time": "13:26",
+          "height_m": 0.76,
+          "type": "low"
+        },
+        {
+          "time": "19:00",
+          "height_m": 1.8,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-08-20",
+      "weekday": "TH",
+      "tides": [
+        {
+          "time": "01:02",
+          "height_m": 0.5,
+          "type": "low"
+        },
+        {
+          "time": "07:40",
+          "height_m": 2.18,
+          "type": "high"
+        },
+        {
+          "time": "13:59",
+          "height_m": 0.82,
+          "type": "low"
+        },
+        {
+          "time": "19:23",
+          "height_m": 1.66,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-08-21",
+      "weekday": "FR",
+      "tides": [
+        {
+          "time": "01:22",
+          "height_m": 0.56,
+          "type": "low"
+        },
+        {
+          "time": "08:11",
+          "height_m": 2.08,
+          "type": "high"
+        },
+        {
+          "time": "14:36",
+          "height_m": 0.93,
+          "type": "low"
+        },
+        {
+          "time": "19:44",
+          "height_m": 1.48,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-08-22",
+      "weekday": "SA",
+      "tides": [
+        {
+          "time": "01:37",
+          "height_m": 0.68,
+          "type": "low"
+        },
+        {
+          "time": "08:45",
+          "height_m": 1.91,
+          "type": "high"
+        },
+        {
+          "time": "15:30",
+          "height_m": 1.1,
+          "type": "low"
+        },
+        {
+          "time": "19:38",
+          "height_m": 1.26,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-08-23",
+      "weekday": "SU",
+      "tides": [
+        {
+          "time": "01:27",
+          "height_m": 0.84,
+          "type": "low"
+        },
+        {
+          "time": "09:40",
+          "height_m": 1.67,
+          "type": "high"
+        },
+        {
+          "time": "23:21",
+          "height_m": 0.88,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-08-24",
+      "weekday": "MO",
+      "tides": [
+        {
+          "time": "14:54",
+          "height_m": 1.68,
+          "type": "high"
+        },
+        {
+          "time": "22:33",
+          "height_m": 0.68,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-08-25",
+      "weekday": "TU",
+      "tides": [
+        {
+          "time": "05:03",
+          "height_m": 1.41,
+          "type": "high"
+        },
+        {
+          "time": "09:31",
+          "height_m": 1.11,
+          "type": "low"
+        },
+        {
+          "time": "15:45",
+          "height_m": 1.93,
+          "type": "high"
+        },
+        {
+          "time": "22:45",
+          "height_m": 0.51,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-08-26",
+      "weekday": "WE",
+      "tides": [
+        {
+          "time": "04:58",
+          "height_m": 1.55,
+          "type": "high"
+        },
+        {
+          "time": "10:02",
+          "height_m": 0.9,
+          "type": "low"
+        },
+        {
+          "time": "16:16",
+          "height_m": 2.11,
+          "type": "high"
+        },
+        {
+          "time": "23:00",
+          "height_m": 0.43,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-08-27",
+      "weekday": "TH",
+      "tides": [
+        {
+          "time": "05:05",
+          "height_m": 1.66,
+          "type": "high"
+        },
+        {
+          "time": "10:24",
+          "height_m": 0.75,
+          "type": "low"
+        },
+        {
+          "time": "16:39",
+          "height_m": 2.21,
+          "type": "high"
+        },
+        {
+          "time": "23:12",
+          "height_m": 0.42,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-08-28",
+      "weekday": "FR",
+      "tides": [
+        {
+          "time": "05:11",
+          "height_m": 1.75,
+          "type": "high"
+        },
+        {
+          "time": "10:43",
+          "height_m": 0.65,
+          "type": "low"
+        },
+        {
+          "time": "16:57",
+          "height_m": 2.25,
+          "type": "high"
+        },
+        {
+          "time": "23:21",
+          "height_m": 0.43,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-08-29",
+      "weekday": "SA",
+      "tides": [
+        {
+          "time": "05:18",
+          "height_m": 1.85,
+          "type": "high"
+        },
+        {
+          "time": "11:04",
+          "height_m": 0.58,
+          "type": "low"
+        },
+        {
+          "time": "17:14",
+          "height_m": 2.24,
+          "type": "high"
+        },
+        {
+          "time": "23:32",
+          "height_m": 0.44,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-08-30",
+      "weekday": "SU",
+      "tides": [
+        {
+          "time": "05:30",
+          "height_m": 1.96,
+          "type": "high"
+        },
+        {
+          "time": "11:29",
+          "height_m": 0.55,
+          "type": "low"
+        },
+        {
+          "time": "17:34",
+          "height_m": 2.18,
+          "type": "high"
+        },
+        {
+          "time": "23:46",
+          "height_m": 0.45,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-08-31",
+      "weekday": "MO",
+      "tides": [
+        {
+          "time": "05:48",
+          "height_m": 2.07,
+          "type": "high"
+        },
+        {
+          "time": "11:57",
+          "height_m": 0.54,
+          "type": "low"
+        },
+        {
+          "time": "17:56",
+          "height_m": 2.07,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-09-01",
+      "weekday": "TU",
+      "tides": [
+        {
+          "time": "00:00",
+          "height_m": 0.48,
+          "type": "low"
+        },
+        {
+          "time": "06:10",
+          "height_m": 2.14,
+          "type": "high"
+        },
+        {
+          "time": "12:27",
+          "height_m": 0.57,
+          "type": "low"
+        },
+        {
+          "time": "18:17",
+          "height_m": 1.93,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-09-02",
+      "weekday": "WE",
+      "tides": [
+        {
+          "time": "00:13",
+          "height_m": 0.51,
+          "type": "low"
+        },
+        {
+          "time": "06:32",
+          "height_m": 2.19,
+          "type": "high"
+        },
+        {
+          "time": "12:54",
+          "height_m": 0.61,
+          "type": "low"
+        },
+        {
+          "time": "18:35",
+          "height_m": 1.77,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-09-03",
+      "weekday": "TH",
+      "tides": [
+        {
+          "time": "00:24",
+          "height_m": 0.51,
+          "type": "low"
+        },
+        {
+          "time": "06:54",
+          "height_m": 2.22,
+          "type": "high"
+        },
+        {
+          "time": "13:21",
+          "height_m": 0.66,
+          "type": "low"
+        },
+        {
+          "time": "18:51",
+          "height_m": 1.61,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-09-04",
+      "weekday": "FR",
+      "tides": [
+        {
+          "time": "00:36",
+          "height_m": 0.51,
+          "type": "low"
+        },
+        {
+          "time": "07:18",
+          "height_m": 2.2,
+          "type": "high"
+        },
+        {
+          "time": "13:50",
+          "height_m": 0.76,
+          "type": "low"
+        },
+        {
+          "time": "19:02",
+          "height_m": 1.45,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-09-05",
+      "weekday": "SA",
+      "tides": [
+        {
+          "time": "00:46",
+          "height_m": 0.55,
+          "type": "low"
+        },
+        {
+          "time": "07:45",
+          "height_m": 2.09,
+          "type": "high"
+        },
+        {
+          "time": "14:25",
+          "height_m": 0.95,
+          "type": "low"
+        },
+        {
+          "time": "18:55",
+          "height_m": 1.27,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-09-06",
+      "weekday": "SU",
+      "tides": [
+        {
+          "time": "00:42",
+          "height_m": 0.63,
+          "type": "low"
+        },
+        {
+          "time": "08:08",
+          "height_m": 1.86,
+          "type": "high"
+        },
+        {
+          "time": "15:23",
+          "height_m": 1.22,
+          "type": "low"
+        },
+        {
+          "time": "16:15",
+          "height_m": 1.23,
+          "type": "high"
+        },
+        {
+          "time": "23:45",
+          "height_m": 0.67,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-09-07",
+      "weekday": "MO",
+      "tides": [
+        {
+          "time": "07:37",
+          "height_m": 1.56,
+          "type": "high"
+        },
+        {
+          "time": "11:35",
+          "height_m": 1.46,
+          "type": "low"
+        },
+        {
+          "time": "15:11",
+          "height_m": 1.56,
+          "type": "high"
+        },
+        {
+          "time": "22:57",
+          "height_m": 0.56,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-09-08",
+      "weekday": "TU",
+      "tides": [
+        {
+          "time": "05:41",
+          "height_m": 1.47,
+          "type": "high"
+        },
+        {
+          "time": "10:03",
+          "height_m": 1.19,
+          "type": "low"
+        },
+        {
+          "time": "15:52",
+          "height_m": 1.85,
+          "type": "high"
+        },
+        {
+          "time": "22:52",
+          "height_m": 0.44,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-09-09",
+      "weekday": "WE",
+      "tides": [
+        {
+          "time": "05:14",
+          "height_m": 1.58,
+          "type": "high"
+        },
+        {
+          "time": "10:15",
+          "height_m": 0.92,
+          "type": "low"
+        },
+        {
+          "time": "16:21",
+          "height_m": 2.05,
+          "type": "high"
+        },
+        {
+          "time": "23:00",
+          "height_m": 0.41,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-09-10",
+      "weekday": "TH",
+      "tides": [
+        {
+          "time": "05:09",
+          "height_m": 1.68,
+          "type": "high"
+        },
+        {
+          "time": "10:31",
+          "height_m": 0.74,
+          "type": "low"
+        },
+        {
+          "time": "16:41",
+          "height_m": 2.12,
+          "type": "high"
+        },
+        {
+          "time": "23:03",
+          "height_m": 0.47,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-09-11",
+      "weekday": "FR",
+      "tides": [
+        {
+          "time": "05:05",
+          "height_m": 1.77,
+          "type": "high"
+        },
+        {
+          "time": "10:44",
+          "height_m": 0.63,
+          "type": "low"
+        },
+        {
+          "time": "16:52",
+          "height_m": 2.1,
+          "type": "high"
+        },
+        {
+          "time": "23:02",
+          "height_m": 0.52,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-09-12",
+      "weekday": "SA",
+      "tides": [
+        {
+          "time": "05:00",
+          "height_m": 1.89,
+          "type": "high"
+        },
+        {
+          "time": "10:57",
+          "height_m": 0.56,
+          "type": "low"
+        },
+        {
+          "time": "17:00",
+          "height_m": 2.06,
+          "type": "high"
+        },
+        {
+          "time": "23:03",
+          "height_m": 0.52,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-09-13",
+      "weekday": "SU",
+      "tides": [
+        {
+          "time": "05:02",
+          "height_m": 2.05,
+          "type": "high"
+        },
+        {
+          "time": "11:14",
+          "height_m": 0.51,
+          "type": "low"
+        },
+        {
+          "time": "17:10",
+          "height_m": 2.01,
+          "type": "high"
+        },
+        {
+          "time": "23:11",
+          "height_m": 0.49,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-09-14",
+      "weekday": "MO",
+      "tides": [
+        {
+          "time": "05:16",
+          "height_m": 2.18,
+          "type": "high"
+        },
+        {
+          "time": "11:36",
+          "height_m": 0.5,
+          "type": "low"
+        },
+        {
+          "time": "17:26",
+          "height_m": 1.94,
+          "type": "high"
+        },
+        {
+          "time": "23:25",
+          "height_m": 0.46,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-09-15",
+      "weekday": "TU",
+      "tides": [
+        {
+          "time": "05:38",
+          "height_m": 2.26,
+          "type": "high"
+        },
+        {
+          "time": "12:01",
+          "height_m": 0.52,
+          "type": "low"
+        },
+        {
+          "time": "17:46",
+          "height_m": 1.85,
+          "type": "high"
+        },
+        {
+          "time": "23:42",
+          "height_m": 0.45,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-09-16",
+      "weekday": "WE",
+      "tides": [
+        {
+          "time": "06:03",
+          "height_m": 2.26,
+          "type": "high"
+        },
+        {
+          "time": "12:28",
+          "height_m": 0.57,
+          "type": "low"
+        },
+        {
+          "time": "18:07",
+          "height_m": 1.76,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-09-17",
+      "weekday": "TH",
+      "tides": [
+        {
+          "time": "00:00",
+          "height_m": 0.46,
+          "type": "low"
+        },
+        {
+          "time": "06:28",
+          "height_m": 2.22,
+          "type": "high"
+        },
+        {
+          "time": "12:52",
+          "height_m": 0.61,
+          "type": "low"
+        },
+        {
+          "time": "18:28",
+          "height_m": 1.66,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-09-18",
+      "weekday": "FR",
+      "tides": [
+        {
+          "time": "00:16",
+          "height_m": 0.48,
+          "type": "low"
+        },
+        {
+          "time": "06:51",
+          "height_m": 2.15,
+          "type": "high"
+        },
+        {
+          "time": "13:16",
+          "height_m": 0.67,
+          "type": "low"
+        },
+        {
+          "time": "18:47",
+          "height_m": 1.56,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-09-19",
+      "weekday": "SA",
+      "tides": [
+        {
+          "time": "00:34",
+          "height_m": 0.53,
+          "type": "low"
+        },
+        {
+          "time": "07:16",
+          "height_m": 2.04,
+          "type": "high"
+        },
+        {
+          "time": "13:43",
+          "height_m": 0.77,
+          "type": "low"
+        },
+        {
+          "time": "19:04",
+          "height_m": 1.43,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-09-20",
+      "weekday": "SU",
+      "tides": [
+        {
+          "time": "00:48",
+          "height_m": 0.62,
+          "type": "low"
+        },
+        {
+          "time": "07:41",
+          "height_m": 1.86,
+          "type": "high"
+        },
+        {
+          "time": "14:13",
+          "height_m": 0.96,
+          "type": "low"
+        },
+        {
+          "time": "19:00",
+          "height_m": 1.25,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-09-21",
+      "weekday": "MO",
+      "tides": [
+        {
+          "time": "00:40",
+          "height_m": 0.77,
+          "type": "low"
+        },
+        {
+          "time": "07:58",
+          "height_m": 1.6,
+          "type": "high"
+        },
+        {
+          "time": "23:03",
+          "height_m": 0.85,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-09-22",
+      "weekday": "TU",
+      "tides": [
+        {
+          "time": "06:13",
+          "height_m": 1.35,
+          "type": "high"
+        },
+        {
+          "time": "09:42",
+          "height_m": 1.28,
+          "type": "low"
+        },
+        {
+          "time": "15:04",
+          "height_m": 1.53,
+          "type": "high"
+        },
+        {
+          "time": "22:06",
+          "height_m": 0.67,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-09-23",
+      "weekday": "WE",
+      "tides": [
+        {
+          "time": "04:31",
+          "height_m": 1.46,
+          "type": "high"
+        },
+        {
+          "time": "09:36",
+          "height_m": 0.99,
+          "type": "low"
+        },
+        {
+          "time": "15:35",
+          "height_m": 1.81,
+          "type": "high"
+        },
+        {
+          "time": "22:11",
+          "height_m": 0.51,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-09-24",
+      "weekday": "TH",
+      "tides": [
+        {
+          "time": "04:24",
+          "height_m": 1.65,
+          "type": "high"
+        },
+        {
+          "time": "09:54",
+          "height_m": 0.76,
+          "type": "low"
+        },
+        {
+          "time": "16:01",
+          "height_m": 2.0,
+          "type": "high"
+        },
+        {
+          "time": "22:23",
+          "height_m": 0.43,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-09-25",
+      "weekday": "FR",
+      "tides": [
+        {
+          "time": "04:30",
+          "height_m": 1.8,
+          "type": "high"
+        },
+        {
+          "time": "10:14",
+          "height_m": 0.6,
+          "type": "low"
+        },
+        {
+          "time": "16:21",
+          "height_m": 2.08,
+          "type": "high"
+        },
+        {
+          "time": "22:33",
+          "height_m": 0.43,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-09-26",
+      "weekday": "SA",
+      "tides": [
+        {
+          "time": "04:35",
+          "height_m": 1.92,
+          "type": "high"
+        },
+        {
+          "time": "10:31",
+          "height_m": 0.5,
+          "type": "low"
+        },
+        {
+          "time": "16:37",
+          "height_m": 2.08,
+          "type": "high"
+        },
+        {
+          "time": "22:42",
+          "height_m": 0.46,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-09-27",
+      "weekday": "SU",
+      "tides": [
+        {
+          "time": "04:41",
+          "height_m": 2.04,
+          "type": "high"
+        },
+        {
+          "time": "10:51",
+          "height_m": 0.43,
+          "type": "low"
+        },
+        {
+          "time": "16:52",
+          "height_m": 2.04,
+          "type": "high"
+        },
+        {
+          "time": "22:51",
+          "height_m": 0.48,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-09-28",
+      "weekday": "MO",
+      "tides": [
+        {
+          "time": "04:51",
+          "height_m": 2.17,
+          "type": "high"
+        },
+        {
+          "time": "11:14",
+          "height_m": 0.39,
+          "type": "low"
+        },
+        {
+          "time": "17:11",
+          "height_m": 1.95,
+          "type": "high"
+        },
+        {
+          "time": "23:01",
+          "height_m": 0.49,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-09-29",
+      "weekday": "TU",
+      "tides": [
+        {
+          "time": "05:09",
+          "height_m": 2.26,
+          "type": "high"
+        },
+        {
+          "time": "11:41",
+          "height_m": 0.39,
+          "type": "low"
+        },
+        {
+          "time": "17:31",
+          "height_m": 1.82,
+          "type": "high"
+        },
+        {
+          "time": "23:14",
+          "height_m": 0.51,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-09-30",
+      "weekday": "WE",
+      "tides": [
+        {
+          "time": "05:31",
+          "height_m": 2.31,
+          "type": "high"
+        },
+        {
+          "time": "12:09",
+          "height_m": 0.44,
+          "type": "low"
+        },
+        {
+          "time": "17:52",
+          "height_m": 1.66,
+          "type": "high"
+        },
+        {
+          "time": "23:25",
+          "height_m": 0.53,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-10-01",
+      "weekday": "TH",
+      "tides": [
+        {
+          "time": "05:54",
+          "height_m": 2.3,
+          "type": "high"
+        },
+        {
+          "time": "12:34",
+          "height_m": 0.52,
+          "type": "low"
+        },
+        {
+          "time": "18:07",
+          "height_m": 1.51,
+          "type": "high"
+        },
+        {
+          "time": "23:35",
+          "height_m": 0.52,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-10-02",
+      "weekday": "FR",
+      "tides": [
+        {
+          "time": "06:15",
+          "height_m": 2.25,
+          "type": "high"
+        },
+        {
+          "time": "12:55",
+          "height_m": 0.61,
+          "type": "low"
+        },
+        {
+          "time": "18:15",
+          "height_m": 1.39,
+          "type": "high"
+        },
+        {
+          "time": "23:47",
+          "height_m": 0.51,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-10-03",
+      "weekday": "SA",
+      "tides": [
+        {
+          "time": "06:36",
+          "height_m": 2.16,
+          "type": "high"
+        },
+        {
+          "time": "13:14",
+          "height_m": 0.74,
+          "type": "low"
+        },
+        {
+          "time": "18:19",
+          "height_m": 1.31,
+          "type": "high"
+        },
+        {
+          "time": "23:57",
+          "height_m": 0.53,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-10-04",
+      "weekday": "SU",
+      "tides": [
+        {
+          "time": "07:56",
+          "height_m": 2.0,
+          "type": "high"
+        },
+        {
+          "time": "14:32",
+          "height_m": 0.91,
+          "type": "low"
+        },
+        {
+          "time": "19:08",
+          "height_m": 1.23,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-10-05",
+      "weekday": "MO",
+      "tides": [
+        {
+          "time": "00:53",
+          "height_m": 0.62,
+          "type": "low"
+        },
+        {
+          "time": "08:06",
+          "height_m": 1.76,
+          "type": "high"
+        },
+        {
+          "time": "14:34",
+          "height_m": 1.14,
+          "type": "low"
+        },
+        {
+          "time": "17:42",
+          "height_m": 1.23,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-10-06",
+      "weekday": "TU",
+      "tides": [
+        {
+          "time": "00:10",
+          "height_m": 0.71,
+          "type": "low"
+        },
+        {
+          "time": "07:15",
+          "height_m": 1.5,
+          "type": "high"
+        },
+        {
+          "time": "12:09",
+          "height_m": 1.27,
+          "type": "low"
+        },
+        {
+          "time": "16:31",
+          "height_m": 1.44,
+          "type": "high"
+        },
+        {
+          "time": "23:20",
+          "height_m": 0.68,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-10-07",
+      "weekday": "WE",
+      "tides": [
+        {
+          "time": "05:47",
+          "height_m": 1.49,
+          "type": "high"
+        },
+        {
+          "time": "10:54",
+          "height_m": 1.02,
+          "type": "low"
+        },
+        {
+          "time": "16:39",
+          "height_m": 1.69,
+          "type": "high"
+        },
+        {
+          "time": "23:05",
+          "height_m": 0.6,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-10-08",
+      "weekday": "TH",
+      "tides": [
+        {
+          "time": "05:18",
+          "height_m": 1.66,
+          "type": "high"
+        },
+        {
+          "time": "10:59",
+          "height_m": 0.75,
+          "type": "low"
+        },
+        {
+          "time": "17:00",
+          "height_m": 1.85,
+          "type": "high"
+        },
+        {
+          "time": "23:07",
+          "height_m": 0.56,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-10-09",
+      "weekday": "FR",
+      "tides": [
+        {
+          "time": "05:14",
+          "height_m": 1.85,
+          "type": "high"
+        },
+        {
+          "time": "11:14",
+          "height_m": 0.57,
+          "type": "low"
+        },
+        {
+          "time": "17:17",
+          "height_m": 1.91,
+          "type": "high"
+        },
+        {
+          "time": "23:11",
+          "height_m": 0.56,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-10-10",
+      "weekday": "SA",
+      "tides": [
+        {
+          "time": "05:16",
+          "height_m": 2.02,
+          "type": "high"
+        },
+        {
+          "time": "11:28",
+          "height_m": 0.46,
+          "type": "low"
+        },
+        {
+          "time": "17:30",
+          "height_m": 1.9,
+          "type": "high"
+        },
+        {
+          "time": "23:15",
+          "height_m": 0.56,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-10-11",
+      "weekday": "SU",
+      "tides": [
+        {
+          "time": "05:21",
+          "height_m": 2.16,
+          "type": "high"
+        },
+        {
+          "time": "11:44",
+          "height_m": 0.41,
+          "type": "low"
+        },
+        {
+          "time": "17:41",
+          "height_m": 1.86,
+          "type": "high"
+        },
+        {
+          "time": "23:22",
+          "height_m": 0.54,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-10-12",
+      "weekday": "MO",
+      "tides": [
+        {
+          "time": "05:31",
+          "height_m": 2.27,
+          "type": "high"
+        },
+        {
+          "time": "12:01",
+          "height_m": 0.39,
+          "type": "low"
+        },
+        {
+          "time": "17:54",
+          "height_m": 1.81,
+          "type": "high"
+        },
+        {
+          "time": "23:34",
+          "height_m": 0.51,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-10-13",
+      "weekday": "TU",
+      "tides": [
+        {
+          "time": "05:48",
+          "height_m": 2.33,
+          "type": "high"
+        },
+        {
+          "time": "12:22",
+          "height_m": 0.39,
+          "type": "low"
+        },
+        {
+          "time": "18:12",
+          "height_m": 1.75,
+          "type": "high"
+        },
+        {
+          "time": "23:51",
+          "height_m": 0.5,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-10-14",
+      "weekday": "WE",
+      "tides": [
+        {
+          "time": "06:11",
+          "height_m": 2.33,
+          "type": "high"
+        },
+        {
+          "time": "12:46",
+          "height_m": 0.42,
+          "type": "low"
+        },
+        {
+          "time": "18:32",
+          "height_m": 1.67,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-10-15",
+      "weekday": "TH",
+      "tides": [
+        {
+          "time": "00:11",
+          "height_m": 0.51,
+          "type": "low"
+        },
+        {
+          "time": "06:35",
+          "height_m": 2.28,
+          "type": "high"
+        },
+        {
+          "time": "13:11",
+          "height_m": 0.47,
+          "type": "low"
+        },
+        {
+          "time": "18:54",
+          "height_m": 1.6,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-10-16",
+      "weekday": "FR",
+      "tides": [
+        {
+          "time": "00:30",
+          "height_m": 0.53,
+          "type": "low"
+        },
+        {
+          "time": "07:00",
+          "height_m": 2.2,
+          "type": "high"
+        },
+        {
+          "time": "13:33",
+          "height_m": 0.53,
+          "type": "low"
+        },
+        {
+          "time": "19:14",
+          "height_m": 1.53,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-10-17",
+      "weekday": "SA",
+      "tides": [
+        {
+          "time": "00:49",
+          "height_m": 0.55,
+          "type": "low"
+        },
+        {
+          "time": "07:22",
+          "height_m": 2.1,
+          "type": "high"
+        },
+        {
+          "time": "13:57",
+          "height_m": 0.59,
+          "type": "low"
+        },
+        {
+          "time": "19:34",
+          "height_m": 1.46,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-10-18",
+      "weekday": "SU",
+      "tides": [
+        {
+          "time": "01:09",
+          "height_m": 0.59,
+          "type": "low"
+        },
+        {
+          "time": "07:46",
+          "height_m": 1.99,
+          "type": "high"
+        },
+        {
+          "time": "14:23",
+          "height_m": 0.69,
+          "type": "low"
+        },
+        {
+          "time": "19:54",
+          "height_m": 1.36,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-10-19",
+      "weekday": "MO",
+      "tides": [
+        {
+          "time": "01:27",
+          "height_m": 0.69,
+          "type": "low"
+        },
+        {
+          "time": "08:12",
+          "height_m": 1.82,
+          "type": "high"
+        },
+        {
+          "time": "14:57",
+          "height_m": 0.86,
+          "type": "low"
+        },
+        {
+          "time": "20:08",
+          "height_m": 1.22,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-10-20",
+      "weekday": "TU",
+      "tides": [
+        {
+          "time": "01:27",
+          "height_m": 0.86,
+          "type": "low"
+        },
+        {
+          "time": "08:32",
+          "height_m": 1.58,
+          "type": "high"
+        },
+        {
+          "time": "23:06",
+          "height_m": 0.97,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-10-21",
+      "weekday": "WE",
+      "tides": [
+        {
+          "time": "06:39",
+          "height_m": 1.32,
+          "type": "high"
+        },
+        {
+          "time": "10:20",
+          "height_m": 1.27,
+          "type": "low"
+        },
+        {
+          "time": "15:03",
+          "height_m": 1.39,
+          "type": "high"
+        },
+        {
+          "time": "22:02",
+          "height_m": 0.8,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-10-22",
+      "weekday": "TH",
+      "tides": [
+        {
+          "time": "04:32",
+          "height_m": 1.49,
+          "type": "high"
+        },
+        {
+          "time": "10:06",
+          "height_m": 0.97,
+          "type": "low"
+        },
+        {
+          "time": "15:59",
+          "height_m": 1.64,
+          "type": "high"
+        },
+        {
+          "time": "22:15",
+          "height_m": 0.64,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-10-23",
+      "weekday": "FR",
+      "tides": [
+        {
+          "time": "04:32",
+          "height_m": 1.74,
+          "type": "high"
+        },
+        {
+          "time": "10:29",
+          "height_m": 0.7,
+          "type": "low"
+        },
+        {
+          "time": "16:31",
+          "height_m": 1.82,
+          "type": "high"
+        },
+        {
+          "time": "22:33",
+          "height_m": 0.56,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-10-24",
+      "weekday": "SA",
+      "tides": [
+        {
+          "time": "04:44",
+          "height_m": 1.94,
+          "type": "high"
+        },
+        {
+          "time": "10:53",
+          "height_m": 0.51,
+          "type": "low"
+        },
+        {
+          "time": "16:58",
+          "height_m": 1.88,
+          "type": "high"
+        },
+        {
+          "time": "22:48",
+          "height_m": 0.56,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-10-25",
+      "weekday": "SU",
+      "tides": [
+        {
+          "time": "04:55",
+          "height_m": 2.09,
+          "type": "high"
+        },
+        {
+          "time": "11:16",
+          "height_m": 0.38,
+          "type": "low"
+        },
+        {
+          "time": "17:20",
+          "height_m": 1.86,
+          "type": "high"
+        },
+        {
+          "time": "23:01",
+          "height_m": 0.58,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-10-26",
+      "weekday": "MO",
+      "tides": [
+        {
+          "time": "05:06",
+          "height_m": 2.22,
+          "type": "high"
+        },
+        {
+          "time": "11:40",
+          "height_m": 0.31,
+          "type": "low"
+        },
+        {
+          "time": "17:39",
+          "height_m": 1.78,
+          "type": "high"
+        },
+        {
+          "time": "23:13",
+          "height_m": 0.6,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-10-27",
+      "weekday": "TU",
+      "tides": [
+        {
+          "time": "05:21",
+          "height_m": 2.33,
+          "type": "high"
+        },
+        {
+          "time": "12:06",
+          "height_m": 0.28,
+          "type": "low"
+        },
+        {
+          "time": "18:00",
+          "height_m": 1.68,
+          "type": "high"
+        },
+        {
+          "time": "23:26",
+          "height_m": 0.6,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-10-28",
+      "weekday": "WE",
+      "tides": [
+        {
+          "time": "05:44",
+          "height_m": 2.39,
+          "type": "high"
+        },
+        {
+          "time": "12:35",
+          "height_m": 0.3,
+          "type": "low"
+        },
+        {
+          "time": "18:24",
+          "height_m": 1.56,
+          "type": "high"
+        },
+        {
+          "time": "23:41",
+          "height_m": 0.6,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-10-29",
+      "weekday": "TH",
+      "tides": [
+        {
+          "time": "06:10",
+          "height_m": 2.38,
+          "type": "high"
+        },
+        {
+          "time": "13:06",
+          "height_m": 0.38,
+          "type": "low"
+        },
+        {
+          "time": "18:47",
+          "height_m": 1.42,
+          "type": "high"
+        },
+        {
+          "time": "23:56",
+          "height_m": 0.61,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-10-30",
+      "weekday": "FR",
+      "tides": [
+        {
+          "time": "06:37",
+          "height_m": 2.31,
+          "type": "high"
+        },
+        {
+          "time": "13:35",
+          "height_m": 0.5,
+          "type": "low"
+        },
+        {
+          "time": "19:03",
+          "height_m": 1.3,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-10-31",
+      "weekday": "SA",
+      "tides": [
+        {
+          "time": "00:10",
+          "height_m": 0.62,
+          "type": "low"
+        },
+        {
+          "time": "07:00",
+          "height_m": 2.2,
+          "type": "high"
+        },
+        {
+          "time": "13:57",
+          "height_m": 0.63,
+          "type": "low"
+        },
+        {
+          "time": "19:12",
+          "height_m": 1.24,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-11-01",
+      "weekday": "SU",
+      "tides": [
+        {
+          "time": "00:24",
+          "height_m": 0.62,
+          "type": "low"
+        },
+        {
+          "time": "07:22",
+          "height_m": 2.06,
+          "type": "high"
+        },
+        {
+          "time": "14:12",
+          "height_m": 0.75,
+          "type": "low"
+        },
+        {
+          "time": "19:19",
+          "height_m": 1.22,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-11-02",
+      "weekday": "MO",
+      "tides": [
+        {
+          "time": "00:41",
+          "height_m": 0.67,
+          "type": "low"
+        },
+        {
+          "time": "07:43",
+          "height_m": 1.89,
+          "type": "high"
+        },
+        {
+          "time": "14:30",
+          "height_m": 0.88,
+          "type": "low"
+        },
+        {
+          "time": "19:32",
+          "height_m": 1.2,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-11-03",
+      "weekday": "TU",
+      "tides": [
+        {
+          "time": "00:51",
+          "height_m": 0.8,
+          "type": "low"
+        },
+        {
+          "time": "08:00",
+          "height_m": 1.66,
+          "type": "high"
+        },
+        {
+          "time": "14:56",
+          "height_m": 1.03,
+          "type": "low"
+        },
+        {
+          "time": "19:25",
+          "height_m": 1.14,
+          "type": "high"
+        },
+        {
+          "time": "23:56",
+          "height_m": 0.99,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-11-04",
+      "weekday": "WE",
+      "tides": [
+        {
+          "time": "07:11",
+          "height_m": 1.39,
+          "type": "high"
+        },
+        {
+          "time": "14:27",
+          "height_m": 1.22,
+          "type": "low"
+        },
+        {
+          "time": "15:17",
+          "height_m": 1.22,
+          "type": "high"
+        },
+        {
+          "time": "21:47",
+          "height_m": 0.99,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-11-05",
+      "weekday": "TH",
+      "tides": [
+        {
+          "time": "04:24",
+          "height_m": 1.45,
+          "type": "high"
+        },
+        {
+          "time": "10:20",
+          "height_m": 1.01,
+          "type": "low"
+        },
+        {
+          "time": "15:54",
+          "height_m": 1.42,
+          "type": "high"
+        },
+        {
+          "time": "21:38",
+          "height_m": 0.87,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-11-06",
+      "weekday": "FR",
+      "tides": [
+        {
+          "time": "04:02",
+          "height_m": 1.74,
+          "type": "high"
+        },
+        {
+          "time": "10:29",
+          "height_m": 0.73,
+          "type": "low"
+        },
+        {
+          "time": "16:23",
+          "height_m": 1.57,
+          "type": "high"
+        },
+        {
+          "time": "21:57",
+          "height_m": 0.77,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-11-07",
+      "weekday": "SA",
+      "tides": [
+        {
+          "time": "04:15",
+          "height_m": 1.99,
+          "type": "high"
+        },
+        {
+          "time": "10:50",
+          "height_m": 0.52,
+          "type": "low"
+        },
+        {
+          "time": "16:50",
+          "height_m": 1.65,
+          "type": "high"
+        },
+        {
+          "time": "22:17",
+          "height_m": 0.7,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-11-08",
+      "weekday": "SU",
+      "tides": [
+        {
+          "time": "04:33",
+          "height_m": 2.18,
+          "type": "high"
+        },
+        {
+          "time": "11:13",
+          "height_m": 0.4,
+          "type": "low"
+        },
+        {
+          "time": "17:14",
+          "height_m": 1.67,
+          "type": "high"
+        },
+        {
+          "time": "22:36",
+          "height_m": 0.67,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-11-09",
+      "weekday": "MO",
+      "tides": [
+        {
+          "time": "04:52",
+          "height_m": 2.29,
+          "type": "high"
+        },
+        {
+          "time": "11:34",
+          "height_m": 0.35,
+          "type": "low"
+        },
+        {
+          "time": "17:33",
+          "height_m": 1.65,
+          "type": "high"
+        },
+        {
+          "time": "22:53",
+          "height_m": 0.64,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-11-10",
+      "weekday": "TU",
+      "tides": [
+        {
+          "time": "05:12",
+          "height_m": 2.34,
+          "type": "high"
+        },
+        {
+          "time": "11:56",
+          "height_m": 0.34,
+          "type": "low"
+        },
+        {
+          "time": "17:53",
+          "height_m": 1.62,
+          "type": "high"
+        },
+        {
+          "time": "23:12",
+          "height_m": 0.62,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-11-11",
+      "weekday": "WE",
+      "tides": [
+        {
+          "time": "05:33",
+          "height_m": 2.34,
+          "type": "high"
+        },
+        {
+          "time": "12:19",
+          "height_m": 0.35,
+          "type": "low"
+        },
+        {
+          "time": "18:15",
+          "height_m": 1.58,
+          "type": "high"
+        },
+        {
+          "time": "23:34",
+          "height_m": 0.61,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-11-12",
+      "weekday": "TH",
+      "tides": [
+        {
+          "time": "06:00",
+          "height_m": 2.31,
+          "type": "high"
+        },
+        {
+          "time": "12:44",
+          "height_m": 0.38,
+          "type": "low"
+        },
+        {
+          "time": "18:39",
+          "height_m": 1.54,
+          "type": "high"
+        },
+        {
+          "time": "23:59",
+          "height_m": 0.61,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-11-13",
+      "weekday": "FR",
+      "tides": [
+        {
+          "time": "06:27",
+          "height_m": 2.24,
+          "type": "high"
+        },
+        {
+          "time": "13:11",
+          "height_m": 0.42,
+          "type": "low"
+        },
+        {
+          "time": "19:03",
+          "height_m": 1.49,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-11-14",
+      "weekday": "SA",
+      "tides": [
+        {
+          "time": "00:25",
+          "height_m": 0.62,
+          "type": "low"
+        },
+        {
+          "time": "06:55",
+          "height_m": 2.15,
+          "type": "high"
+        },
+        {
+          "time": "13:37",
+          "height_m": 0.48,
+          "type": "low"
+        },
+        {
+          "time": "19:27",
+          "height_m": 1.45,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-11-15",
+      "weekday": "SU",
+      "tides": [
+        {
+          "time": "00:49",
+          "height_m": 0.65,
+          "type": "low"
+        },
+        {
+          "time": "07:21",
+          "height_m": 2.06,
+          "type": "high"
+        },
+        {
+          "time": "14:04",
+          "height_m": 0.54,
+          "type": "low"
+        },
+        {
+          "time": "19:52",
+          "height_m": 1.42,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-11-16",
+      "weekday": "MO",
+      "tides": [
+        {
+          "time": "01:16",
+          "height_m": 0.7,
+          "type": "low"
+        },
+        {
+          "time": "07:48",
+          "height_m": 1.96,
+          "type": "high"
+        },
+        {
+          "time": "14:35",
+          "height_m": 0.61,
+          "type": "low"
+        },
+        {
+          "time": "20:24",
+          "height_m": 1.37,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-11-17",
+      "weekday": "TU",
+      "tides": [
+        {
+          "time": "01:46",
+          "height_m": 0.8,
+          "type": "low"
+        },
+        {
+          "time": "08:19",
+          "height_m": 1.82,
+          "type": "high"
+        },
+        {
+          "time": "15:15",
+          "height_m": 0.73,
+          "type": "low"
+        },
+        {
+          "time": "21:11",
+          "height_m": 1.3,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-11-18",
+      "weekday": "WE",
+      "tides": [
+        {
+          "time": "02:24",
+          "height_m": 0.96,
+          "type": "low"
+        },
+        {
+          "time": "09:00",
+          "height_m": 1.62,
+          "type": "high"
+        },
+        {
+          "time": "16:23",
+          "height_m": 0.87,
+          "type": "low"
+        },
+        {
+          "time": "23:28",
+          "height_m": 1.26,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-11-19",
+      "weekday": "TH",
+      "tides": [
+        {
+          "time": "04:06",
+          "height_m": 1.18,
+          "type": "low"
+        },
+        {
+          "time": "10:57",
+          "height_m": 1.39,
+          "type": "high"
+        },
+        {
+          "time": "19:08",
+          "height_m": 0.93,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-11-20",
+      "weekday": "FR",
+      "tides": [
+        {
+          "time": "02:32",
+          "height_m": 1.48,
+          "type": "high"
+        },
+        {
+          "time": "08:55",
+          "height_m": 1.03,
+          "type": "low"
+        },
+        {
+          "time": "14:33",
+          "height_m": 1.41,
+          "type": "high"
+        },
+        {
+          "time": "20:42",
+          "height_m": 0.86,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-11-21",
+      "weekday": "SA",
+      "tides": [
+        {
+          "time": "03:16",
+          "height_m": 1.75,
+          "type": "high"
+        },
+        {
+          "time": "09:50",
+          "height_m": 0.74,
+          "type": "low"
+        },
+        {
+          "time": "15:49",
+          "height_m": 1.53,
+          "type": "high"
+        },
+        {
+          "time": "21:29",
+          "height_m": 0.79,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-11-22",
+      "weekday": "SU",
+      "tides": [
+        {
+          "time": "03:49",
+          "height_m": 1.98,
+          "type": "high"
+        },
+        {
+          "time": "10:30",
+          "height_m": 0.51,
+          "type": "low"
+        },
+        {
+          "time": "16:37",
+          "height_m": 1.6,
+          "type": "high"
+        },
+        {
+          "time": "22:01",
+          "height_m": 0.77,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-11-23",
+      "weekday": "MO",
+      "tides": [
+        {
+          "time": "04:15",
+          "height_m": 2.15,
+          "type": "high"
+        },
+        {
+          "time": "11:05",
+          "height_m": 0.35,
+          "type": "low"
+        },
+        {
+          "time": "17:15",
+          "height_m": 1.58,
+          "type": "high"
+        },
+        {
+          "time": "22:26",
+          "height_m": 0.77,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-11-24",
+      "weekday": "TU",
+      "tides": [
+        {
+          "time": "04:41",
+          "height_m": 2.27,
+          "type": "high"
+        },
+        {
+          "time": "11:38",
+          "height_m": 0.27,
+          "type": "low"
+        },
+        {
+          "time": "17:45",
+          "height_m": 1.52,
+          "type": "high"
+        },
+        {
+          "time": "22:46",
+          "height_m": 0.77,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-11-25",
+      "weekday": "WE",
+      "tides": [
+        {
+          "time": "05:06",
+          "height_m": 2.35,
+          "type": "high"
+        },
+        {
+          "time": "12:12",
+          "height_m": 0.25,
+          "type": "low"
+        },
+        {
+          "time": "18:15",
+          "height_m": 1.43,
+          "type": "high"
+        },
+        {
+          "time": "23:08",
+          "height_m": 0.75,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-11-26",
+      "weekday": "TH",
+      "tides": [
+        {
+          "time": "05:36",
+          "height_m": 2.38,
+          "type": "high"
+        },
+        {
+          "time": "12:47",
+          "height_m": 0.28,
+          "type": "low"
+        },
+        {
+          "time": "18:43",
+          "height_m": 1.35,
+          "type": "high"
+        },
+        {
+          "time": "23:31",
+          "height_m": 0.73,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-11-27",
+      "weekday": "FR",
+      "tides": [
+        {
+          "time": "06:10",
+          "height_m": 2.34,
+          "type": "high"
+        },
+        {
+          "time": "13:22",
+          "height_m": 0.36,
+          "type": "low"
+        },
+        {
+          "time": "19:07",
+          "height_m": 1.27,
+          "type": "high"
+        },
+        {
+          "time": "23:56",
+          "height_m": 0.72,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-11-28",
+      "weekday": "SA",
+      "tides": [
+        {
+          "time": "06:42",
+          "height_m": 2.25,
+          "type": "high"
+        },
+        {
+          "time": "13:54",
+          "height_m": 0.47,
+          "type": "low"
+        },
+        {
+          "time": "19:28",
+          "height_m": 1.23,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-11-29",
+      "weekday": "SU",
+      "tides": [
+        {
+          "time": "00:20",
+          "height_m": 0.72,
+          "type": "low"
+        },
+        {
+          "time": "07:11",
+          "height_m": 2.13,
+          "type": "high"
+        },
+        {
+          "time": "14:17",
+          "height_m": 0.59,
+          "type": "low"
+        },
+        {
+          "time": "19:44",
+          "height_m": 1.25,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-11-30",
+      "weekday": "MO",
+      "tides": [
+        {
+          "time": "00:46",
+          "height_m": 0.75,
+          "type": "low"
+        },
+        {
+          "time": "07:36",
+          "height_m": 1.99,
+          "type": "high"
+        },
+        {
+          "time": "14:32",
+          "height_m": 0.68,
+          "type": "low"
+        },
+        {
+          "time": "20:05",
+          "height_m": 1.31,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-12-01",
+      "weekday": "TU",
+      "tides": [
+        {
+          "time": "01:20",
+          "height_m": 0.81,
+          "type": "low"
+        },
+        {
+          "time": "08:01",
+          "height_m": 1.83,
+          "type": "high"
+        },
+        {
+          "time": "14:50",
+          "height_m": 0.73,
+          "type": "low"
+        },
+        {
+          "time": "20:45",
+          "height_m": 1.38,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-12-02",
+      "weekday": "WE",
+      "tides": [
+        {
+          "time": "02:08",
+          "height_m": 0.94,
+          "type": "low"
+        },
+        {
+          "time": "08:31",
+          "height_m": 1.64,
+          "type": "high"
+        },
+        {
+          "time": "15:21",
+          "height_m": 0.79,
+          "type": "low"
+        },
+        {
+          "time": "21:59",
+          "height_m": 1.43,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-12-03",
+      "weekday": "TH",
+      "tides": [
+        {
+          "time": "03:36",
+          "height_m": 1.12,
+          "type": "low"
+        },
+        {
+          "time": "09:12",
+          "height_m": 1.4,
+          "type": "high"
+        },
+        {
+          "time": "16:15",
+          "height_m": 0.89,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-12-04",
+      "weekday": "FR",
+      "tides": [
+        {
+          "time": "00:30",
+          "height_m": 1.54,
+          "type": "high"
+        },
+        {
+          "time": "08:21",
+          "height_m": 1.1,
+          "type": "low"
+        },
+        {
+          "time": "12:36",
+          "height_m": 1.17,
+          "type": "high"
+        },
+        {
+          "time": "18:35",
+          "height_m": 0.97,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-12-05",
+      "weekday": "SA",
+      "tides": [
+        {
+          "time": "02:15",
+          "height_m": 1.76,
+          "type": "high"
+        },
+        {
+          "time": "09:50",
+          "height_m": 0.83,
+          "type": "low"
+        },
+        {
+          "time": "15:30",
+          "height_m": 1.23,
+          "type": "high"
+        },
+        {
+          "time": "20:23",
+          "height_m": 0.94,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-12-06",
+      "weekday": "SU",
+      "tides": [
+        {
+          "time": "03:15",
+          "height_m": 1.97,
+          "type": "high"
+        },
+        {
+          "time": "10:30",
+          "height_m": 0.6,
+          "type": "low"
+        },
+        {
+          "time": "16:30",
+          "height_m": 1.35,
+          "type": "high"
+        },
+        {
+          "time": "21:24",
+          "height_m": 0.88,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-12-07",
+      "weekday": "MO",
+      "tides": [
+        {
+          "time": "03:59",
+          "height_m": 2.12,
+          "type": "high"
+        },
+        {
+          "time": "11:04",
+          "height_m": 0.45,
+          "type": "low"
+        },
+        {
+          "time": "17:11",
+          "height_m": 1.43,
+          "type": "high"
+        },
+        {
+          "time": "22:06",
+          "height_m": 0.83,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-12-08",
+      "weekday": "TU",
+      "tides": [
+        {
+          "time": "04:33",
+          "height_m": 2.2,
+          "type": "high"
+        },
+        {
+          "time": "11:35",
+          "height_m": 0.37,
+          "type": "low"
+        },
+        {
+          "time": "17:42",
+          "height_m": 1.46,
+          "type": "high"
+        },
+        {
+          "time": "22:39",
+          "height_m": 0.79,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-12-09",
+      "weekday": "WE",
+      "tides": [
+        {
+          "time": "05:04",
+          "height_m": 2.23,
+          "type": "high"
+        },
+        {
+          "time": "12:01",
+          "height_m": 0.34,
+          "type": "low"
+        },
+        {
+          "time": "18:07",
+          "height_m": 1.47,
+          "type": "high"
+        },
+        {
+          "time": "23:07",
+          "height_m": 0.74,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-12-10",
+      "weekday": "TH",
+      "tides": [
+        {
+          "time": "05:33",
+          "height_m": 2.24,
+          "type": "high"
+        },
+        {
+          "time": "12:27",
+          "height_m": 0.33,
+          "type": "low"
+        },
+        {
+          "time": "18:30",
+          "height_m": 1.48,
+          "type": "high"
+        },
+        {
+          "time": "23:35",
+          "height_m": 0.69,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-12-11",
+      "weekday": "FR",
+      "tides": [
+        {
+          "time": "06:03",
+          "height_m": 2.23,
+          "type": "high"
+        },
+        {
+          "time": "12:52",
+          "height_m": 0.34,
+          "type": "low"
+        },
+        {
+          "time": "18:54",
+          "height_m": 1.48,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-12-12",
+      "weekday": "SA",
+      "tides": [
+        {
+          "time": "00:05",
+          "height_m": 0.65,
+          "type": "low"
+        },
+        {
+          "time": "06:33",
+          "height_m": 2.2,
+          "type": "high"
+        },
+        {
+          "time": "13:19",
+          "height_m": 0.36,
+          "type": "low"
+        },
+        {
+          "time": "19:19",
+          "height_m": 1.49,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-12-13",
+      "weekday": "SU",
+      "tides": [
+        {
+          "time": "00:36",
+          "height_m": 0.63,
+          "type": "low"
+        },
+        {
+          "time": "07:03",
+          "height_m": 2.15,
+          "type": "high"
+        },
+        {
+          "time": "13:46",
+          "height_m": 0.39,
+          "type": "low"
+        },
+        {
+          "time": "19:45",
+          "height_m": 1.5,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-12-14",
+      "weekday": "MO",
+      "tides": [
+        {
+          "time": "01:07",
+          "height_m": 0.65,
+          "type": "low"
+        },
+        {
+          "time": "07:31",
+          "height_m": 2.09,
+          "type": "high"
+        },
+        {
+          "time": "14:14",
+          "height_m": 0.42,
+          "type": "low"
+        },
+        {
+          "time": "20:13",
+          "height_m": 1.52,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-12-15",
+      "weekday": "TU",
+      "tides": [
+        {
+          "time": "01:39",
+          "height_m": 0.7,
+          "type": "low"
+        },
+        {
+          "time": "07:59",
+          "height_m": 2.0,
+          "type": "high"
+        },
+        {
+          "time": "14:40",
+          "height_m": 0.47,
+          "type": "low"
+        },
+        {
+          "time": "20:45",
+          "height_m": 1.54,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-12-16",
+      "weekday": "WE",
+      "tides": [
+        {
+          "time": "02:15",
+          "height_m": 0.77,
+          "type": "low"
+        },
+        {
+          "time": "08:28",
+          "height_m": 1.89,
+          "type": "high"
+        },
+        {
+          "time": "15:08",
+          "height_m": 0.53,
+          "type": "low"
+        },
+        {
+          "time": "21:23",
+          "height_m": 1.56,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-12-17",
+      "weekday": "TH",
+      "tides": [
+        {
+          "time": "03:02",
+          "height_m": 0.86,
+          "type": "low"
+        },
+        {
+          "time": "09:04",
+          "height_m": 1.73,
+          "type": "high"
+        },
+        {
+          "time": "15:44",
+          "height_m": 0.61,
+          "type": "low"
+        },
+        {
+          "time": "22:17",
+          "height_m": 1.59,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-12-18",
+      "weekday": "FR",
+      "tides": [
+        {
+          "time": "04:15",
+          "height_m": 0.97,
+          "type": "low"
+        },
+        {
+          "time": "09:56",
+          "height_m": 1.52,
+          "type": "high"
+        },
+        {
+          "time": "16:29",
+          "height_m": 0.74,
+          "type": "low"
+        },
+        {
+          "time": "23:35",
+          "height_m": 1.64,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-12-19",
+      "weekday": "SA",
+      "tides": [
+        {
+          "time": "06:25",
+          "height_m": 1.0,
+          "type": "low"
+        },
+        {
+          "time": "11:37",
+          "height_m": 1.28,
+          "type": "high"
+        },
+        {
+          "time": "17:40",
+          "height_m": 0.89,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-12-20",
+      "weekday": "SU",
+      "tides": [
+        {
+          "time": "01:15",
+          "height_m": 1.73,
+          "type": "high"
+        },
+        {
+          "time": "08:55",
+          "height_m": 0.83,
+          "type": "low"
+        },
+        {
+          "time": "14:42",
+          "height_m": 1.18,
+          "type": "high"
+        },
+        {
+          "time": "19:33",
+          "height_m": 0.99,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-12-21",
+      "weekday": "MO",
+      "tides": [
+        {
+          "time": "02:41",
+          "height_m": 1.87,
+          "type": "high"
+        },
+        {
+          "time": "10:17",
+          "height_m": 0.57,
+          "type": "low"
+        },
+        {
+          "time": "16:48",
+          "height_m": 1.27,
+          "type": "high"
+        },
+        {
+          "time": "21:06",
+          "height_m": 1.01,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-12-22",
+      "weekday": "TU",
+      "tides": [
+        {
+          "time": "03:45",
+          "height_m": 2.02,
+          "type": "high"
+        },
+        {
+          "time": "11:13",
+          "height_m": 0.37,
+          "type": "low"
+        },
+        {
+          "time": "17:46",
+          "height_m": 1.33,
+          "type": "high"
+        },
+        {
+          "time": "22:05",
+          "height_m": 0.98,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-12-23",
+      "weekday": "WE",
+      "tides": [
+        {
+          "time": "04:34",
+          "height_m": 2.14,
+          "type": "high"
+        },
+        {
+          "time": "11:58",
+          "height_m": 0.25,
+          "type": "low"
+        },
+        {
+          "time": "18:26",
+          "height_m": 1.34,
+          "type": "high"
+        },
+        {
+          "time": "22:46",
+          "height_m": 0.92,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-12-24",
+      "weekday": "TH",
+      "tides": [
+        {
+          "time": "05:15",
+          "height_m": 2.23,
+          "type": "high"
+        },
+        {
+          "time": "12:36",
+          "height_m": 0.21,
+          "type": "low"
+        },
+        {
+          "time": "18:55",
+          "height_m": 1.32,
+          "type": "high"
+        },
+        {
+          "time": "23:20",
+          "height_m": 0.85,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-12-25",
+      "weekday": "FR",
+      "tides": [
+        {
+          "time": "05:51",
+          "height_m": 2.27,
+          "type": "high"
+        },
+        {
+          "time": "13:09",
+          "height_m": 0.24,
+          "type": "low"
+        },
+        {
+          "time": "19:15",
+          "height_m": 1.29,
+          "type": "high"
+        },
+        {
+          "time": "23:51",
+          "height_m": 0.77,
+          "type": "low"
+        }
+      ]
+    },
+    {
+      "date": "2026-12-26",
+      "weekday": "SA",
+      "tides": [
+        {
+          "time": "06:25",
+          "height_m": 2.26,
+          "type": "high"
+        },
+        {
+          "time": "13:35",
+          "height_m": 0.31,
+          "type": "low"
+        },
+        {
+          "time": "19:30",
+          "height_m": 1.3,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-12-27",
+      "weekday": "SU",
+      "tides": [
+        {
+          "time": "00:22",
+          "height_m": 0.72,
+          "type": "low"
+        },
+        {
+          "time": "06:55",
+          "height_m": 2.2,
+          "type": "high"
+        },
+        {
+          "time": "13:57",
+          "height_m": 0.39,
+          "type": "low"
+        },
+        {
+          "time": "19:44",
+          "height_m": 1.36,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-12-28",
+      "weekday": "MO",
+      "tides": [
+        {
+          "time": "00:53",
+          "height_m": 0.69,
+          "type": "low"
+        },
+        {
+          "time": "07:21",
+          "height_m": 2.1,
+          "type": "high"
+        },
+        {
+          "time": "14:12",
+          "height_m": 0.47,
+          "type": "low"
+        },
+        {
+          "time": "19:59",
+          "height_m": 1.46,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-12-29",
+      "weekday": "TU",
+      "tides": [
+        {
+          "time": "01:26",
+          "height_m": 0.7,
+          "type": "low"
+        },
+        {
+          "time": "07:44",
+          "height_m": 1.98,
+          "type": "high"
+        },
+        {
+          "time": "14:22",
+          "height_m": 0.5,
+          "type": "low"
+        },
+        {
+          "time": "20:21",
+          "height_m": 1.6,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-12-30",
+      "weekday": "WE",
+      "tides": [
+        {
+          "time": "02:03",
+          "height_m": 0.74,
+          "type": "low"
+        },
+        {
+          "time": "08:06",
+          "height_m": 1.84,
+          "type": "high"
+        },
+        {
+          "time": "14:35",
+          "height_m": 0.49,
+          "type": "low"
+        },
+        {
+          "time": "20:53",
+          "height_m": 1.73,
+          "type": "high"
+        }
+      ]
+    },
+    {
+      "date": "2026-12-31",
+      "weekday": "TH",
+      "tides": [
+        {
+          "time": "02:47",
+          "height_m": 0.81,
+          "type": "low"
+        },
+        {
+          "time": "08:32",
+          "height_m": 1.69,
+          "type": "high"
+        },
+        {
+          "time": "14:57",
+          "height_m": 0.5,
+          "type": "low"
+        },
+        {
+          "time": "21:36",
+          "height_m": 1.81,
+          "type": "high"
+        }
+      ]
+    }
+  ]
+}
