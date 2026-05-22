@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Middleton Surf Report</title>
+  <!-- Codex connected test -->
   <style>
     :root {
       --bg: #071720;
@@ -42,7 +43,7 @@
     }
     .brand-kicker { color: var(--accent); text-shadow: var(--text-shadow-20); font-size: 13px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.13em; margin-bottom: 7px; }
     h1 { margin: 0; font-size: clamp(34px, 5vw, 64px); letter-spacing: -0.055em; line-height: 0.96; font-weight: 950; text-shadow: var(--text-shadow-strong); }
-    .subtitle { margin: 10px 0 0; color: var(--muted); max-width: 760px; font-size: 16px; line-height: 1.5; font-weight: 650; }
+    .subtitle { margin: 10px 0 0; color: var(--muted); max-width: 760px; font-size: 16px; line-height: 1.6; font-weight: 650; }
     .top-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
     .cta-link, .ghost-link {
       display: inline-flex; align-items: center; justify-content: center; text-decoration: none;
@@ -76,8 +77,8 @@
     .size-helper { margin-top: 4px; color: var(--muted); font-size: 12px; font-weight: 850; letter-spacing: 0.04em; text-transform: uppercase; }
     .day-summary { margin-top: 12px; padding: 13px; border-radius: 20px; background: rgba(0,0,0,0.16); border: 1px solid rgba(255,255,255,0.10); max-width: 720px; }
     .day-summary b { display: block; font-size: 17px; letter-spacing: -0.02em; margin-bottom: 6px; text-shadow: var(--text-shadow-20); }
-    .day-summary p { margin: 0; color: #f0fbff; font-size: 15px; line-height: 1.42; font-weight: 650; }
-    .quick-stats { display: grid; grid-template-columns: repeat(3, minmax(120px, 1fr)); gap: 8px; margin-top: 10px; max-width: 720px; }
+    .day-summary p { margin: 0; color: #f0fbff; font-size: 15px; line-height: 1.52; font-weight: 650; }
+    .quick-stats { display: grid; grid-template-columns: repeat(3, minmax(120px, 1fr)); gap: 10px; margin-top: 10px; max-width: 720px; }
     .quick-stat { padding: 10px; border-radius: 17px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08); }
     .quick-stat small { display: block; color: var(--soft-muted); font-size: 12px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
     .quick-stat b { font-size: 17px; letter-spacing: -0.02em; font-weight: 950; color: #fff; text-shadow: var(--text-shadow-20); }
@@ -113,9 +114,9 @@
     .tide-now-label, .swell-now-label, .wind-now-label { position: absolute; top: 16px; transform: translateX(-50%); color: #06202d; font-size: 11px; font-weight: 900; border-radius: 999px; padding: 4px 8px; white-space: nowrap; }
     .tide-now-label, .wind-now-label { background: rgba(119,216,255,0.9); }
     .swell-now-label { background: rgba(156,242,202,0.92); }
-    .tide-events, .swell-trend-cards, .wind-trend-cards { display: grid; grid-template-columns: repeat(3, minmax(130px, 1fr)); gap: 10px; }
+    .tide-events, .swell-trend-cards, .wind-trend-cards { display: grid; grid-template-columns: repeat(3, minmax(130px, 1fr)); gap: 12px; }
     .tide-events { grid-template-columns: repeat(4, minmax(130px, 1fr)); }
-    .tide-event, .swell-trend-card, .wind-trend-card { padding: 12px; border-radius: 17px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.09); font-size: 14px; }
+    .tide-event, .swell-trend-card, .wind-trend-card { padding: 13px; border-radius: 17px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.09); font-size: 14px; }
     .tide-event { display: grid; grid-template-columns: 38px 1fr; gap: 10px; align-items: center; }
     .tide-arrow { width: 38px; height: 38px; display: grid; place-items: center; border-radius: 11px; color: white; font-weight: 950; background: linear-gradient(145deg, #56c5ff, #0564b8); text-shadow: var(--text-shadow-20); }
     .tide-arrow.low { background: linear-gradient(145deg, #1d78c8, #0a2e66); }
@@ -150,6 +151,8 @@
       .top-actions { justify-content: flex-start; }
       .wind-box { text-align: left; }
       .quick-stats, .swell-row, .tide-events, .swell-trend-cards, .wind-trend-cards, .weather-current, .footer-source, .weather-hours { grid-template-columns: 1fr; }
+      .day-summary { padding: 15px; }
+      .cta-link, .ghost-link { width: 100%; justify-content: center; }
       .swell-pill { justify-content: flex-start; }
       .swell-data.wind-read { white-space: normal; flex-wrap: wrap; }
     }
@@ -197,7 +200,7 @@
     <section class="card panel" style="margin-top:16px;">
       <div class="section-head"><h2>7-day outlook</h2><span class="section-tag">Daily pulse</span></div>
       <div class="days" id="days"></div>
-      <div class="inline-swell-detail"><p class="forecast-table-note" id="swellDetailHint">Tap any date above to see the 6 AM, 12 PM and 6 PM read. Tap the same date again to close it.</p><div class="swell-detail" id="swellDetail"></div></div>
+      <div class="inline-swell-detail"><p class="forecast-table-note" id="swellDetailHint">Tap a date to open the 6 AM, 12 PM and 6 PM read. Tap it again to close.</p><div class="swell-detail" id="swellDetail"></div></div>
     </section>
 
     <section class="card panel" style="margin-top:16px;"><div class="section-head"><h2 id="tideTitle">Tide</h2><span class="section-tag">Victor Harbor</span></div><div class="tide-panel" id="tidePanel"></div></section>
@@ -227,7 +230,7 @@
     };
 
     const state = { selectedDay: 0, expandedDay: null, selectedWeatherDay: null, data: null, report: null, tides: {}, yearlyTides: {} };
-    const MIDDLETON_SIZE_OFFSET_FT = 1;
+    const MIDDLETON_SIZE_OFFSET_FT = 0;
     const MIDDLETON_TIDE_CACHE_KEY = 'middleton-yearly-tides-victor-harbor-bom-2026-v3-24h';
 
     const $ = id => document.getElementById(id);
@@ -260,14 +263,14 @@
       if (d <= 260) return lerp(0.42, 0.28, (d - 245) / 15);
       return 0.18;
     }
-    function periodFactor(period) { const p = Number(period); if (!p) return 0.8; if (p <= 8) return 0.65; if (p <= 10) return 0.85; if (p <= 12) return 1.00; if (p <= 13.5) return 1.10; if (p <= 14.5) return 1.25; if (p <= 15.5) return 1.55; if (p <= 17) return 1.35; return 1.20; }
+    function periodFactor(period) { const p = Number(period); if (!p) return 0.8; if (p <= 8) return 0.62; if (p <= 10) return 0.80; if (p <= 12) return 0.95; if (p <= 13.5) return 1.00; if (p <= 14.5) return 1.08; if (p <= 15.5) return 1.15; if (p <= 17) return 1.10; return 1.02; }
     function southCoastSizeFt(heightM, dir, period, calibration = 'normal') {
       const fit = southCoastDirectionScore(dir), h = Number(heightM || 0), p = periodFactor(period);
-      let ft = h * 1.32 * fit * p;
-      // Long-period 14–15s S/SW lines hit Middleton harder than the simple height suggests.
-      if (h >= 1.35 && fit >= 0.85 && Number(period || 0) >= 14) ft = Math.max(ft, h * 1.82);
-      // But normal 10–12s SW swell should not inflate too much. 1.5–1.6m @ 229–235° is usually around 2ft, not 3ft.
-      if (h <= 1.7 && Number(period || 0) <= 12.5 && Number(dir || 0) >= 225) ft = Math.min(ft, h * 1.35);
+      let ft = h * 1.18 * fit * p;
+      // Keep long-period lines helpful, but never let period alone over-hype the size.
+      if (h >= 1.25 && fit >= 0.9 && Number(period || 0) >= 14) ft = Math.max(ft, h * 1.45);
+      // SW and WSW (around 230°+) should generally read smaller at Middleton.
+      if (h <= 1.8 && Number(period || 0) <= 12.5 && Number(dir || 0) >= 225) ft = Math.min(ft, h * 1.12);
       if (calibration === 'conservative') ft *= 0.86;
       if (calibration === 'generous') ft *= 1.12;
       return clamp(ft, 0, 8);
@@ -275,25 +278,9 @@
     function sizeRange(ft) { const x = clamp(Number(ft), 0, 8); if (x < 0.4) return 'Flat'; if (x < 0.8) return '0.5'; if (x < 1.25) return '1'; if (x < 1.75) return '1-1.5'; if (x < 2.25) return '1.5-2'; if (x < 2.8) return '2-2.5'; if (x < 3.4) return '2.5-3'; if (x < 4.4) return '3-4'; return `${Math.round(x * 2) / 2}`; }
     function formatFtValue(value) { const n = Math.max(0, Number(value || 0)); if (n < 0.35) return 'Flat'; const rounded = Math.round(n * 2) / 2; return Number.isInteger(rounded) ? String(rounded) : String(rounded); }
     function sizeTextToFt(sizeText) { const text = String(sizeText || '').replace('ft', '').trim(); if (text.toLowerCase() === 'flat') return 0; if (text.includes('-')) { const [a, b] = text.split('-').map(Number); return (Number(a) + Number(b)) / 2; } return Number(text) || 0; }
-    function adjustedMiddletonDirection(heightM, periodS, directionDeg) {
-      const h = Number(heightM || 0), p = Number(periodS || 0), d = Number(directionDeg || 0);
-      if (!Number.isFinite(d) || d <= 0) return d;
-      if (h >= 0.8 && d >= 185 && d <= 215) return clamp(d + 7, 180, 220);
-      if (h >= 0.8 && d > 215 && d <= 230) return clamp(d + 3, 180, 235);
-      return d;
-    }
-    function adjustedMiddletonPeriod(heightM, periodS, directionDeg) {
-      const h = Number(heightM || 0), p = Number(periodS || 0), d = Number(directionDeg || 0);
-      if (!Number.isFinite(p) || p <= 0) return p;
-      if (h >= 0.8 && d >= 185 && d <= 220 && p < 10.5) return clamp(p + 4.6 + (h < 1.35 ? 0.6 : 0), 10, 15.5);
-      if (h >= 0.5 && d >= 165 && d <= 235 && p < 9) return clamp(p + 3.2, 8, 14);
-      return p;
-    }
-    function adjustedMiddletonHeight(heightM, periodS, directionDeg) {
-      const h = Number(heightM || 0), p = Number(periodS || 0), d = Number(directionDeg || 0);
-      if (h >= 1.0 && d >= 185 && d <= 220 && p < 10.5) return h * 0.9;
-      return h;
-    }
+    function adjustedMiddletonDirection(heightM, periodS, directionDeg) { const d = Number(directionDeg || 0); return Number.isFinite(d) ? d : 0; }
+    function adjustedMiddletonPeriod(heightM, periodS, directionDeg) { const p = Number(periodS || 0); return Number.isFinite(p) ? p : 0; }
+    function adjustedMiddletonHeight(heightM, periodS, directionDeg) { const h = Number(heightM || 0); return Number.isFinite(h) ? h : 0; }
     function adjustedMiddletonSwellLine(line) {
       const h = Number(line.h || 0), p = Number(line.p || 0), d = Number(line.d || 0);
       if (h < 0.25 || p < 5) return { h: 0, p: 0, d: 0, ignored: true };
@@ -346,7 +333,7 @@
       const modelFt = southCoastSizeFt(activeDriver.heightM, activeDriver.directionDeg, activeDriver.periodS, calibration);
       // Local marine cell is a reality check only. It should stop the report going dead-flat,
       // but it should not overpower the offshore swell math and create fake 3–4ft days.
-      const localRealityFt = clamp(southCoastSizeFt(row.local.wave_height, row.local.wave_direction, row.local.wave_period, calibration) * 0.55, 0, 2.1);
+      const localRealityFt = clamp(southCoastSizeFt(row.local.wave_height, row.local.wave_direction, row.local.wave_period, calibration) * 0.45, 0, 1.6);
       const rawFinalFt = Math.max(modelFt, localRealityFt);
       const finalFt = clamp(rawFinalFt > 0.3 ? rawFinalFt + MIDDLETON_SIZE_OFFSET_FT : rawFinalFt, 0, 8);
       const windSpeed = Number(row.wind.wind_speed_10m || 0), windDir = Number(row.wind.wind_direction_10m || 0), wq = windQuality(windSpeed, windDir);
@@ -376,13 +363,13 @@
     function selectedReportForDay(day) { const selected = $('timeSelect').value; const reports = daylightReports(day.reports); const usable = reports.length ? reports : day.reports; if (selected === 'now' && day.date === localIsoDate()) return nearestHour(usable, clampSurfHour(new Date().getHours())); const hour = selected === 'now' ? 9 : Number(selected); return nearestHour(usable, clampSurfHour(hour)); }
     function groupByDay(hourReports) { const groups = {}; hourReports.forEach(r => { const day = r.time.slice(0, 10); if (!groups[day]) groups[day] = []; groups[day].push(r); }); return Object.entries(groups).map(([date, reports]) => { const useful = daylightReports(reports); const avg = useful.reduce((s, r) => s + r.finalFt, 0) / useful.length; const best = useful.slice().sort((a,b) => b.finalFt * b.windQuality - a.finalFt * a.windQuality)[0]; return { date, reports, avgFt: avg, best, sizeText: sizeRange(avg) }; }); }
     function windDirectionName(deg) { const short = compassFromDeg(deg); const names = { N:'North', NNE:'North-north-east', NE:'North-east', ENE:'East-north-east', E:'East', ESE:'East-south-east', SE:'South-east', SSE:'South-south-east', S:'South', SSW:'South-south-west', SW:'South-west', WSW:'West-south-west', W:'West', WNW:'West-north-west', NW:'North-west', NNW:'North-north-west' }; return names[short] || short; }
-    function windStrengthLabel(speedKmh) { const s = Number(speedKmh || 0); if (s < 20) return 'light'; if (s < 40) return 'moderate'; if (s < 60) return 'strong'; return 'big storm'; }
+    function windStrengthLabel(speedKmh) { const s = Number(speedKmh || 0); if (s < 15) return 'light'; if (s < 30) return 'moderate'; if (s < 45) return 'strong'; return 'stormy'; }
     function simpleWindText(directionDeg, speedKmh) { return `${windDirectionName(directionDeg)} ${Math.round(speedKmh)} km/h · ${windStrengthLabel(speedKmh)}`; }
     function windEffect(directionDeg, speedKmh = 0) { const d = ((Number(directionDeg || 0) % 360) + 360) % 360; let label = 'mixed', note = 'mixed conditions'; if (d >= 330 || d <= 45) { label = 'clean'; note = 'north wind is clean and offshore for Middleton'; } else if (d > 45 && d <= 75) { label = 'side-ish'; note = 'north-east wind can be okay if it stays light, but it is not as clean as north'; } else if (d > 75 && d <= 145) { label = 'worst wind'; note = 'east or south-east wind is the worst direction for Middleton and can make it ugly fast'; } else if (d > 145 && d <= 220) { label = 'bumpy'; note = 'south wind makes Middleton bumpy and messy'; } else if (d > 220 && d <= 300) { label = 'side wind'; note = 'west to south-west wind can add side bumps, but it is usually better than east/south-east'; } else { label = 'clean-ish'; note = 'north-west wind can still be pretty clean if it stays light'; } if (speedKmh >= 25) note += ', especially once it gets stronger'; return { label, note }; }
     function isCleanWind(directionDeg) { const d = ((Number(directionDeg || 0) % 360) + 360) % 360; return d >= 330 || d <= 45; }
     function isBadMiddletonWind(directionDeg) { const d = ((Number(directionDeg || 0) % 360) + 360) % 360; return d > 75 && d <= 145; }
-    function isLightWind(speedKmh) { return Number(speedKmh || 0) < 20; }
-    function surfWindowScore(report) { const cleanBonus = isCleanWind(report.windDir) ? 1.2 : 0; const lightBonus = isLightWind(report.windSpeed) ? 0.9 : 0; const badWindPenalty = isBadMiddletonWind(report.windDir) ? 1.2 : 0; const southPenalty = Number(report.windDir || 0) > 145 && Number(report.windDir || 0) <= 220 ? 0.55 : 0; const strongPenalty = Number(report.windSpeed || 0) >= 25 ? 0.8 : 0; return (report.finalFt * 1.55) + cleanBonus + lightBonus + report.windQuality - strongPenalty - badWindPenalty - southPenalty; }
+    function isLightWind(speedKmh) { return Number(speedKmh || 0) < 15; }
+    function surfWindowScore(report) { const cleanBonus = isCleanWind(report.windDir) ? 1.2 : 0; const lightBonus = isLightWind(report.windSpeed) ? 0.9 : 0; const badWindPenalty = isBadMiddletonWind(report.windDir) ? 1.2 : 0; const southPenalty = Number(report.windDir || 0) > 145 && Number(report.windDir || 0) <= 220 ? 0.55 : 0; const strongPenalty = Number(report.windSpeed || 0) >= 30 ? 0.8 : 0; return (report.finalFt * 1.55) + cleanBonus + lightBonus + report.windQuality - strongPenalty - badWindPenalty - southPenalty; }
     function boardDayText(sizeFt) { const s = Number(sizeFt || 0); if (s < 1.25) return 'Foamboard day — easy runners, keep it playful.'; if (s < 3) return 'Longboard, mid or fish day — plenty of glide if you pick the right ones.'; return 'Pumping yeahhhhhh — bring the good board and good legs.'; }
     function pulseStory(day) { const daylight = daylightReports(day.reports); if (daylight.length < 2) return ''; const first = daylight[0], bestSize = daylight.slice().sort((a, b) => b.finalFt - a.finalFt)[0]; const pulseFt = bestSize.finalFt - first.finalFt; const boardText = boardDayText(bestSize.finalFt); if (pulseFt >= 0.5 && pulseFt < 1) return `Little push building toward ${formatTime(bestSize.time)}. ${boardText}`; if (pulseFt >= 1 && pulseFt < 2) return `A better pulse builds toward ${formatTime(bestSize.time)} — ${bestSize.finalFt >= 3 ? 'it could get pumping' : bestSize.finalFt >= 2 ? 'it should get fun' : 'it will get more fun'}. ${boardText}`; if (pulseFt >= 2) return `Big pulse building toward ${formatTime(bestSize.time)} — ${bestSize.finalFt >= 3 ? 'pumping yeahhhhhh' : 'proper little jump in energy'}. ${boardText}`; const last = daylight[daylight.length - 1]; if (first.finalFt - last.finalFt > 0.3) return `The pulse looks better early, then slowly loses energy later in the day. ${boardDayText(first.finalFt)}`; return `Steady South Coast read. ${boardText}`; }
     function highTideWarning(day) { const points = tideForDate(day.date); if (!points) return ''; const high = points.map(normaliseTidePoint).filter(p => p.type === 'High' && p.height >= 1.35 && timeToHour(p.time) >= 6 && timeToHour(p.time) <= 18).sort((a, b) => b.height - a.height)[0]; return high ? `Tide note: ${formatClock(high.time)} is a ${high.height.toFixed(2)}m high, so the beach may get fuller and softer.` : ''; }
@@ -395,7 +382,7 @@
     function fmtM(value) { const n = Number(value || 0); return n ? `${n.toFixed(1)}m` : '--'; }
     function fmtPeriod(value) { const n = Number(value || 0); return n ? `${n.toFixed(1)}s` : '--'; }
     function fmtDirection(value) { const n = Number(value || 0); return n ? `${Math.round(n)}° ${compassFromDeg(n)}` : '--'; }
-    function renderSwellDetail(day) { if (state.expandedDay !== state.selectedDay) { $('swellDetail').innerHTML = ''; $('swellDetailHint').textContent = 'Tap any date above to open the 6 AM, 12 PM and 6 PM read.'; return; } $('swellDetailHint').textContent = 'Tap the same date again to close the 6 AM, 12 PM and 6 PM read.'; const rows = [6, 12, 18].map(hour => nearestHour(day.reports, hour)).filter(Boolean); $('swellDetail').innerHTML = rows.map(r => { const primary = { h: r.offshoreRaw.swell_wave_height, p: r.offshoreRaw.swell_wave_period, d: r.offshoreRaw.swell_wave_direction }, secondary = { h: r.offshoreRaw.secondary_swell_wave_height, p: r.offshoreRaw.secondary_swell_wave_period, d: r.offshoreRaw.secondary_swell_wave_direction }; const driverLabel = r.activeDriver.kind === 'Secondary swell' ? 'Secondary driving' : r.activeDriver.kind === 'Primary swell' ? 'Primary driving' : 'Mixed / weak'; return `<div class="swell-row"><div><b>${formatTime(r.time)}</b><small style="display:block;color:var(--muted);margin-top:2px;">${driverLabel}</small></div><div class="swell-pill">${r.sizeText} ft</div><div class="swell-data"><strong>Primary: ${fmtM(primary.h)} @ ${fmtPeriod(primary.p)}</strong><small>${fmtDirection(primary.d)} · adjusted Cape du Couedic reference</small></div><div class="swell-data"><strong>Secondary: ${fmtM(secondary.h)} @ ${fmtPeriod(secondary.p)}</strong><small>${secondary.h ? fmtDirection(secondary.d) + ' · checked as possible real driver' : 'No useful secondary line'}</small></div><div class="swell-data wind-read"><strong>Wind: ${simpleWindText(r.windDir, r.windSpeed)}</strong><small>Clean simple read for coaching decisions</small></div></div>`; }).join(''); }
+    function renderSwellDetail(day) { if (state.expandedDay !== state.selectedDay) { $('swellDetail').innerHTML = ''; $('swellDetailHint').textContent = 'Tap a date to open the 6 AM, 12 PM and 6 PM read.'; return; } $('swellDetailHint').textContent = 'Tap the same date again to close this detail.'; const rows = [6, 12, 18].map(hour => nearestHour(day.reports, hour)).filter(Boolean); $('swellDetail').innerHTML = rows.map(r => { const primary = { h: r.offshoreRaw.swell_wave_height, p: r.offshoreRaw.swell_wave_period, d: r.offshoreRaw.swell_wave_direction }, secondary = { h: r.offshoreRaw.secondary_swell_wave_height, p: r.offshoreRaw.secondary_swell_wave_period, d: r.offshoreRaw.secondary_swell_wave_direction }; const driverLabel = r.activeDriver.kind === 'Secondary swell' ? 'Secondary driving' : r.activeDriver.kind === 'Primary swell' ? 'Primary driving' : 'Mixed / weak'; return `<div class="swell-row"><div><b>${formatTime(r.time)}</b><small style="display:block;color:var(--muted);margin-top:2px;">${driverLabel}</small></div><div class="swell-pill">${r.sizeText} ft</div><div class="swell-data"><strong>Primary: ${fmtM(primary.h)} @ ${fmtPeriod(primary.p)}</strong><small>${fmtDirection(primary.d)} · adjusted Cape du Couedic reference</small></div><div class="swell-data"><strong>Secondary: ${fmtM(secondary.h)} @ ${fmtPeriod(secondary.p)}</strong><small>${secondary.h ? fmtDirection(secondary.d) + ' · checked as possible real driver' : 'No useful secondary line'}</small></div><div class="swell-data wind-read"><strong>Wind: ${simpleWindText(r.windDir, r.windSpeed)}</strong><small>Simple wind read for coaching decisions</small></div></div>`; }).join(''); }
 
     function graphX(hour) { return 78 + (clamp(Number(hour), 0, 24) / 24) * 600; }
     function graphLeftPct(hour) { return (graphX(hour) / 720) * 100; }
@@ -415,7 +402,7 @@
     function renderSwellTrendPanel(day) { const reports = day.reports.map(r => ({ time: r.time, hour: reportHourValue(r), sizeFt: Number(r.finalFt || 0), sizeText: r.sizeText, windDir: r.windDir, windSpeed: r.windSpeed })).sort((a, b) => a.hour - b.hour); if (!reports.length) { $('swellTrendPanel').innerHTML = `<div class="warning error"><b>No swell trend data.</b></div>`; return; } const maxDataFt = Math.max(...reports.map(r => r.sizeFt), 3); const maxFt = Math.max(3, Math.ceil(maxDataFt)); const minFt = 0; const path = makeSwellTrendPath(reports, minFt, maxFt), fillPath = `${path} L 696 220 L 78 220 Z`, best = reports.slice().sort((a, b) => b.sizeFt - a.sizeFt)[0]; const markers = [0,3,6,9,12,15,18,21].map(hour => nearestHour(day.reports, hour)).filter(Boolean).map(r => ({ hour: reportHourValue(r), sizeFt: Number(r.finalFt || 0) })); const markerDots = markers.map(p => `<circle cx="${graphX(p.hour)}" cy="${swellGraphY(p.sizeFt, minFt, maxFt)}" r="5" fill="#eafff5" stroke="#9cf2ca" stroke-width="3" />`).join(''); const showNow = day.date === localIsoDate(), now = new Date(), nowPct = graphLeftPct(now.getHours() + now.getMinutes() / 60), windows = buildSwellTrendWindows(reports), bestText = `${formatTime(best.time)} · ${best.sizeText} ft`; const cards = [`<div class="swell-trend-card"><small>Best pulse</small><b>${bestText}</b><small>${simpleWindText(best.windDir, best.windSpeed)}</small></div>`, ...windows.slice(0, 2).map(w => `<div class="swell-trend-card"><small>${trendArrow(w.delta)} ${w.trend}</small><b>${formatTime(w.start.time)} → ${formatTime(w.end.time)}</b><small>${w.start.sizeText} ft to ${w.end.sizeText} ft</small></div>`)].join(''); $('swellTrendPanel').innerHTML = `<div class="swell-graph">${showNow ? `<div class="swell-now-line" style="left:${nowPct}%"></div><div class="swell-now-label" style="left:${nowPct}%">Now</div>` : ''}<svg viewBox="0 0 720 240" preserveAspectRatio="none">${makeSwellGridLines(minFt, maxFt)}<path d="${fillPath}" fill="rgba(156,242,202,0.18)" /><path d="${path}" fill="none" stroke="#9cf2ca" stroke-width="4" stroke-linecap="round" />${markerDots}${axisLabels().join('')}</svg></div><div class="swell-trend-cards">${cards}</div>`; }
 
     function windGraphY(speed, minSpeed, maxSpeed) { const top = 34, bottom = 246, range = Math.max(4, maxSpeed - minSpeed); return bottom - ((speed - minSpeed) / range) * (bottom - top); }
-    function windLevel(speedKmh) { return clamp(Number(speedKmh || 0) / 20, 0, 4); }
+    function windLevel(speedKmh) { return clamp(Number(speedKmh || 0) / 15, 0, 4); }
     function makeWindGridLines(minLevel = 0, maxLevel = 4) { const boundaryLines = [1, 2, 3, 4].map(v => `<line x1="78" y1="${windGraphY(v, minLevel, maxLevel)}" x2="696" y2="${windGraphY(v, minLevel, maxLevel)}" stroke="rgba(255,255,255,0.13)" />`).join(''); const labels = [{ y: 0.5, label: 'light' }, { y: 1.5, label: 'moderate' }, { y: 2.5, label: 'strong' }, { y: 3.5, label: 'stormy' }].map(item => `<text x="18" y="${windGraphY(item.y, minLevel, maxLevel) + 4}" fill="rgba(255,255,255,0.95)" font-size="13" font-weight="950">${item.label}</text>`).join(''); return boundaryLines + labels; }
     function makeWindTrendPath(points, minSpeed, maxSpeed) { const sorted = points.slice().sort((a, b) => a.hour - b.hour); if (!sorted.length) return ''; const coords = sorted.map(p => ({ x: graphX(p.hour), y: windGraphY(p.speed, minSpeed, maxSpeed) })); let d = `M ${coords[0].x} ${coords[0].y}`; for (let i = 1; i < coords.length; i++) { const prev = coords[i - 1], curr = coords[i], midX = (prev.x + curr.x) / 2; d += ` C ${midX} ${prev.y}, ${midX} ${curr.y}, ${curr.x} ${curr.y}`; } return d; }
     function windArrowRotation(directionFromDeg) { return (Number(directionFromDeg || 0) + 180) % 360; }
@@ -431,7 +418,7 @@
 
     async function loadReport(force = false) { $('statusText').textContent = 'Loading report...'; try { if (force) ['middleton-offshore','middleton-local','middleton-wind','middleton-weather'].forEach(k => localStorage.removeItem(k)); await loadYearlyTides(); const [offshoreRes, localRes, windRes, weatherRes] = await Promise.all([fetchJsonCached('middleton-offshore', marineUrl(CONFIG.offshore)), fetchJsonCached('middleton-local', marineUrl(CONFIG.local)), fetchJsonCached('middleton-wind', windUrl()), fetchJsonCached('middleton-weather', weatherUrl())]); state.data = { offshore: offshoreRes.data, local: localRes.data, wind: windRes.data, weather: weatherRes.data }; const combined = combineHourly(state.data.offshore, state.data.local, state.data.wind), reports = combined.map(buildHourReport); state.report = { reports, days: groupByDay(reports) }; state.selectedDay = 0; state.expandedDay = null; await loadTidesForDays(state.report.days); $('statusText').textContent = 'Report updated'; render(); } catch (err) { console.error(err); $('statusText').textContent = 'Data error'; $('plainWhy').textContent = err.message || 'Could not load report.'; $('hero').classList.add('error'); } }
     function copySummary() { if (!state.report) return; const day = state.report.days[state.selectedDay], r = selectedReportForDay(day); navigator.clipboard?.writeText(`Middleton report ${formatDay(day.date)}: ${r.sizeText} ft. Wind ${compassFromDeg(r.windDir)} ${Math.round(r.windSpeed)} km/h.`); $('statusText').textContent = 'Summary copied'; }
-    function runTests() { console.assert(MIDDLETON_TIDE_CACHE_KEY.includes('victor-harbor-bom-2026-v3-24h'), 'Middleton tide cache key should force corrected 24h Victor Harbor tide file to load'); console.assert(axisLabels().join('').includes('12am') && axisLabels().join('').includes('9pm'), 'Tide graph should show the full 24-hour scale'); console.assert(MIDDLETON_SIZE_OFFSET_FT === 1, 'Middleton calibration should add 1ft to surfable calculated size'); console.assert(CONFIG.local.lat === -35.529717 && CONFIG.local.lon === 138.7508, 'Middleton coordinates should be set'); const adjustedTestLine = adjustedMiddletonSwellLine({ h: 1.6, p: 8.2, d: 202 }); console.assert(adjustedTestLine.p > 12 && adjustedTestLine.d > 205, 'Middleton adjustment should lift under-called SSW period/direction toward South Coast reference'); console.assert(sizeTextToFt('2-3') === 2.5, 'Size text conversion should average ranges'); console.assert(CONFIG.offshore.lat === -36.05 && CONFIG.offshore.lon === 136.70, 'Middleton offshore reference should use Cape du Couedic coordinates'); console.assert(southCoastDirectionScore(205) > southCoastDirectionScore(90), 'South/SSW swell should score higher than east swell'); console.assert(sizeRange(southCoastSizeFt(1.6, 229, 11.2)) === '1.5-2' || sizeRange(southCoastSizeFt(1.6, 229, 11.2)) === '2-2.5', '1.6m @ 229° 11s should sit near 2ft, not 3ft'); console.assert(sizeRange(southCoastSizeFt(1.5, 221, 14.9)).includes('2') || sizeRange(southCoastSizeFt(1.5, 221, 14.9)).includes('3'), '1.5m @ 221° 15s should be stronger, around 2-3ft/3ft'); console.assert(isCleanWind(20) === true && isCleanWind(180) === false, 'North wind should be clean, south wind not clean'); console.assert(windQuality(10, 100) < windQuality(10, 180), 'East / South-East should score worse than south for Middleton'); console.assert(isBadMiddletonWind(100) === true, 'East / South-East should be marked as the worst wind for Middleton'); console.assert(sizeRange(3.2) === '2.5-3' || sizeRange(3.2) === '3-4', 'Size range should parse'); console.assert(axisLabels().join('').includes('12am') && axisLabels().join('').includes('3am') && axisLabels().join('').includes('9pm'), 'Swell, wind and tide graphs should use the full 24-hour scale'); console.info('Middleton Surf Report tests passed'); }
+    function runTests() { console.assert(MIDDLETON_TIDE_CACHE_KEY.includes('victor-harbor-bom-2026-v3-24h'), 'Middleton tide cache key should force corrected 24h Victor Harbor tide file to load'); console.assert(axisLabels().join('').includes('12am') && axisLabels().join('').includes('9pm'), 'Tide graph should show the full 24-hour scale'); console.assert(MIDDLETON_SIZE_OFFSET_FT === 0, 'Middleton calibration offset should be zero to avoid overcalling'); console.assert(CONFIG.local.lat === -35.529717 && CONFIG.local.lon === 138.7508, 'Middleton coordinates should be set'); const adjustedTestLine = adjustedMiddletonSwellLine({ h: 1.6, p: 8.2, d: 202 }); console.assert(Math.abs(adjustedTestLine.p - 8.2) < 0.01 && Math.abs(adjustedTestLine.d - 202) < 0.01, 'Middleton adjustment should not artificially change period/direction'); console.assert(sizeTextToFt('2-3') === 2.5, 'Size text conversion should average ranges'); console.assert(CONFIG.offshore.lat === -36.05 && CONFIG.offshore.lon === 136.70, 'Middleton offshore reference should use Cape du Couedic coordinates'); console.assert(southCoastDirectionScore(205) > southCoastDirectionScore(90), 'South/SSW swell should score higher than east swell'); console.assert(sizeRange(southCoastSizeFt(1.6, 229, 11.2)) === '1.5-2' || sizeRange(southCoastSizeFt(1.6, 229, 11.2)) === '2-2.5', '1.6m @ 229° 11s should sit near 2ft, not 3ft'); console.assert(sizeRange(southCoastSizeFt(1.5, 221, 14.9)).includes('2') || sizeRange(southCoastSizeFt(1.5, 221, 14.9)).includes('3'), '1.5m @ 221° 15s should be stronger, around 2-3ft/3ft'); console.assert(southCoastSizeFt(1.2, 225, 14) >= 1.8 && southCoastSizeFt(1.2, 225, 14) <= 2.6, '1.1-1.3m @ 13-15s 224-226 should be around 2ft, sometimes 2-3ft'); console.assert(southCoastSizeFt(1.0, 228, 13) >= 1.2 && southCoastSizeFt(1.0, 228, 13) <= 2.1, '1.0m @ 13s from 228 should be around 1-2ft'); console.assert(southCoastSizeFt(0.85, 220, 12) >= 0.9 && southCoastSizeFt(0.85, 220, 12) <= 1.8, '0.8-0.9m @ 11-13s from 207-227 should be around 1 to 1-2ft'); console.assert(southCoastSizeFt(0.85, 238, 11) >= 0.7 && southCoastSizeFt(0.85, 238, 11) <= 1.6, '0.8-0.9m @ 10-12s from 234-241 should be around 1ft to 1ft+'); console.assert(southCoastSizeFt(0.8, 198, 17) < 2.4, '0.8m secondary @ 16-18s from 193-205 should not create 3ft by itself'); console.assert(southCoastSizeFt(1.5, 189, 8.7) >= 1.6 && southCoastSizeFt(1.5, 189, 8.7) <= 2.4, '1.5m @ 8.7s from 189 should be around 2ft, not 3-4ft'); console.assert(isCleanWind(20) === true && isCleanWind(180) === false, 'North wind should be clean, south wind not clean'); console.assert(windQuality(10, 100) < windQuality(10, 180), 'East / South-East should score worse than south for Middleton'); console.assert(isBadMiddletonWind(100) === true, 'East / South-East should be marked as the worst wind for Middleton'); console.assert(sizeRange(3.2) === '2.5-3' || sizeRange(3.2) === '3-4', 'Size range should parse'); console.assert(axisLabels().join('').includes('12am') && axisLabels().join('').includes('3am') && axisLabels().join('').includes('9pm'), 'Swell, wind and tide graphs should use the full 24-hour scale'); console.assert(windStrengthLabel(0) === 'light', '0 km/h should be light'); console.assert(windStrengthLabel(15) === 'moderate', '15 km/h should be moderate'); console.assert(windStrengthLabel(30) === 'strong', '30 km/h should be strong'); console.assert(windStrengthLabel(45) === 'stormy', '45 km/h should be stormy'); console.assert(isLightWind(12) === true && isLightWind(15) === false, 'Light wind should be under 15 km/h'); console.assert(windLevel(0) === 0, '0 km/h should map to level 0'); console.assert(windLevel(15) === 1, '15 km/h should map to level 1'); console.assert(windLevel(30) === 2, '30 km/h should map to level 2'); console.assert(windLevel(45) === 3, '45 km/h should map to level 3'); console.assert(windLevel(60) === 4, '60 km/h and above should map toward level 4'); console.assert(renderSwellDetail.toString().includes('Tap a date to open the 6 AM, 12 PM and 6 PM read.'), 'Swell detail helper text should use the shorter open hint'); console.assert(renderSwellDetail.toString().includes('Tap the same date again to close this detail.'), 'Swell detail helper text should use the shorter close hint'); console.info('Middleton Surf Report tests passed'); }
 
     $('refreshBtn').addEventListener('click', () => loadReport(true));
     $('timeSelect').addEventListener('change', render);
