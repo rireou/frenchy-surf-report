@@ -374,6 +374,36 @@
     };
 
     const state = { selectedDay: 0, expandedDay: null, selectedWeatherDay: null, data: null, report: null, tides: {}, portNoarlungaTides: {} };
+    const DEBUG_MODE = new URLSearchParams(window.location.search).get('debug') === '1';
+    const GULF_CHECK_POINTS = [
+      { name: 'Seaford local cell', lat: -35.19, lon: 138.48 },
+      { name: 'Moana / Port Noarlunga cell', lat: -35.15, lon: 138.47 },
+      { name: 'Christies / O’Sullivan cell', lat: -35.12, lon: 138.47 },
+      { name: 'Outer Gulf entrance cell', lat: -35.35, lon: 138.20 }
+    ];
+
+
+    const DAILY_SANITY_CHECKS = [
+      // Optional manual entries:
+      // { source: 'Swellnet daily report', spot: 'Mid Coast', date: '2026-06-06', hour: 7, observedFt: 1.0, note: 'Swellnet daily report said around 1ft in the morning.' },
+      // { source: 'Frenchy beach check', spot: 'Seaford', date: '2026-06-06', hour: 14, observedFt: 1.75, note: 'Beach check: Seaford around 1.5-2ft at 2pm.' },
+      {
+        source: 'Frenchy beach check',
+        spot: 'Seaford',
+        date: 'TODAY',
+        hour: 6,
+        observedFt: 1.5,
+        note: 'Beach check: Seaford was around 1.5ft in the morning.'
+      },
+      {
+        source: 'Frenchy beach check',
+        spot: 'Seaford',
+        date: 'TODAY',
+        hour: 14,
+        observedFt: 1.75,
+        note: 'Beach check: Seaford was around 1.5-2ft at 2pm.'
+      }
+    ];
     const $ = (id) => document.getElementById(id);
     function clamp(n, min, max) { return Math.max(min, Math.min(max, n)); }
     function lerp(a, b, t) { return a + (b - a) * clamp(t, 0, 1); }
@@ -596,13 +626,14 @@
       if (calibration === 'generous') return ft >= 2.5 ? 1.0 : 0.5;
       return 0;
     }
-    function sizeRange(ft) { const x = clamp(Number(ft), 0, 6); if (x < 0.4) return 'Flat'; if (x < 0.8) return '0.5'; if (x < 1.15) return '1'; if (x < 1.38) return '1-1.5'; if (x < 1.65) return '1.5'; if (x < 2.15) return '1.5-2'; if (x < 2.4) return '2'; if (x < 2.65) return '2-2.5'; if (x < 3.25) return '3'; if (x < 3.7) return '3-3.5'; return `${Math.round(x * 2) / 2}`; }
+    function publicSizeText(ft) { const x = Number(ft || 0); if (x < 0.35) return 'Flat'; if (x < 0.75) return '0.5'; if (x < 1.25) return '1'; if (x < 1.5) return '1.5'; if (x < 1.6) return '1.5-2'; if (x < 2.25) return '2'; if (x < 2.75) return '2-2.5'; if (x < 3.25) return '3'; if (x < 3.75) return '3-3.5'; if (x < 4.5) return '4'; return `${Math.round(x)}ft`; }
+    function sizeRange(ft) { return publicSizeText(ft); }
     function formatFtValue(value) { const n = Math.max(0, Number(value || 0)); if (n < 0.35) return 'Flat'; const rounded = Math.round(n * 2) / 2; return Number.isInteger(rounded) ? String(rounded) : String(rounded); }
-    function liveSizeText(report) { const correction = report.correctionApplied; if (correction && Number.isFinite(Number(correction.actualFt))) return formatFtValue(Number(correction.actualFt)); return formatFtValue(Number(report.finalFt || 0)); }
+    function liveSizeText(report) { const correction = report.correctionApplied; if (correction && Number.isFinite(Number(correction.actualFt))) return publicSizeText(Number(correction.actualFt)); return publicSizeText(Number(report.finalFt || 0)); }
     function confidenceLabel(report) { let score = 0.52; if (report.insideFloorFt > 0.9) score += 0.12; if (report.activeDriver.directionScore > 0.65) score += 0.12; if (report.activeDriver.periodS >= 10) score += 0.06; if (report.windQuality < 0.4) score -= 0.05; score = clamp(score, 0, 1); if (score >= 0.72) return 'High'; if (score >= 0.48) return 'Medium'; return 'Low'; }
     function indexByTime(hourly) { const out = {}; hourly.time.forEach((time, i) => out[time] = pickHour(hourly, i)); return out; }
     function pickHour(hourly, i) { const obj = {}; Object.keys(hourly).forEach(k => obj[k] = Array.isArray(hourly[k]) ? hourly[k][i] : hourly[k]); return obj; }
-    function combineHourly(offshore, local, wind) { const mapLocal = indexByTime(local.hourly), mapWind = indexByTime(wind.hourly); const rows = offshore.hourly.time.map((time, i) => ({ time, offshore: pickHour(offshore.hourly, i), local: mapLocal[time] || null, wind: mapWind[time] || null })).filter(x => x.local && x.wind); rows.forEach((row, index) => { row._index = index; row._allRows = rows; }); return rows; }
+    function combineHourly(offshore, local, wind, gulfData = []) { const mapLocal = indexByTime(local.hourly), mapWind = indexByTime(wind.hourly), gulfMaps = gulfData.map(item => ({ point: item.point, map: item.data?.hourly ? indexByTime(item.data.hourly) : {} })); const rows = offshore.hourly.time.map((time, i) => ({ time, offshore: pickHour(offshore.hourly, i), local: mapLocal[time] || null, wind: mapWind[time] || null, gulfChecks: gulfMaps.map(g => ({ name: g.point.name, point: g.point, data: g.map[time] || null })).filter(g => g.data) })).filter(x => x.local && x.wind); rows.forEach((row, index) => { row._index = index; row._allRows = rows; }); return rows; }
 
     const TIDE_SOURCE_BY_DATE = {};
     const TIDE_POINTS = {
@@ -625,11 +656,292 @@
     function localIsoDate() { return new Intl.DateTimeFormat('en-CA', { timeZone: CONFIG.tz, year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date()); }
     function formatDay(dateStr) { return new Intl.DateTimeFormat('en-AU', { weekday: 'short', month: 'short', day: 'numeric' }).format(new Date(`${dateStr}T12:00:00`)); }
     function formatTime(timeStr) { const h = Number(timeStr.slice(11, 13)); if (h === 0) return '12 AM'; if (h < 12) return `${h} AM`; if (h === 12) return '12 PM'; return `${h - 12} PM`; }
+    function hourLabel(hour) { const h = Number(hour); if (h === 0) return '12 AM'; if (h < 12) return `${h} AM`; if (h === 12) return '12 PM'; return `${h - 12} PM`; }
     function tideGatePenaltyForDirection(directionDeg) { const d = Number(directionDeg || 0); if (!Number.isFinite(d)) return 0; if (d < 225) return 1.0; if (d < 235) return 0.5; if (d > 240) return 0.25; return 0; }
     function timeToMinutesFromReport(timeStr) { return Number(timeStr.slice(11, 13)) * 60 + Number(timeStr.slice(14, 16) || 0); }
     function clockToMinutesLocal(clock) { const [h, m] = String(clock).split(':').map(Number); return h * 60 + m; }
     function highTidePush(reportTime, swellDirectionDeg, offshoreFt) { const date = reportTime.slice(0, 10), tidePoints = tideForDate(date); if (!tidePoints || !tidePoints.length) return { boostFt: 0, phase: 'unknown', note: 'No tide data available for high-tide push.' }; const d = Number(swellDirectionDeg || 0); if (d < 235 || d > 245 || Number(offshoreFt || 0) < 2.2) return { boostFt: 0, phase: 'open', note: 'No high-tide direction boost.' }; const highs = tidePoints.map(normaliseTidePoint).filter(p => p.type === 'High').map(p => ({ ...p, minute: clockToMinutesLocal(p.time) })); const current = timeToMinutesFromReport(reportTime); let best = null; for (const high of highs) { const diff = Math.abs(current - high.minute); if (diff <= 150 && Number(high.height || 0) >= 1.5) { const tideStrength = clamp((Number(high.height || 0) - 1.5) / 0.5, 0, 1); const timingStrength = 1 - diff / 150; const boostFt = 0.45 * tideStrength * timingStrength; if (!best || boostFt > best.boostFt) best = { high, boostFt }; } } if (!best || best.boostFt <= 0.05) return { boostFt: 0, phase: 'open', note: 'Outside useful high-tide push window.' }; return { boostFt: best.boostFt, phase: 'high push', note: `High-tide push: ${formatClock(best.high.time)} at ${best.high.height.toFixed(2)}m helps a 235–245° swell squeeze into Seaford.` }; }
     function lowTideDrag(reportTime, swellDirectionDeg, offshoreFt = 0, insideFloorFt = 0) { const basePenaltyRaw = tideGatePenaltyForDirection(swellDirectionDeg); if (!basePenaltyRaw) return { penaltyFt: 0, capFt: null, phase: 'open', note: 'No low-tide direction penalty.' }; const date = reportTime.slice(0, 10), tidePoints = tideForDate(date); if (!tidePoints || !tidePoints.length) return { penaltyFt: 0, capFt: null, phase: 'unknown', note: 'No tide data available for low-tide penalty.' }; const confirmedEnergy = Number(offshoreFt || 0) >= 2.2 || Number(insideFloorFt || 0) >= 1.45; const strongInsideSignal = Number(insideFloorFt || 0) >= 1.65; const basePenalty = basePenaltyRaw * (strongInsideSignal ? 0.45 : confirmedEnergy ? 0.62 : 1); const lows = tidePoints.map(normaliseTidePoint).filter(p => p.type === 'Low').map(p => ({ ...p, minute: clockToMinutesLocal(p.time) })); const current = timeToMinutesFromReport(reportTime); let best = null; for (const low of lows) { const diff = current - low.minute; if (diff >= -120 && diff <= 150) { const phase = diff < -20 ? 'dropping into low' : diff <= 20 ? 'low tide' : 'early push'; const factor = diff <= 0 ? (diff + 120) / 120 : Math.max(0, 1 - (diff / 150)); let penaltyFt = basePenalty * clamp(factor, 0, 1); if (phase === 'early push' && confirmedEnergy) penaltyFt *= 0.55; let capFt = null; if (penaltyFt > 0.2) { capFt = Number(swellDirectionDeg) < 225 ? 2.15 : 2.35; if (confirmedEnergy) capFt += 0.35; if (strongInsideSignal) capFt += 0.25; if (phase === 'early push') capFt += confirmedEnergy ? 0.45 : 0.25; } if (!best || penaltyFt > best.penaltyFt) best = { low, penaltyFt, capFt, phase }; } } if (!best || best.penaltyFt <= 0.05) return { penaltyFt: 0, capFt: null, phase: 'open', note: 'Outside low-tide slowdown window.' }; const dirText = Number(swellDirectionDeg) < 225 ? 'under 225°' : 'under 235°'; const capText = best.capFt ? ` Live cap ${best.capFt.toFixed(1)} ft while the tide gate is tight.` : ''; const confirmedText = confirmedEnergy ? ' Confirmed energy reduces the low-tide penalty, so the report can still show 2ft+ when the swell is actually getting in.' : ''; return { penaltyFt: best.penaltyFt, capFt: best.capFt, phase: best.phase, note: `Low-tide gate: swell ${dirText}. Around low tide, less water near the Gulf entrance can slow and shrink the Seaford pulse. Penalty ${best.penaltyFt.toFixed(1)} ft near low at ${formatClock(best.low.time)}.${capText}${confirmedText}` }; }
+
+
+    function sanityChecksForDate(date) {
+      const targetDate = String(date || '').slice(0, 10);
+      return DAILY_SANITY_CHECKS
+        .map(check => ({ ...check, date: check.date === 'TODAY' ? localIsoDate() : check.date }))
+        .filter(check => check.date === targetDate && Number.isFinite(Number(check.hour)) && Number.isFinite(Number(check.observedFt)))
+        .map(check => ({ ...check, minute: Number(check.hour) * 60, observedFt: Number(check.observedFt), source: check.source || 'Manual sanity check', spot: check.spot || 'Mid Coast' }))
+        .sort((a, b) => a.minute - b.minute);
+    }
+    function sanityCheckAnchorForTime(reportTime) {
+      const date = String(reportTime || '').slice(0, 10);
+      const checks = sanityChecksForDate(date);
+      if (!checks.length) return null;
+      const minute = timeToMinutesFromReport(reportTime);
+      const nearest = checks.slice().sort((a, b) => Math.abs(a.minute - minute) - Math.abs(b.minute - minute))[0];
+      const nearestDiff = Math.abs(nearest.minute - minute);
+      if (nearestDiff <= 90) return { type: 'nearest', check: nearest, observedFt: nearest.observedFt, minute, diffMinutes: nearestDiff, note: nearest.note, source: nearest.source };
+      for (let i = 0; i < checks.length - 1; i += 1) {
+        const before = checks[i], after = checks[i + 1];
+        if (minute > before.minute && minute < after.minute) {
+          const t = (minute - before.minute) / (after.minute - before.minute);
+          const observedFt = lerp(before.observedFt, after.observedFt, t);
+          return { type: 'interpolated', before, after, observedFt, minute, note: `Sanity check interpolation between ${hourLabel(before.hour)} and ${hourLabel(after.hour)}.`, source: `${before.source} / ${after.source}` };
+        }
+      }
+      const first = checks[0], latest = checks[checks.length - 1];
+      if (minute < first.minute) return { type: 'before', check: first, observedFt: first.observedFt, minute, diffMinutes: first.minute - minute, note: first.note, source: first.source };
+      return { type: 'after', check: latest, observedFt: latest.observedFt, minute, diffMinutes: minute - latest.minute, note: latest.note, source: latest.source };
+    }
+    function latestSanityCheckForTime(reportTime, maxHours = 6) {
+      const checks = sanityChecksForDate(String(reportTime || '').slice(0, 10));
+      if (!checks.length) return null;
+      const minute = timeToMinutesFromReport(reportTime);
+      return checks
+        .filter(check => check.minute <= minute && minute - check.minute <= maxHours * 60)
+        .sort((a, b) => b.minute - a.minute)[0] || null;
+    }
+    function localGulfConfirmation(row, report) {
+      const localWave = Number(row.local?.wave_height || 0);
+      const localWindWave = Number(row.local?.wind_wave_height || 0);
+      const localPeriod = Number(row.local?.wave_period || 0);
+      const insideFloorFt = Number(report.insideFloorFt || 0);
+      const stormSurfFt = Number(report.stormSurfFt || 0);
+      const offshoreFt = Number(report.offshoreModelFt || 0);
+      const windSpeed = Number(row.wind?.wind_speed_10m || report.windSpeed || 0);
+      const windDir = Number(row.wind?.wind_direction_10m || report.windDir || 0);
+      const stormFit = northStormDirectionFit(windDir);
+      const usefulWindWave = localWindWave >= 0.75 && windSpeed >= 20 && stormFit >= 0.35;
+      let score = 0;
+      const reasons = [];
+
+      if (localWave >= 0.7) { score += 0.5; reasons.push('local Gulf wave height is confirming'); }
+      else if (localWave >= 0.55) { score += 0.28; reasons.push('local Gulf wave height is partly showing'); }
+      else if (localWave >= 0.4) { score += 0.12; reasons.push('local Gulf wave height is small'); }
+
+      if (usefulWindWave) { score += 0.38; reasons.push('local wind-wave is useful for the Mid Coast'); }
+      else if (localWindWave >= 0.45) { score += 0.12; reasons.push('local wind-wave is present but not a strong Mid Coast signal'); }
+
+      if (insideFloorFt >= 1.5) { score += 0.36; reasons.push('inside-gulf floor supports surfable size'); }
+      else if (insideFloorFt >= 1.0) { score += 0.16; reasons.push('inside-gulf floor is modest'); }
+
+      if (stormSurfFt >= 2 && stormFit >= 0.45) { score += 0.18; reasons.push('storm-surf signal has useful N/NW fetch'); }
+      if (localPeriod >= 8 && localWave >= 0.5) { score += 0.08; reasons.push('local period has some push'); }
+
+      const weakOffshoreMismatch = offshoreFt >= 2.5 && localWave < 0.55 && localWindWave < 0.45;
+      const weakWestFallback = report.westFallbackCapped && offshoreFt >= 2 && localWave < 0.7 && localWindWave < 0.75;
+      if (weakOffshoreMismatch) { score -= 0.35; reasons.push('offshore swell is high but the local Gulf signal is weak'); }
+      if (weakWestFallback) { score -= 0.25; reasons.push('W/WNW fallback has not entered the Mid Coast yet'); }
+
+      score = clamp(score, 0, 1);
+      const confirmed = localWave >= 0.7 || usefulWindWave || insideFloorFt >= 1.5 || score >= 0.65;
+      const weak = !confirmed && (score < 0.4 || weakOffshoreMismatch || weakWestFallback);
+      const label = confirmed ? (score >= 0.75 ? 'strong' : 'confirmed') : weak ? 'weak' : 'watching';
+      const reason = reasons.length ? reasons.join('; ') : 'No clear local Gulf signal yet';
+      return { score, label, confirmed, reason };
+    }
+    function estimateGulfPointFt(pointData) {
+      const waveM = Number(pointData?.wave_height || 0);
+      const windWaveM = Number(pointData?.wind_wave_height || 0);
+      const period = Number(pointData?.wave_period || 0);
+      let ft = Math.max(waveM * 2.2, windWaveM * 2.1);
+      if (waveM >= 0.7) ft = Math.max(ft, 1.5);
+      if (waveM >= 0.9) ft = Math.max(ft, 2.0);
+      if (waveM >= 1.1) ft = Math.max(ft, 2.5);
+      if (waveM >= 1.3) ft = Math.max(ft, 3.0);
+      if (windWaveM >= 0.75) ft = Math.max(ft, 1.8);
+      if (windWaveM >= 1.0) ft = Math.max(ft, 2.3);
+      if (windWaveM >= 1.2) ft = Math.max(ft, 2.8);
+      if (period >= 10 && waveM >= 0.7) ft += 0.25;
+      return clamp(ft, 0, 4);
+    }
+    function midCoastRealityFromGulfPoints(row, currentFinalFt) {
+      const checks = (row.gulfChecks || []).map(g => {
+        const data = g.data || {};
+        const waveM = Number(data.wave_height || 0);
+        const windWaveM = Number(data.wind_wave_height || 0);
+        const period = Number(data.wave_period || 0);
+        const estimatedFt = estimateGulfPointFt(data);
+        const confirms = waveM >= 0.7 || windWaveM >= 0.75 || estimatedFt >= 1.8;
+        return { name: g.name, waveM, windWaveM, period, estimatedFt, confirms };
+      });
+      const confirming = checks.filter(c => c.confirms);
+      const strongest = checks.slice().sort((a, b) => b.estimatedFt - a.estimatedFt)[0] || null;
+      let confidence = 'medium';
+      let confirmed = false;
+      let recommendedCapFt = null;
+      let reason = 'Mixed Gulf signal.';
+      if (confirming.length >= 2) {
+        confirmed = true;
+        confidence = 'high';
+        reason = 'Multiple Mid Coast / Gulf points confirm wave energy.';
+      } else if (confirming.length === 1) {
+        confirmed = true;
+        confidence = 'medium';
+        reason = 'One Gulf point confirms wave energy, but confirmation is not broad.';
+      } else {
+        confirmed = false;
+        confidence = 'low';
+        reason = 'Offshore swell may be showing, but Gulf points do not confirm it yet.';
+        if (Number(currentFinalFt || 0) > 3) recommendedCapFt = 2.25;
+        else if (Number(currentFinalFt || 0) > 2) recommendedCapFt = 2.0;
+      }
+      return { confirmed, confidence, recommendedCapFt, reason, strongestPointName: strongest ? strongest.name : null, strongestPointFt: strongest ? strongest.estimatedFt : 0, checks };
+    }
+
+    function isTrustedMidCoastSwell(activeDriver) {
+      const dir = Number(activeDriver?.directionDeg || 0);
+      const height = Number(activeDriver?.heightM || 0);
+      const period = Number(activeDriver?.periodS || 0);
+      return height >= 2.5 && dir >= 225 && dir <= 240 && period >= 10;
+    }
+    function sanityCheckBuildSignal(row, report, observedFt, modelFinalFt) {
+      const localWave = Number(row.local?.wave_height || 0);
+      const localWindWave = Number(row.local?.wind_wave_height || 0);
+      const offshoreFt = Number(report.offshoreModelFt || 0);
+      const dir = Number(report.activeDriver?.directionDeg || 0);
+      const gulfPointReality = midCoastRealityFromGulfPoints(row, modelFinalFt);
+      const building =
+        report.gulfRealityConfirmed === true ||
+        gulfPointReality.confidence === 'medium' ||
+        gulfPointReality.confidence === 'high' ||
+        Number(report.insideFloorFt || 0) >= 1.3 ||
+        localWave >= 0.6 ||
+        localWindWave >= 0.55 ||
+        (offshoreFt >= Number(observedFt || 0) + 0.75 && dir >= 220 && dir <= 240);
+      const weak = !building && !gulfPointReality.confirmed && localWave < 0.55 && localWindWave < 0.45 && Number(report.insideFloorFt || 0) < 1.3;
+      return { building, weak, gulfPointReality };
+    }
+    function relaxedSanityCapFt(minutesAfterCheck, observedFt, buildSignal) {
+      const observed = Number(observedFt || 0);
+      if (minutesAfterCheck <= 90) return observed + 0.25;
+      if (minutesAfterCheck <= 180) return buildSignal.building ? observed + 0.75 : observed + 0.35;
+      if (minutesAfterCheck <= 360) return !buildSignal.weak ? observed + 1.25 : observed + 0.75;
+      return null;
+    }
+
+    function applyMidCoastRealityGate(row, report, modelFinalFt) {
+      const gulf = localGulfConfirmation(row, report);
+      const anchor = sanityCheckAnchorForTime(row.time);
+      const modelFt = Number(modelFinalFt || 0);
+      let gatedFt = modelFt;
+      let sanityApplied = false;
+      let sanityNote = '';
+      let sanitySource = '';
+      let sanityObservedFt;
+
+      if (anchor) {
+        sanityObservedFt = anchor.observedFt;
+        sanitySource = anchor.source;
+        sanityNote = anchor.note;
+        if (anchor.type === 'nearest') {
+          gatedFt = clamp(gatedFt, anchor.observedFt - 0.25, anchor.observedFt + 0.25);
+          sanityApplied = true;
+        } else if (anchor.type === 'interpolated') {
+          const minutesAfter = anchor.minute - anchor.before.minute;
+          const buildSignal = sanityCheckBuildSignal(row, report, anchor.before.observedFt, modelFt);
+          let capFt = relaxedSanityCapFt(minutesAfter, anchor.before.observedFt, buildSignal) ?? anchor.observedFt + 0.25;
+          if (buildSignal.building && modelFt >= 2) capFt = Math.max(capFt, 2);
+          gatedFt = Math.min(gatedFt, capFt);
+          sanityApplied = true;
+          sanityNote = buildSignal.building ? `Morning beach check started around ${formatFtValue(anchor.before.observedFt)}ft, and the Mid Coast signal is now building.` : 'Morning check is holding the report down until the Gulf signal confirms more size.';
+        } else if (anchor.type === 'after' && anchor.diffMinutes <= 360 && !gulf.confirmed) {
+          const buildSignal = sanityCheckBuildSignal(row, report, anchor.observedFt, modelFt);
+          let capFt = relaxedSanityCapFt(anchor.diffMinutes, anchor.observedFt, buildSignal);
+          if (buildSignal.building && modelFt >= 2) capFt = Math.max(capFt, 2);
+          if (isTrustedMidCoastSwell(report.activeDriver)) capFt = Math.max(capFt, 2);
+          gatedFt = capFt == null ? gatedFt : Math.min(gatedFt, capFt);
+          sanityApplied = true;
+          sanityNote = buildSignal.building ? `Morning beach check started around ${formatFtValue(anchor.observedFt)}ft, and the Mid Coast signal is now building.` : 'Morning check is holding the report down until the Gulf signal confirms more size.';
+        } else if (anchor.type === 'before' && anchor.diffMinutes <= 180) {
+          const allowedDriftFt = lerp(0.25, 0.75, anchor.diffMinutes / 180);
+          gatedFt = clamp(gatedFt, anchor.observedFt - allowedDriftFt, anchor.observedFt + allowedDriftFt);
+          sanityApplied = true;
+        }
+      }
+
+      let realityNote = gulf.reason;
+      const trustedSwell = isTrustedMidCoastSwell(report.activeDriver);
+      if (!gulf.confirmed && modelFt > 3) {
+        gatedFt = Math.min(gatedFt, trustedSwell ? Math.max(2, 2.25) : 2.25);
+        realityNote = 'Offshore swell is showing, but the Mid Coast signal has not fully confirmed it yet.';
+      } else if (!gulf.confirmed && modelFt > 2) {
+        gatedFt = Math.min(gatedFt, trustedSwell ? Math.max(2, gatedFt) : 2);
+        realityNote = 'Offshore swell is showing, but the Mid Coast signal has not fully confirmed it yet.';
+      }
+
+      gatedFt = clamp(gatedFt, 0, 6);
+      return {
+        ft: gulf.confirmed && !sanityApplied ? modelFt : gatedFt,
+        gulf,
+        applied: Math.abs(gatedFt - modelFt) > 0.01,
+        note: realityNote,
+        sanityCheckApplied: sanityApplied,
+        sanityCheckSource: sanitySource,
+        sanityCheckObservedFt: sanityObservedFt,
+        sanityCheckNote: sanityNote,
+        sanityCheckHour: anchor?.check?.hour ?? anchor?.before?.hour ?? null
+      };
+    }
+
+    function applyOvercheckConfidenceGate(row, report, gatedFinalFt, modelFinalFt) {
+      const latestCheck = latestSanityCheckForTime(row.time, 6);
+      const anchor = sanityCheckAnchorForTime(row.time);
+      const comparisonCheck = latestCheck || anchor?.check || anchor?.before || null;
+      const observedFt = Number(comparisonCheck?.observedFt ?? anchor?.observedFt);
+      const hasSanityCheck = Number.isFinite(observedFt);
+      const modelFt = Number(modelFinalFt || 0);
+      const gulf = localGulfConfirmation(row, report);
+      const strongGulf = gulf.label === 'strong' || (gulf.confirmed && gulf.score >= 0.75);
+      const buildSignal = hasSanityCheck ? sanityCheckBuildSignal(row, report, observedFt, modelFt) : { building: false, weak: !gulf.confirmed };
+      const buildingAllowed = strongGulf || buildSignal.building;
+      const modelDisagreementFt = hasSanityCheck ? Math.abs(modelFt - observedFt) : null;
+      let finalFt = Number(gatedFinalFt || 0);
+      let confidenceReason = gulf.confirmed ? 'Gulf signal confirms the size.' : report.gulfRealityNote || gulf.reason;
+      let needsBeachCheck = false;
+      let sanityCheckHolding = false;
+      let sanityCheckBuilding = false;
+
+      if (latestCheck) {
+        const minutesAfter = timeToMinutesFromReport(row.time) - latestCheck.minute;
+        const capFt = relaxedSanityCapFt(minutesAfter, latestCheck.observedFt, buildSignal);
+        if (capFt != null && !strongGulf) {
+          let allowedCapFt = capFt;
+          if (buildingAllowed && modelFt >= 2) allowedCapFt = Math.max(allowedCapFt, 2);
+          if (isTrustedMidCoastSwell(report.activeDriver)) allowedCapFt = Math.max(allowedCapFt, 2);
+          if (finalFt > allowedCapFt) {
+            finalFt = allowedCapFt;
+            sanityCheckHolding = !buildingAllowed;
+          }
+        }
+        if (buildingAllowed && modelFt >= 2 && finalFt < 2) {
+          finalFt = Math.min(modelFt, 2);
+        }
+        sanityCheckBuilding = buildingAllowed && minutesAfter > 90 && finalFt > latestCheck.observedFt + 0.25;
+      }
+
+      if (hasSanityCheck && modelDisagreementFt > 1 && !buildingAllowed) {
+        needsBeachCheck = true;
+        sanityCheckHolding = true;
+        confidenceReason = 'Offshore swell is showing, but the Mid Coast signal is weak — worth a beach check.';
+      } else if (sanityCheckBuilding) {
+        confidenceReason = `Morning beach check started around ${formatFtValue(observedFt)}ft, and the Mid Coast signal is now building.`;
+      } else if (sanityCheckHolding) {
+        confidenceReason = 'Morning check is holding the report down until the Gulf signal confirms more size.';
+      }
+
+      return {
+        ft: clamp(finalFt, 0, 6),
+        confidenceReason,
+        needsBeachCheck,
+        modelDisagreementFt,
+        sanityCheckHolding,
+        sanityCheckBuilding,
+        gulfRealityConfirmed: gulf.confirmed,
+        gulfRealityScore: gulf.score,
+        gulfRealityLabel: gulf.label,
+        gulfRealityNote: gulf.confirmed ? 'Gulf signal confirms the size.' : (report.gulfRealityNote || gulf.reason)
+      };
+    }
 
     function buildHourReport(row) {
       const calibration = $('calibrationSelect').value;
@@ -672,17 +984,67 @@
       if (tideDrag.capFt && groundswellFt > tideDrag.capFt) groundswellFt = tideDrag.capFt;
       groundswellFt = clamp(groundswellFt, 0, 6);
       let finalFt = stormSurf.active ? Math.max(groundswellFt, stormSurf.ft) : groundswellFt;
-      finalFt = clamp(finalFt + calibrationSizeAdjustFt(finalFt, calibration), 0, 6);
       if (stormSurf.capped) {
         finalFt = Math.min(finalFt, stormSurf.ft);
       }
       if (westFallbackGate.capped) {
         finalFt = Math.min(finalFt, westFallbackGate.ft);
       }
+      finalFt = clamp(finalFt + calibrationSizeAdjustFt(finalFt, calibration), 0, 6);
       const lifted = insideFloorFt > gatedOffshoreModelFt + 0.15;
       const why = stormSurf.capped ? `${stormSurf.capNote || 'N/NW fetch is showing, but the local Seaford signal has not filled in yet.'} Expect around ${sizeRange(stormSurf.ft)} ft for now. Watch for it to build only if the local wind-wave fills in.` : stormSurf.active ? `Storm surf running on the Mid Coast. Swell surf is about ${sizeRange(gatedOffshoreModelFt)} ft, but ${stormSurf.source} is creating about ${sizeRange(stormSurf.ft)} ft. Windy and messy, but rideable for foamies, mals and keen surfers.` : lifted ? `Inside-gulf signal is lifting the forecast. Offshore alone suggests about ${sizeRange(gatedOffshoreModelFt)} ft, but the Seaford local cell shows energy already in the gulf.` : 'Offshore driver is doing most of the work. The local Seaford cell is not lifting the forecast much.';
-      const report = { time: row.time, activeDriver, offshoreModelFt: gatedOffshoreModelFt, offshoreUncappedFt: offshoreModelFt, westFallbackCapped: westFallbackGate.capped, westFallbackCapNote: westFallbackGate.note, singleDriverFt, combinedEnergy, insideFloorFt, stormSurfFt: stormSurf.ft, hasLocalStormSurf: stormSurf.active, localWindWaveM: stormSurf.localWindWave, stormFetchFt: stormSurf.fetchFt, stormMemoryFetchFt: stormSurf.memoryFetchFt, stormSurfSource: stormSurf.source, stormSurfNote: stormSurf.note, stormConfirmed: stormSurf.confirmed, stormCapped: stormSurf.capped, stormCapNote: stormSurf.capNote, stormDirectionQuality: stormSurf.directionGate?.quality, groundswellFt, originalFinalFt: finalFt, finalFt, sizeText: sizeRange(finalFt), windSpeed, windDir, windQuality: wq, confidence: null, why, suppressionNote, gulfLimit, tideDrag, tidePush, sourceMode: stormSurf.active ? 'storm-surf-mode' : 'fallback-only', localRaw: row.local, offshoreRaw: row.offshore, windRaw: row.wind };
-      report.confidence = confidenceLabel(report);
+      const report = { time: row.time, activeDriver, offshoreModelFt: gatedOffshoreModelFt, offshoreUncappedFt: offshoreModelFt, westFallbackCapped: westFallbackGate.capped, westFallbackCapNote: westFallbackGate.note, singleDriverFt, combinedEnergy, insideFloorFt, stormSurfFt: stormSurf.ft, hasLocalStormSurf: stormSurf.active, localWindWaveM: stormSurf.localWindWave, stormFetchFt: stormSurf.fetchFt, stormMemoryFetchFt: stormSurf.memoryFetchFt, stormSurfSource: stormSurf.source, stormSurfNote: stormSurf.note, stormConfirmed: stormSurf.confirmed, stormCapped: stormSurf.capped, stormCapNote: stormSurf.capNote, stormDirectionQuality: stormSurf.directionGate?.quality, groundswellFt, originalFinalFt: finalFt, finalFt, sizeText: '', windSpeed, windDir, windQuality: wq, confidence: null, why, suppressionNote, gulfLimit, tideDrag, tidePush, sourceMode: stormSurf.active ? 'storm-surf-mode' : 'fallback-only', localRaw: row.local, offshoreRaw: row.offshore, windRaw: row.wind };
+      const modelFinalFt = finalFt;
+      const realityGate = applyMidCoastRealityGate(row, report, modelFinalFt);
+      finalFt = realityGate.ft;
+      report.finalFt = finalFt;
+      report.sizeText = sizeRange(finalFt);
+      report.gulfRealityConfirmed = realityGate.gulf.confirmed;
+      report.gulfRealityScore = realityGate.gulf.score;
+      report.gulfRealityLabel = realityGate.gulf.label;
+      report.gulfRealityNote = realityGate.note;
+      report.sanityCheckApplied = realityGate.sanityCheckApplied;
+      report.sanityCheckSource = realityGate.sanityCheckSource;
+      report.sanityCheckObservedFt = realityGate.sanityCheckObservedFt;
+      report.sanityCheckNote = realityGate.sanityCheckNote;
+      report.sanityCheckHour = realityGate.sanityCheckHour;
+      const confidenceGate = applyOvercheckConfidenceGate(row, report, finalFt, modelFinalFt);
+      finalFt = confidenceGate.ft;
+      report.finalFt = finalFt;
+      report.sizeText = sizeRange(finalFt);
+      report.gulfRealityConfirmed = confidenceGate.gulfRealityConfirmed;
+      report.gulfRealityScore = confidenceGate.gulfRealityScore;
+      report.gulfRealityLabel = confidenceGate.gulfRealityLabel;
+      report.gulfRealityNote = confidenceGate.gulfRealityNote;
+      report.confidenceReason = confidenceGate.confidenceReason;
+      report.needsBeachCheck = confidenceGate.needsBeachCheck;
+      report.modelDisagreementFt = confidenceGate.modelDisagreementFt;
+      report.sanityCheckHolding = confidenceGate.sanityCheckHolding;
+      report.sanityCheckBuilding = confidenceGate.sanityCheckBuilding;
+      const gulfPointReality = midCoastRealityFromGulfPoints(row, finalFt);
+      const trustedSwell = isTrustedMidCoastSwell(activeDriver);
+      if (!gulfPointReality.confirmed && gulfPointReality.recommendedCapFt != null) {
+        const capFt = trustedSwell ? Math.max(2, gulfPointReality.recommendedCapFt) : gulfPointReality.recommendedCapFt;
+        finalFt = Math.min(finalFt, capFt);
+      }
+      if (trustedSwell && gulfPointReality.confirmed && gulfPointReality.confidence !== 'low' && modelFinalFt >= 3) {
+        finalFt = Math.max(finalFt, Math.min(modelFinalFt, 3));
+      }
+      report.finalFt = finalFt;
+      report.sizeText = sizeRange(finalFt);
+      report.gulfPointRealityConfirmed = gulfPointReality.confirmed;
+      report.gulfPointRealityConfidence = gulfPointReality.confidence;
+      report.gulfPointRealityNote = gulfPointReality.reason;
+      report.gulfPointStrongestName = gulfPointReality.strongestPointName;
+      report.gulfPointStrongestFt = gulfPointReality.strongestPointFt;
+      report.gulfPointChecks = gulfPointReality.checks;
+      if (gulfPointReality.confidence === 'low') {
+        report.needsBeachCheck = true;
+        report.confidenceReason = 'Offshore swell is showing, but the Mid Coast / Gulf signal is weak — worth a beach check.';
+      } else if (gulfPointReality.confidence === 'high') {
+        report.confidenceReason = 'Multiple Gulf points confirm the size.';
+      }
+      report.confidence = report.needsBeachCheck || gulfPointReality.confidence === 'low' ? 'Low' : confidenceLabel(report);
       return report;
     }
 
@@ -692,11 +1054,31 @@
     function liveCorrectionKey(date) { return `${date}@live`; }
     function applyOneCorrection(report, correction) { if (!correction || !Number.isFinite(Number(correction.deltaFt))) return report; report.originalFinalFt = Number.isFinite(report.originalFinalFt) ? report.originalFinalFt : report.finalFt; report.finalFt = clamp(report.originalFinalFt + Number(correction.deltaFt), 0, 6); report.sizeText = sizeRange(report.finalFt); report.correctionApplied = correction; return report; }
     function applySizeCorrections(reports) { const corrections = getSizeCorrections(); reports.forEach(r => { r.originalFinalFt = Number.isFinite(r.originalFinalFt) ? r.originalFinalFt : r.finalFt; applyOneCorrection(r, corrections[correctionKeyForReport(r)]); }); return reports; }
-    function rebuildReportsFromState() { if (!state.data || !state.data.offshore) return; const combined = combineHourly(state.data.offshore, state.data.local, state.data.wind); const reports = applySizeCorrections(combined.map(buildHourReport)); state.report = { reports, days: groupByDay(reports) }; }
+    function rebuildReportsFromState() {
+      if (!state.data || !state.data.offshore) return;
+      const previousDate = state.report?.days?.[state.selectedDay]?.date;
+      const previousExpandedDate = state.expandedDay == null ? null : state.report?.days?.[state.expandedDay]?.date;
+      const combined = combineHourly(state.data.offshore, state.data.local, state.data.wind, state.data.gulfChecks || []);
+      const reports = applySizeCorrections(combined.map(buildHourReport));
+      state.report = { reports, days: groupByDay(reports) };
+      const nextSelected = previousDate ? state.report.days.findIndex(day => day.date === previousDate) : state.selectedDay;
+      state.selectedDay = nextSelected >= 0 ? nextSelected : 0;
+      if (previousExpandedDate) {
+        const nextExpanded = state.report.days.findIndex(day => day.date === previousExpandedDate);
+        state.expandedDay = nextExpanded >= 0 ? nextExpanded : null;
+      }
+    }
     function groupByDay(hourReports) { const groups = {}; hourReports.forEach(r => { const day = r.time.slice(0, 10); if (!groups[day]) groups[day] = []; groups[day].push(r); }); return Object.entries(groups).map(([date, reports]) => { const daylight = daylightReports(reports); const useful = daylight.length ? daylight : reports; const snapshotReports = [6, 12, 18].map(hour => nearestHour(useful, hour)).filter(Boolean); const peak = (snapshotReports.length ? snapshotReports : useful).slice().sort((a, b) => b.finalFt - a.finalFt)[0]; const best = useful.slice().sort((a,b) => b.finalFt * b.windQuality - a.finalFt * a.windQuality)[0]; return { date, reports, avgFt: peak?.finalFt || 0, peak, best, sizeText: peak ? sizeRange(peak.finalFt) : 'Flat' }; }); }
     function nearestHour(reports, hour) { return reports.slice().sort((a,b) => Math.abs(Number(a.time.slice(11,13)) - hour) - Math.abs(Number(b.time.slice(11,13)) - hour))[0]; }
     function daylightReports(reports) { return reports.filter(r => { const h = Number(r.time.slice(11, 13)); return h >= 6 && h <= 18; }); }
     function clampSurfHour(hour) { return clamp(Number(hour || 9), 6, 18); }
+    function nearestCurrentHourReport(reports) {
+      const now = new Date();
+      const nowMs = now.getTime();
+      return reports
+        .slice()
+        .sort((a, b) => Math.abs(new Date(a.time).getTime() - nowMs) - Math.abs(new Date(b.time).getTime() - nowMs))[0] || reports[0];
+    }
     function selectedReportForDay(day) { const selected = $('timeSelect').value; const reports = daylightReports(day.reports); const usable = reports.length ? reports : day.reports; if (selected === 'now' && day.date === localIsoDate()) return nearestHour(usable, clampSurfHour(new Date().getHours())); const hour = selected === 'now' ? 9 : Number(selected); return nearestHour(usable, clampSurfHour(hour)); }
     function windDirectionName(deg) { const short = compassFromDeg(deg); const names = { N:'North', NNE:'North-north-east', NE:'North-east', ENE:'East-north-east', E:'East', ESE:'East-south-east', SE:'South-east', SSE:'South-south-east', S:'South', SSW:'South-south-west', SW:'South-west', WSW:'West-south-west', W:'West', WNW:'West-north-west', NW:'North-west', NNW:'North-north-west' }; return names[short] || short; }
     function windStrengthLabel(speedKmh) { const s = Number(speedKmh || 0); if (s < 15) return 'light'; if (s < 30) return 'moderate'; if (s < 45) return 'strong'; return 'stormy'; }
@@ -749,9 +1131,35 @@
       if (!parts.length) return pulseStory(day);
       return parts.join(' ');
     }
-    function buildDailySummary(day, report) { const daylight = day.reports.filter(r => { const h = Number(r.time.slice(11, 13)); return h >= 6 && h <= 18; }); const useful = daylight.length ? daylight : day.reports; const best = useful.slice().sort((a, b) => surfWindowScore(b) - surfWindowScore(a))[0] || report; const morning = nearestHour(day.reports, 6) || report, evening = nearestHour(day.reports, 18) || report, shift = findWindShift(day, morning), bestEffect = windEffect(best.windDir, best.windSpeed); const delta = evening.finalFt - morning.finalFt; const swellTrend = delta > 0.25 ? 'building' : delta < -0.25 ? 'dropping' : 'holding steady'; const bestWindow = `${formatTime(best.time)} · ${liveSizeText(best)} ft`; const windShift = shift ? `${formatTime(shift.time)} · ${windDirectionName(shift.windDir)} ${Math.round(shift.windSpeed)} km/h` : 'No major shift today'; if (report.stormCapped) { const text = `${report.stormCapNote || 'N/NW fetch is showing, but the local Seaford signal has not filled in yet.'} Expect around ${report.sizeText} ft for now. Watch for it to build only if the local wind-wave fills in.`; return { headline: 'Storm surf watch', text, bestWindow, windShift, swellTrend: `${swellTrend} · storm surf watch` }; } if (report.hasLocalStormSurf) { const text = `Storm surf running on the Mid Coast. Swell surf is around ${sizeRange(report.offshoreModelFt)} ft, but ${report.stormSurfSource || 'local N–NW fetch'} is making ${report.sizeText} ft. Messy, windy and not pretty — but surfable for foamies, mals and keen surfers.`; return { headline: 'Storm surf mode', text, bestWindow, windShift, swellTrend: `${swellTrend} · storm surf` }; } const windReason = isEastWind(best.windDir) && isLightWind(best.windSpeed) ? `The wind is light and from the east — chef’s kiss for Seaford.` : isEastWind(best.windDir) ? `The east angle is doing the right thing, even if the strength needs watching.` : isLightWind(best.windSpeed) ? `The wind is light, so even with a less-perfect direction it should stay manageable.` : `${bestEffect.note}.`; const surfPlanText = surfPlanStory(day, report, bestEffect); const highText = highTideWarning(day); const headline = `Surf plan`; const text = [windReason, surfPlanText, highText].filter(Boolean).join(' '); return { headline, text, bestWindow, windShift, swellTrend: `${swellTrend} · ${bestEffect.label}` }; }
+    function buildDailySummary(day, report) {
+      const daylight = day.reports.filter(r => { const h = Number(r.time.slice(11, 13)); return h >= 6 && h <= 18; });
+      const useful = daylight.length ? daylight : day.reports;
+      const best = useful.slice().sort((a, b) => surfWindowScore(b) - surfWindowScore(a))[0] || report;
+      const morning = nearestHour(day.reports, 6) || report, evening = nearestHour(day.reports, 18) || report, shift = findWindShift(day, morning), bestEffect = windEffect(best.windDir, best.windSpeed);
+      const delta = evening.finalFt - morning.finalFt;
+      const swellTrend = delta > 0.25 ? 'building' : delta < -0.25 ? 'dropping' : 'holding steady';
+      const bestWindow = `${formatTime(best.time)} · ${liveSizeText(best)} ft`;
+      const windShift = shift ? `${formatTime(shift.time)} · ${windDirectionName(shift.windDir)} ${Math.round(shift.windSpeed)} km/h` : 'No major shift today';
+      const gulfRealityText = report.gulfPointRealityConfidence === 'low' ? 'Offshore swell is showing, but the Mid Coast / Gulf signal is weak — worth a beach check.' : report.gulfPointRealityConfidence === 'high' ? 'Multiple Gulf points confirm the size.' : report.needsBeachCheck ? 'Offshore swell is showing, but the Mid Coast signal is weak — worth a beach check.' : report.gulfRealityConfirmed ? 'Gulf signal confirms the size.' : report.gulfRealityConfirmed === false ? 'Offshore swell is showing, but the Mid Coast signal has not fully confirmed it yet.' : '';
+      const reportTimeText = `Live check: ${formatTime(report.time)}.`;
+      const sanityCheckText = report.sanityCheckBuilding ? `Morning beach check started around ${formatFtValue(report.sanityCheckObservedFt)}ft, and the Mid Coast signal is now building.` : report.sanityCheckHolding ? 'Morning check is holding the report down until the Gulf signal confirms more size.' : report.sanityCheckApplied ? `Morning sanity check applied: ${report.sanityCheckSource || 'manual check'} reported around ${formatFtValue(report.sanityCheckObservedFt)} ft.` : '';
+      if (report.stormCapped) {
+        const text = [`${report.stormCapNote || 'N/NW fetch is showing, but the local Seaford signal has not filled in yet.'} Expect around ${report.sizeText} ft for now. Watch for it to build only if the local wind-wave fills in.`, reportTimeText, gulfRealityText, sanityCheckText].filter(Boolean).join(' ');
+        return { headline: 'Storm surf watch', text, bestWindow, windShift, swellTrend: `${swellTrend} · storm surf watch` };
+      }
+      if (report.hasLocalStormSurf) {
+        const text = [`Storm surf running on the Mid Coast. Swell surf is around ${sizeRange(report.offshoreModelFt)} ft, but ${report.stormSurfSource || 'local N–NW fetch'} is making ${report.sizeText} ft. Messy, windy and not pretty — but surfable for foamies, mals and keen surfers.`, reportTimeText, gulfRealityText, sanityCheckText].filter(Boolean).join(' ');
+        return { headline: 'Storm surf mode', text, bestWindow, windShift, swellTrend: `${swellTrend} · storm surf` };
+      }
+      const windReason = isEastWind(best.windDir) && isLightWind(best.windSpeed) ? `The wind is light and from the east — chef’s kiss for Seaford.` : isEastWind(best.windDir) ? `The east angle is doing the right thing, even if the strength needs watching.` : isLightWind(best.windSpeed) ? `The wind is light, so even with a less-perfect direction it should stay manageable.` : `${bestEffect.note}.`;
+      const surfPlanText = surfPlanStory(day, report, bestEffect);
+      const highText = highTideWarning(day);
+      const headline = `Surf plan`;
+      const text = [windReason, surfPlanText, highText, reportTimeText, gulfRealityText, sanityCheckText].filter(Boolean).join(' ');
+      return { headline, text, bestWindow, windShift, swellTrend: `${swellTrend} · ${bestEffect.label}` };
+    }
 
-    function render() { if (!state.report) return; const days = state.report.days; const day = days[state.selectedDay] || days[0]; const liveDay = days.find(d => d.date === localIsoDate()) || days[0]; const liveReport = selectedReportForDay(liveDay); $('mainSize').textContent = liveSizeText(liveReport); const dailySummary = buildDailySummary(liveDay, liveReport); $('dailyHeadline').textContent = dailySummary.headline; $('plainWhy').textContent = dailySummary.text; $('bestWindowStat').textContent = dailySummary.bestWindow; $('windShiftStat').textContent = dailySummary.windShift; $('swellTrendStat').textContent = dailySummary.swellTrend; $('windMain').textContent = `${Math.round(liveReport.windSpeed)} km/h`; $('windSub').textContent = `${compassFromDeg(liveReport.windDir)} wind · ${Math.round(liveReport.windDir)}°`; $('sourceRow').innerHTML = ''; $('tideTitle').textContent = `Tide · ${formatDay(day.date)}`; $('swellTrendTitle').textContent = `Swell trend · ${formatDay(day.date)}`; $('windTrendTitle').textContent = `Wind trend · ${formatDay(day.date)}`; renderDays(days); renderSwellDetail(day); renderTidePanel(day); renderSwellTrendPanel(day); renderWindTrendPanel(day); renderWeatherPanel(); }
+    function render() { if (!state.report) return; const days = state.report.days; const day = days[state.selectedDay] || days[0]; const liveReport = nearestCurrentHourReport(state.report.reports || []); const liveDay = days.find(d => d.date === liveReport?.time?.slice(0, 10)) || days.find(d => d.date === localIsoDate()) || days[0]; $('mainSize').textContent = liveSizeText(liveReport); const dailySummary = buildDailySummary(liveDay, liveReport); $('dailyHeadline').textContent = dailySummary.headline; $('plainWhy').textContent = dailySummary.text; $('bestWindowStat').textContent = dailySummary.bestWindow; $('windShiftStat').textContent = dailySummary.windShift; $('swellTrendStat').textContent = dailySummary.swellTrend; $('windMain').textContent = `${Math.round(liveReport.windSpeed)} km/h`; $('windSub').textContent = `${compassFromDeg(liveReport.windDir)} wind · ${Math.round(liveReport.windDir)}°`; $('sourceRow').innerHTML = ''; $('tideTitle').textContent = `Tide · ${formatDay(day.date)}`; $('swellTrendTitle').textContent = `Swell trend · ${formatDay(day.date)}`; $('windTrendTitle').textContent = `Wind trend · ${formatDay(day.date)}`; renderDays(days); renderSwellDetail(day); renderTidePanel(day); renderSwellTrendPanel(day); renderWindTrendPanel(day); renderWeatherPanel(); }
     function renderDays(days) { $('days').innerHTML = days.map((day, i) => { const best = day.best; const peak = day.peak; const note = peak ? `Biggest size near ${formatTime(peak.time)} · ${compassFromDeg(peak.windDir)} ${Math.round(peak.windSpeed)} km/h` : best ? `Best daylight pulse near ${formatTime(best.time)} · ${compassFromDeg(best.windDir)} ${Math.round(best.windSpeed)} km/h` : 'No daylight report'; return `<div class="day-card ${i === state.selectedDay ? 'active' : ''}" data-day="${i}"><div class="day-name">${formatDay(day.date)}</div><div class="day-size">${day.sizeText}<span style="font-size:14px;color:var(--muted);letter-spacing:0;"> ft</span></div><div class="day-note">${note}</div></div>`; }).join(''); document.querySelectorAll('.day-card').forEach(card => card.addEventListener('click', () => { const clicked = Number(card.dataset.day); if (state.selectedDay === clicked && state.expandedDay === clicked) { state.expandedDay = null; } else { state.selectedDay = clicked; state.expandedDay = clicked; } render(); })); }
     function fmtM(value) { const n = Number(value || 0); return n ? `${n.toFixed(1)}m` : '--'; }
     function fmtPeriod(value) { const n = Number(value || 0); return n ? `${n.toFixed(1)}s` : '--'; }
@@ -759,7 +1167,13 @@
     function renderLiveCorrectionBox(day, report) { const input = $('liveActualSizeInput'), status = $('liveCorrectionStatus'); if (!input || !status) return; const corrections = getSizeCorrections(); const existing = corrections[liveCorrectionKey(day.date)]; if (existing) { input.value = existing.actualFt; const sign = existing.deltaFt >= 0 ? '+' : ''; status.textContent = `Live saved: actual ${existing.actualFt} ft · correction ${sign}${Number(existing.deltaFt).toFixed(2)} ft`; applyOneCorrection(report, existing); $('mainSize').textContent = liveSizeText(report); } else { input.value = ''; status.textContent = `Model live: ${(report.originalFinalFt ?? report.finalFt).toFixed(2)} ft. Add what you see now.`; } }
     function saveLiveCorrection() { if (!state.report) return; const day = state.report.days.find(d => d.date === localIsoDate()) || state.report.days[0], report = selectedReportForDay(day), actual = Number($('liveActualSizeInput').value); if (!Number.isFinite(actual) || actual < 0 || actual > 6) { alert('Add a real size between 0 and 6 ft.'); return; } const base = report.originalFinalFt ?? report.finalFt, corrections = getSizeCorrections(); corrections[liveCorrectionKey(day.date)] = { actualFt: actual, baseFt: Number(base.toFixed(2)), deltaFt: Number((actual - base).toFixed(2)), savedAt: new Date().toISOString() }; setSizeCorrections(corrections); $('statusText').textContent = 'Live size correction saved'; render(); }
     function clearLiveCorrection() { if (!state.report) return; const day = state.report.days.find(d => d.date === localIsoDate()) || state.report.days[0], corrections = getSizeCorrections(); delete corrections[liveCorrectionKey(day.date)]; setSizeCorrections(corrections); $('statusText').textContent = 'Live size correction cleared'; render(); }
-    function renderSwellDetail(day) { if (state.expandedDay !== state.selectedDay) { $('swellDetail').innerHTML = ''; $('swellDetailHint').textContent = 'Tap any date above to open the 6 AM, 12 PM and 6 PM read.'; return; } $('swellDetailHint').textContent = 'Tap the same date again to close the 6 AM, 12 PM and 6 PM read.'; const rows = [6, 12, 18].map(hour => nearestHour(day.reports, hour)).filter(Boolean); $('swellDetail').innerHTML = rows.map(r => { const primary = { h: r.offshoreRaw.swell_wave_height, p: r.offshoreRaw.swell_wave_period, d: r.offshoreRaw.swell_wave_direction }, secondary = { h: r.offshoreRaw.secondary_swell_wave_height, p: r.offshoreRaw.secondary_swell_wave_period, d: r.offshoreRaw.secondary_swell_wave_direction }; const driverLabel = r.activeDriver.kind === 'Secondary swell' ? 'Secondary driving' : r.activeDriver.kind === 'Primary swell' ? 'Primary driving' : 'Mixed / weak'; return `<div class="swell-row"><div><b>${formatTime(r.time)}</b><small style="display:block;color:var(--muted);margin-top:2px;">${driverLabel}</small></div><div class="swell-pill">${r.sizeText} ft</div><div class="swell-data"><strong>Primary: ${fmtM(primary.h)} @ ${fmtPeriod(primary.p)}</strong><small>${fmtDirection(primary.d)} · offshore fallback</small></div><div class="swell-data"><strong>Secondary: ${fmtM(secondary.h)} @ ${fmtPeriod(secondary.p)}</strong><small>${fmtDirection(secondary.d)} · checked as possible real driver</small></div><div class="swell-data wind-read"><strong>Wind: ${simpleWindText(r.windDir, r.windSpeed)}</strong><small>Clean simple read for coaching decisions</small></div></div>`; }).join(''); }
+    function renderGulfDebug(report) {
+      if (!DEBUG_MODE) return '';
+      const checks = report.gulfPointChecks || [];
+      if (!checks.length) return `<div class="swell-data"><strong>Gulf debug</strong><small>No Gulf point data matched this hour.</small></div>`;
+      return checks.map(c => `<div class="swell-data"><strong>${c.name}: ${formatFtValue(c.estimatedFt)} ft · ${c.confirms ? 'confirms yes' : 'confirms no'}</strong><small>wave ${c.waveM.toFixed(2)}m · wind-wave ${c.windWaveM.toFixed(2)}m · period ${c.period.toFixed(1)}s</small></div>`).join('');
+    }
+    function renderSwellDetail(day) { if (state.expandedDay !== state.selectedDay) { $('swellDetail').innerHTML = ''; $('swellDetailHint').textContent = 'Tap any date above to open the 6 AM, 12 PM and 6 PM read.'; return; } $('swellDetailHint').textContent = 'Tap the same date again to close the 6 AM, 12 PM and 6 PM read.'; const rows = [6, 12, 18].map(hour => nearestHour(day.reports, hour)).filter(Boolean); $('swellDetail').innerHTML = rows.map(r => { const primary = { h: r.offshoreRaw.swell_wave_height, p: r.offshoreRaw.swell_wave_period, d: r.offshoreRaw.swell_wave_direction }, secondary = { h: r.offshoreRaw.secondary_swell_wave_height, p: r.offshoreRaw.secondary_swell_wave_period, d: r.offshoreRaw.secondary_swell_wave_direction }; const driverLabel = r.activeDriver.kind === 'Secondary swell' ? 'Secondary driving' : r.activeDriver.kind === 'Primary swell' ? 'Primary driving' : 'Mixed / weak'; return `<div class="swell-row"><div><b>${formatTime(r.time)}</b><small style="display:block;color:var(--muted);margin-top:2px;">${driverLabel}</small></div><div class="swell-pill">${r.sizeText} ft</div><div class="swell-data"><strong>Primary: ${fmtM(primary.h)} @ ${fmtPeriod(primary.p)}</strong><small>${fmtDirection(primary.d)} · offshore fallback</small></div><div class="swell-data"><strong>Secondary: ${fmtM(secondary.h)} @ ${fmtPeriod(secondary.p)}</strong><small>${fmtDirection(secondary.d)} · checked as possible real driver</small></div><div class="swell-data wind-read"><strong>Wind: ${simpleWindText(r.windDir, r.windSpeed)}</strong><small>Clean simple read for coaching decisions</small></div>${renderGulfDebug(r)}</div>`; }).join(''); }
 
     function graphX(hour) { return 78 + (clamp(Number(hour), 0, 24) / 24) * 600; }
     function graphLeftPct(hour) { return (graphX(hour) / 720) * 100; }
@@ -853,14 +1267,49 @@
 
     function renderWindTrendPanel(day) { const reports = day.reports.map(r => ({ time: r.time, hour: reportHourValue(r), speed: Number(r.windSpeed || 0), speedLevel: windLevel(r.windSpeed), direction: r.windDir, quality: r.windQuality })).sort((a, b) => a.hour - b.hour); if (!reports.length) { $('windTrendPanel').innerHTML = `<div class="warning error"><b>No wind trend data.</b></div>`; return; } const minSpeed = 0, maxSpeed = 4; const path = makeWindTrendPath(reports.map(r => ({ ...r, speed: r.speedLevel })), minSpeed, maxSpeed), fillPath = `${path} L 696 260 L 78 260 Z`; const windGridLines = makeWindGridLines(minSpeed, maxSpeed); const markers = [0,3,6,9,12,15,18,21].map(hour => nearestHour(day.reports, hour)).filter(Boolean).map(r => ({ hour: reportHourValue(r), speed: Number(r.windSpeed || 0), direction: r.windDir, label: formatTime(r.time) })); const markerDots = markers.map(p => { const x = graphX(p.hour), y = windGraphY(windLevel(p.speed), minSpeed, maxSpeed), rotation = windArrowRotation(p.direction); return `<circle cx="${x}" cy="${y}" r="6" fill="#eafaff" stroke="#77d8ff" stroke-width="3" /><text x="${x}" y="${Math.max(24, y - 16)}" text-anchor="middle" class="wind-arrow-marker" style="transform: rotate(${rotation}deg);">↑</text>`; }).join(''); const now = new Date(), showNow = day.date === localIsoDate(), nowHour = now.getHours() + now.getMinutes() / 60, nowPct = graphLeftPct(nowHour); const cleanest = reports.slice().sort((a, b) => b.quality - a.quality || a.speed - b.speed)[0], lightest = reports.slice().sort((a, b) => a.speed - b.speed)[0], strongest = reports.slice().sort((a, b) => b.speed - a.speed)[0]; const cards = [`<div class="wind-trend-card"><small>Cleanest window</small><b>${formatTime(cleanest.time)}</b><small>${simpleWindText(cleanest.direction, cleanest.speed)}</small></div>`, `<div class="wind-trend-card"><small>Lightest wind</small><b>${formatTime(lightest.time)}</b><small>${simpleWindText(lightest.direction, lightest.speed)}</small></div>`, `<div class="wind-trend-card"><small>Strongest wind</small><b>${formatTime(strongest.time)}</b><small>${simpleWindText(strongest.direction, strongest.speed)}</small></div>`].join(''); $('windTrendPanel').innerHTML = `<div class="wind-graph">${showNow ? `<div class="wind-now-line" style="left:${nowPct}%"></div><div class="wind-now-label" style="left:${nowPct}%">Now</div>` : ''}<svg viewBox="0 0 720 300" preserveAspectRatio="none">${windGridLines}<path d="${fillPath}" fill="rgba(119,216,255,0.18)" /><path d="${path}" fill="none" stroke="#77d8ff" stroke-width="4" stroke-linecap="round" />${markerDots}${axisLabels(286).join('')}</svg></div><div class="wind-trend-cards">${cards}</div>`; }
 
-    async function loadReport(force = false) { $('statusText').textContent = 'Loading report...'; try { if (force) ['offshore','local','wind','weather-seaford','weather-adelaide'].forEach(k => localStorage.removeItem(k)); await loadPortNoarlungaBaseTides(); const [offshoreRes, localRes, windRes, weatherRes] = await Promise.all([fetchJsonCached('offshore', marineUrl(CONFIG.offshore, false)), fetchJsonCached('local', marineUrl(CONFIG.local, true)), fetchJsonCached('wind', windUrl()), fetchJsonCached('weather-seaford', weatherUrl())]); state.data = { offshore: offshoreRes.data, local: localRes.data, wind: windRes.data, weather: weatherRes.data, meta: { offshoreCached: offshoreRes.cached, localCached: localRes.cached, windCached: windRes.cached, weatherCached: weatherRes.cached, loadedAt: new Date().toISOString(), tide: CONFIG.tideApiEndpoint ? 'Live tide proxy enabled' : 'BOM Port Noarlunga 2026 yearly tide file mode' } }; const combined = combineHourly(state.data.offshore, state.data.local, state.data.wind), reports = applySizeCorrections(combined.map(buildHourReport)); state.report = { reports, days: groupByDay(reports) }; state.selectedDay = 0; state.expandedDay = null; await loadTidesForDays(state.report.days); $('statusText').textContent = 'Report updated'; render(); } catch (err) { console.error(err); $('statusText').textContent = 'Data error'; $('plainWhy').textContent = err.message || 'Could not load report.'; $('hero').classList.add('error'); } }
+    async function loadReport(force = false) {
+      $('statusText').textContent = 'Loading report...';
+      try {
+        if (force) ['offshore','local','wind','weather-seaford','weather-adelaide', ...GULF_CHECK_POINTS.map((_, i) => `gulf-check-${i}`)].forEach(k => localStorage.removeItem(k));
+        await loadPortNoarlungaBaseTides();
+        const gulfFetches = GULF_CHECK_POINTS.map((point, i) => fetchJsonCached(`gulf-check-${i}`, marineUrl(point, true)).then(res => ({ point, data: res.data, cached: res.cached })));
+        const [offshoreRes, localRes, windRes, weatherRes, ...gulfChecks] = await Promise.all([
+          fetchJsonCached('offshore', marineUrl(CONFIG.offshore, false)),
+          fetchJsonCached('local', marineUrl(CONFIG.local, true)),
+          fetchJsonCached('wind', windUrl()),
+          fetchJsonCached('weather-seaford', weatherUrl()),
+          ...gulfFetches
+        ]);
+        state.data = {
+          offshore: offshoreRes.data,
+          local: localRes.data,
+          wind: windRes.data,
+          weather: weatherRes.data,
+          gulfChecks,
+          meta: { offshoreCached: offshoreRes.cached, localCached: localRes.cached, windCached: windRes.cached, weatherCached: weatherRes.cached, gulfCached: gulfChecks.map(g => g.cached), loadedAt: new Date().toISOString(), tide: CONFIG.tideApiEndpoint ? 'Live tide proxy enabled' : 'BOM Port Noarlunga 2026 yearly tide file mode' }
+        };
+        const combined = combineHourly(state.data.offshore, state.data.local, state.data.wind, state.data.gulfChecks || []), reports = applySizeCorrections(combined.map(buildHourReport));
+        state.report = { reports, days: groupByDay(reports) };
+        state.selectedDay = 0;
+        state.expandedDay = null;
+        await loadTidesForDays(state.report.days);
+        $('statusText').textContent = 'Report updated';
+        render();
+      } catch (err) {
+        console.error(err);
+        $('statusText').textContent = 'Data error';
+        $('plainWhy').textContent = err.message || 'Could not load report.';
+        $('hero').classList.add('error');
+      }
+    }
+
     function copySummary() { if (!state.report) return; const day = state.report.days[state.selectedDay], r = selectedReportForDay(day); const text = `Seaford report ${formatDay(day.date)}: ${r.sizeText} ft, ${r.confidence.toLowerCase()} confidence. Wind ${compassFromDeg(r.windDir)} ${Math.round(r.windSpeed)} km/h. ${r.why}`; navigator.clipboard?.writeText(text); $('statusText').textContent = 'Summary copied'; }
 
-    function runTests() { console.assert(Math.abs(sectorCalibratedSizeFt(2, 240, 12) - 2) < 0.25, '2m at 240 degrees should be about 2ft for Seaford'); console.assert(Math.abs(sectorCalibratedSizeFt(3, 240, 12) - 3) < 0.25, '3m at 240 degrees should be about 3ft for Seaford'); console.assert(Math.abs(sectorCalibratedSizeFt(3, 242, 12) - 3) < 0.25, '3m at 242 degrees should still behave like the 240-degree Seaford window'); console.assert(sizeRange(1.5) === '1.5', 'A true 1.5ft forecast should display as 1.5ft, not 1-1.5ft'); console.assert(sizeRange(3) === '3', 'A true 3ft forecast should display as 3ft, not 2.5-3ft'); console.assert(Math.abs(sectorCalibratedSizeFt(3, 243, 12) - 2.75) < 0.35, '3m at 243 degrees should be at least 2.5ft for Seaford'); console.assert(Math.abs(sectorCalibratedSizeFt(2, 245, 12) - 1.5) < 0.3, '2m at 245 degrees should be about 1.5ft for Seaford'); console.assert(Math.abs(sectorCalibratedSizeFt(2, 247, 12) - 1.3) < 0.35, '2m at 247 degrees should display near 1.5ft for Seaford'); console.assert(Math.abs(sectorCalibratedSizeFt(2, 250, 12) - 1) < 0.3, '2m at 250 degrees should be about 1ft for Seaford'); console.assert(Math.abs(sectorCalibratedSizeFt(3, 244, 12) - 3) < 0.3, '3m at 244 degrees should be about 3ft for Seaford'); const combinedTest = combinedSwellEnergyFt({ offshore: { swell_wave_height: 2.2, swell_wave_direction: 245, swell_wave_period: 10.3, secondary_swell_wave_height: 1.5, secondary_swell_wave_direction: 242, secondary_swell_wave_period: 14 } }, 'normal'); console.assert(combinedTest.aligned && combinedTest.ft >= 2.4, 'Aligned primary and secondary WSW swell should combine into a stronger 12pm pulse'); console.assert(sizeRange(1.75) === '1.5-2', 'Around 1.75ft should display as 1.5-2ft'); console.assert(sizeRange(2.75) === '3' && sizeRange(3.1) === '3', '2.75-3.1ft should display as 3ft'); console.assert(sizeRange(3.25) === '3-3.5', 'Only 3.25ft+ should display as 3-3.5ft'); const weakWnwMorningGate = seafordWestFallbackCap({ local: { wave_height: 0.35, wind_wave_height: 0.3 } }, 2.4, { directionDeg: 292, periodS: 7.5 }); console.assert(weakWnwMorningGate.capped && weakWnwMorningGate.ft <= 2, '2.1m @ 7.5s from 292° with weak local signal should not show above 2ft'); const weakWnwMiddayGate = seafordWestFallbackCap({ local: { wave_height: 0.55, wind_wave_height: 0.45 } }, 3.4, { directionDeg: 280, periodS: 9.3 }); console.assert(weakWnwMiddayGate.capped && weakWnwMiddayGate.ft <= 2 && sizeRange(weakWnwMiddayGate.ft) !== '3-3.5', '2.2m @ 9.3s from 280° with weak/moderate local signal should not show 3-3.5ft'); const confirmedWnwGate = seafordWestFallbackCap({ local: { wave_height: 0.8, wind_wave_height: 0.8 } }, 3.6, { directionDeg: 279, periodS: 9.7 }); console.assert(confirmedWnwGate.capped && confirmedWnwGate.ft === 3, 'W/WNW fallback with local confirmation can reach 3ft max'); const properSwGate = seafordWestFallbackCap({ local: { wave_height: 0.35, wind_wave_height: 0.3 } }, 3.4, { directionDeg: 230, periodS: 12 }); console.assert(!properSwGate.isWestFallback && !properSwGate.capped && properSwGate.ft === 3.4, 'Proper SW swell from 230° should not be capped by the W/WNW fallback gate'); const wnwConfirmedStorm = stormSurfInfo({ time: new Date().toISOString(), local: { wind_wave_height: 1.5, wave_height: 0.8, wave_period: 5 }, wind: { wind_speed_10m: 40, wind_direction_10m: 292 } }); const wnwConfirmedGate = seafordStormConfirmation({ time: new Date().toISOString(), local: { wind_wave_height: 1.5, wave_height: 0.8, wave_period: 5 }, wind: { wind_speed_10m: 40, wind_direction_10m: 292 } }, wnwConfirmedStorm); console.assert(wnwConfirmedGate.capped && wnwConfirmedGate.ft <= 2.5 && wnwConfirmedGate.directionGate.quality === 'partial', 'WNW 292° with high local wind-wave should cap around 2.5ft max if confirmed'); const wnwUnconfirmedStorm = stormSurfInfo({ time: new Date().toISOString(), local: { wind_wave_height: 0.3, wave_height: 0.4, wave_period: 5 }, wind: { wind_speed_10m: 40, wind_direction_10m: 292 } }); const wnwUnconfirmedGate = seafordStormConfirmation({ time: new Date().toISOString(), local: { wind_wave_height: 0.3, wave_height: 0.4, wave_period: 5 }, wind: { wind_speed_10m: 40, wind_direction_10m: 292 } }, wnwUnconfirmedStorm); console.assert(wnwUnconfirmedGate.capped && wnwUnconfirmedGate.ft <= 1.8 && wnwUnconfirmedGate.directionGate.quality === 'partial', 'WNW 292° without local confirmation should cap around 1.8ft'); const wConfirmedStorm = stormSurfInfo({ time: new Date().toISOString(), local: { wind_wave_height: 1.6, wave_height: 0.8, wave_period: 5 }, wind: { wind_speed_10m: 40, wind_direction_10m: 280 } }); const wConfirmedGate = seafordStormConfirmation({ time: new Date().toISOString(), local: { wind_wave_height: 1.6, wave_height: 0.8, wave_period: 5 }, wind: { wind_speed_10m: 40, wind_direction_10m: 280 } }, wConfirmedStorm); console.assert(wConfirmedGate.capped && wConfirmedGate.ft <= 3 && wConfirmedGate.directionGate.quality === 'poor', 'W 280° with high local wind-wave should cap around 3ft max if confirmed'); const wswStorm = stormSurfInfo({ time: new Date().toISOString(), local: { wind_wave_height: 1.6, wave_height: 0.8, wave_period: 5 }, wind: { wind_speed_10m: 40, wind_direction_10m: 250 } }); console.assert(!wswStorm.active, 'WSW 250° should not trigger full storm surf from local wind-wave alone'); const previousCalibration = $('calibrationSelect').value; $('calibrationSelect').value = 'generous'; const gromStormCapped = buildHourReport({ time: new Date().toISOString().slice(0, 13) + ':00', offshore: { swell_wave_height: 0, swell_wave_direction: 0, swell_wave_period: 0, secondary_swell_wave_height: 0, secondary_swell_wave_direction: 0, secondary_swell_wave_period: 0, wind_wave_height: 0, wind_wave_direction: 0, wind_wave_period: 0 }, local: { wind_wave_height: 1.5, wave_height: 0.8, wave_period: 5, wave_direction: 280 }, wind: { wind_speed_10m: 40, wind_direction_10m: 292 }, _allRows: [], _index: 0 }); $('calibrationSelect').value = previousCalibration; console.assert(gromStormCapped.stormCapped && gromStormCapped.finalFt <= gromStormCapped.stormSurfFt, 'Frothing Grom Mode must not push storm-capped values above the cap'); const stormTest = stormSurfInfo({ local: { wind_wave_height: 1.2, wave_height: 1.2 }, wind: { wind_speed_10m: 35, wind_direction_10m: 330 } }); console.assert(stormTest.active && stormTest.ft >= 2.5, 'N-NW storm wind with 1.2m local wind wave should trigger 2-3ft storm surf'); const fetchStormTest = stormSurfInfo({ local: { wind_wave_height: 0.2, wave_height: 0.4 }, wind: { wind_speed_10m: 40, wind_direction_10m: 330 } }); console.assert(fetchStormTest.active && fetchStormTest.ft >= 2.4, 'Strong N-NW fetch should trigger storm surf even when local wind_wave_height underreads'); const weakLocalFetchGate = seafordStormConfirmation({ time: new Date().toISOString(), local: { wind_wave_height: 0.2, wave_height: 0.4, wave_period: 4 }, wind: { wind_speed_10m: 40, wind_direction_10m: 330 } }, fetchStormTest); console.assert(weakLocalFetchGate.capped && weakLocalFetchGate.ft <= 1.5, 'Strong N-NW wind with weak Seaford wind-wave should stay around 1-2ft, not 2-3ft+'); const confirmedWindWaveStorm = stormSurfInfo({ local: { wind_wave_height: 0.8, wave_height: 0.6, wave_period: 5 }, wind: { wind_speed_10m: 40, wind_direction_10m: 330 } }); const confirmedWindWaveGate = seafordStormConfirmation({ time: new Date().toISOString(), local: { wind_wave_height: 0.8, wave_height: 0.6, wave_period: 5 }, wind: { wind_speed_10m: 40, wind_direction_10m: 330 } }, confirmedWindWaveStorm); console.assert(confirmedWindWaveGate.confirmed && !confirmedWindWaveGate.capped && confirmedWindWaveGate.ft >= 2, 'Strong N-NW wind with wind_wave_height >= 0.8m can show 2ft+'); const futureMemoryDate = new Date(Date.now() + 36e5 * 36).toISOString().slice(0, 10); const futureMemoryRows = [10,11,12].map(h => ({ time: `${futureMemoryDate}T${String(h).padStart(2,'0')}:00`, local: { wind_wave_height: 0.1, wave_height: 0.3, wave_period: 4 }, wind: { wind_speed_10m: h < 12 ? 40 : 18, wind_direction_10m: h < 12 ? 330 : 250 } })); futureMemoryRows.forEach((r, i) => { r._index = i; r._allRows = futureMemoryRows; }); const futureMemoryStorm = stormSurfInfo(futureMemoryRows[2]); const futureMemoryGate = seafordStormConfirmation(futureMemoryRows[2], futureMemoryStorm); console.assert(futureMemoryStorm.active && futureMemoryGate.capped && futureMemoryGate.ft <= 1.5, 'Fetch memory alone should not overcall future forecasts without local Seaford wind-wave confirmation'); console.assert(stormSurfSizeFromWindFt(35, 330) >= 2, '35 km/h NNW fetch should produce about 2ft storm surf potential'); const memoryRows = [12,13,14,15,16,17,18].map((h, i, arr) => ({ time: `2026-06-01T${String(h).padStart(2,'0')}:00`, local: { wind_wave_height: 0.1, wave_height: 0.3 }, wind: { wind_speed_10m: h <= 16 ? 40 : 18, wind_direction_10m: h <= 16 ? 330 : 250 } })); memoryRows.forEach((r, i) => { r._index = i; r._allRows = memoryRows; }); const memoryStorm = stormSurfInfo(memoryRows[6]); console.assert(memoryStorm.active && memoryStorm.ft >= 1.4, '6pm should keep storm surf alive when 12pm-4pm had strong N-NW fetch'); console.assert(!stormSurfInfo({ local: { wind_wave_height: 1.2 }, wind: { wind_speed_10m: 15, wind_direction_10m: 330 } }).active, 'Light wind should not trigger storm surf mode'); console.assert(seafordGulfRealityLimit(3, 3, 1.2, 245, '2026-05-10T18:00').ft >= 3, '3m-ish 243-245 degree swell should show 3ft, not be capped at 2.5ft'); console.assert(seafordGulfRealityLimit(2, 2, 1.2, 245, '2026-05-10T18:00').ft <= 2.2, 'Smaller late west swell should still be capped by inside-gulf reality check'); console.assert(seafordGulfRealityLimit(3.2, 3.2, 2.1, 245, '2026-05-10T18:00').ft >= 2.8, 'Confirmed inside-gulf energy should prevent under-sizing real swell'); const confirmedLow = lowTideDrag('2026-04-28T11:00', 224, 2.4, 1.65); console.assert(!confirmedLow.capFt || confirmedLow.capFt >= 2.5, 'Confirmed energy near low tide should allow 2.5ft during the early push'); console.assert(windStrengthLabel(0) === 'light', '0 km/h should be light'); console.assert(windStrengthLabel(15) === 'moderate', '15 km/h should be moderate'); console.assert(windStrengthLabel(30) === 'strong', '30 km/h should be strong'); console.assert(windStrengthLabel(45) === 'stormy', '45 km/h should be stormy'); console.assert(calibrationSizeAdjustFt(1.5, 'conservative') === -0.5, 'Real surfers wave size should be normal minus 0.5ft'); console.assert(calibrationSizeAdjustFt(1.5, 'generous') === 0.5 && calibrationSizeAdjustFt(3, 'generous') === 1, 'Frothing Grom Mode should be normal plus 0.5-1ft'); console.assert(CONFIG.weather.lat === CONFIG.local.lat && CONFIG.weather.lon === CONFIG.local.lon, 'Weather should use Seaford local coordinates'); console.assert(Number.isFinite(CONFIG.cacheMs), 'CONFIG must parse correctly and include cacheMs'); console.assert(weatherLabel(0) === 'Sunny', 'weather code 0 should be Sunny'); console.assert(weatherLabel(61) === 'Cloud and rain', 'weather code 61 should be Cloud and rain'); console.assert(weatherEmoji(0) === '☀️', 'weather code 0 should show sun'); console.assert(weatherEmoji(1) === '🌤️', 'weather code 1 should show sun cloud'); console.assert(weatherEmoji(3) === '🌤️', 'dry mostly-cloudy weather should show sun cloud'); console.assert(weatherEmoji(45) === '☁️', 'fog/grey cloud should show cloud'); console.assert(weatherEmoji(61) === '🌧️', 'weather code 61 should show rain cloud'); console.assert(weatherEmoji(61, 40) === '🌧️💨', 'rain plus wind should show rain wind'); console.assert(weatherEmoji(3, 40) === '☁️💨', 'cloud plus wind should show cloud wind'); console.assert(weatherSummaryText(61, 88) === 'Cloud and rain · 88%', 'Rain percentage should not repeat the word rain'); console.assert(weatherSummaryText(1, 7) === 'Sun and cloud', 'Under 10% rain should hide the percentage'); console.assert(weatherPositiveLine(12, 15, 0, 2).includes('Fresh air') || weatherPositiveLine(12, 15, 0, 2).includes('make the most of it'), 'Weather line should stay positive'); console.assert(weatherPositiveLine(13, 17, 24, 2, 'Sun, 10 May').startsWith('Sun, 10 May:'), 'Selected weather day should use selected date label, not Today'); console.assert(weatherPositiveLine(13, 17, 24, 2, 'Sun, 10 May', 12).includes('12pm rain chance 24%'), 'Weather summary should focus on 12pm rain chance'); console.assert(Math.round(windArrowRotation(90)) === 270, 'East wind FROM 90 should point toward west 270'); console.assert(isEastWind(90) === true, '90 degrees should be east wind'); console.assert(isLightWind(12) === true && isLightWind(16) === false, 'Light wind should be under 15 km/h'); console.assert(highTideWarning({ date: '2026-04-28' }).includes('too full'), 'High tide above 1.9m during daylight should trigger warning'); console.assert(boardDayText(1).includes('Foamboard'), '1ft should be foamboard day'); console.assert(boardDayText(2).includes('Longboard or fish'), '1–2ft should be longboard or fish day'); console.assert(boardDayText(3).includes('Pumping'), '3ft should be pumping'); const sampleDayForHeadline = { date: '2026-04-28', reports: [{ time: '2026-04-28T06:00', finalFt: 1.5, windDir: 90, windSpeed: 8, windQuality: 0.9, tideDrag: { penaltyFt: 0 } }, { time: '2026-04-28T12:00', finalFt: 2, windDir: 100, windSpeed: 10, windQuality: 0.95, tideDrag: { penaltyFt: 0 } }, { time: '2026-04-28T18:00', finalFt: 1.5, windDir: 180, windSpeed: 12, windQuality: 0.6, tideDrag: { penaltyFt: 0 } }] }; console.assert(!buildDailySummary(sampleDayForHeadline, sampleDayForHeadline.reports[0]).headline.includes('Best surf window'), 'Hero headline should not repeat best window'); const sampleDayPeak = groupByDay([{ time: '2026-04-28T06:00', finalFt: 1, windQuality: 0.7, windDir: 90, windSpeed: 5 }, { time: '2026-04-28T12:00', finalFt: 3, windQuality: 0.4, windDir: 180, windSpeed: 10 }, { time: '2026-04-28T18:00', finalFt: 2, windQuality: 0.9, windDir: 90, windSpeed: 5 }])[0]; console.assert(sampleDayPeak.sizeText.includes('2.5') || sampleDayPeak.sizeText.includes('3'), '7-day outlook should show the biggest 6/12/6 size, not the average or best wind window'); console.assert(axisLabels().join('').includes('12am') && axisLabels().join('').includes('6am') && axisLabels().join('').includes('6pm') && axisLabels().join('').includes('9pm'), 'Trend graphs should show a full 24-hour scale'); console.assert(clampSurfHour(2) === 6 && clampSurfHour(21) === 18, 'Surf report hours should clamp to daylight'); const sampleSwellPath = makeSwellTrendPath([{ hour: 0, sizeFt: 1 }, { hour: 12, sizeFt: 2 }, { hour: 24, sizeFt: 1.5 }], 0, 3); console.assert(sampleSwellPath.startsWith('M '), 'Swell trend path should render'); const smoothedSpike = smoothSwellTrendPoints([{ time:'2026-06-01T06:00', finalFt:1, sizeText:'1', windDir:90, windSpeed:5, activeDriver:{} }, { time:'2026-06-01T07:00', finalFt:2.5, sizeText:'2.5', windDir:90, windSpeed:5, activeDriver:{} }, { time:'2026-06-01T08:00', finalFt:1, sizeText:'1', windDir:90, windSpeed:5, activeDriver:{} }]); console.assert(smoothedSpike[1].sizeFt < 2, 'Swell trend smoothing should remove isolated one-hour bumps'); const grid = makeSwellGridLines(0, 3); console.assert(grid.includes('1ft') && grid.includes('2ft') && grid.includes('3ft'), 'Swell grid should include 1ft, 2ft and 3ft labels'); const sampleWindPath = makeWindTrendPath([{ hour: 0, speed: 5 }, { hour: 12, speed: 20 }, { hour: 24, speed: 10 }], 0, 65); console.assert(sampleWindPath.startsWith('M '), 'Wind trend path should render with explicit minSpeed/maxSpeed'); const windGrid = makeWindGridLines(0, 4); console.assert(windGrid.includes('light') && windGrid.includes('moderate') && windGrid.includes('strong') && windGrid.includes('stormy'), 'Wind grid should include light, moderate, strong and stormy labels'); console.assert(windLevel(10) > 0 && windLevel(10) < 1, '0–15 km/h should plot inside light band'); console.assert(windLevel(20) > 1 && windLevel(20) < 2, '15–30 km/h should plot inside moderate band'); console.assert(windLevel(35) > 2 && windLevel(35) < 3, '30–45 km/h should plot inside strong band'); console.assert(windLevel(50) > 3 && windLevel(50) <= 4, '45+ km/h should plot inside stormy band'); console.assert(!renderTidePanel.toString().includes('swellGridLines'), 'Tide render must not reference swellGridLines'); const tideGrid = makeTideGridLines(0, 3); console.assert(tideGrid.includes('0m') && tideGrid.includes('1m') && tideGrid.includes('2m') && tideGrid.includes('3m'), 'Tide grid should include 0m, 1m, 2m and 3m labels'); const previousSelected = state.selectedDay; const previousExpanded = state.expandedDay; state.selectedDay = 0; state.expandedDay = 0; console.assert(state.expandedDay === state.selectedDay, 'Selected day detail can be open'); state.expandedDay = null; console.assert(state.expandedDay === null, 'Selected day detail can be closed'); state.selectedDay = previousSelected; state.expandedDay = previousExpanded; console.info('Seaford Surf Report tests passed'); }
+    function runTests() { console.assert(Math.abs(sectorCalibratedSizeFt(2, 240, 12) - 2) < 0.25, '2m at 240 degrees should be about 2ft for Seaford'); console.assert(Math.abs(sectorCalibratedSizeFt(3, 240, 12) - 3) < 0.25, '3m at 240 degrees should be about 3ft for Seaford'); console.assert(Math.abs(sectorCalibratedSizeFt(3, 242, 12) - 3) < 0.25, '3m at 242 degrees should still behave like the 240-degree Seaford window'); console.assert(['1.5', '1.5-2'].includes(publicSizeText(1.5)), 'A true 1.5ft forecast should display as 1.5ft or 1.5-2ft'); console.assert(publicSizeText(1.6) === '2', '1.6ft should display as 2ft'); console.assert(sizeRange(3) === '3', 'A true 3ft forecast should display as 3ft, not 2.5-3ft'); console.assert(Math.abs(sectorCalibratedSizeFt(3, 243, 12) - 2.75) < 0.35, '3m at 243 degrees should be at least 2.5ft for Seaford'); console.assert(Math.abs(sectorCalibratedSizeFt(2, 245, 12) - 1.5) < 0.3, '2m at 245 degrees should be about 1.5ft for Seaford'); console.assert(Math.abs(sectorCalibratedSizeFt(2, 247, 12) - 1.3) < 0.35, '2m at 247 degrees should display near 1.5ft for Seaford'); console.assert(Math.abs(sectorCalibratedSizeFt(2, 250, 12) - 1) < 0.3, '2m at 250 degrees should be about 1ft for Seaford'); console.assert(Math.abs(sectorCalibratedSizeFt(3, 244, 12) - 3) < 0.3, '3m at 244 degrees should be about 3ft for Seaford'); const combinedTest = combinedSwellEnergyFt({ offshore: { swell_wave_height: 2.2, swell_wave_direction: 245, swell_wave_period: 10.3, secondary_swell_wave_height: 1.5, secondary_swell_wave_direction: 242, secondary_swell_wave_period: 14 } }, 'normal'); console.assert(combinedTest.aligned && combinedTest.ft >= 2.4, 'Aligned primary and secondary WSW swell should combine into a stronger 12pm pulse'); console.assert(publicSizeText(1.75) === '2', 'Around 1.75ft should display as 2ft'); console.assert(sizeRange(2.75) === '3' && sizeRange(3.1) === '3', '2.75-3.1ft should display as 3ft'); console.assert(sizeRange(3.25) === '3-3.5', 'Only 3.25ft+ should display as 3-3.5ft'); const weakWnwMorningGate = seafordWestFallbackCap({ local: { wave_height: 0.35, wind_wave_height: 0.3 } }, 2.4, { directionDeg: 292, periodS: 7.5 }); console.assert(weakWnwMorningGate.capped && weakWnwMorningGate.ft <= 2, '2.1m @ 7.5s from 292° with weak local signal should not show above 2ft'); const weakWnwMiddayGate = seafordWestFallbackCap({ local: { wave_height: 0.55, wind_wave_height: 0.45 } }, 3.4, { directionDeg: 280, periodS: 9.3 }); console.assert(weakWnwMiddayGate.capped && weakWnwMiddayGate.ft <= 2 && sizeRange(weakWnwMiddayGate.ft) !== '3-3.5', '2.2m @ 9.3s from 280° with weak/moderate local signal should not show 3-3.5ft'); const confirmedWnwGate = seafordWestFallbackCap({ local: { wave_height: 0.8, wind_wave_height: 0.8 } }, 3.6, { directionDeg: 279, periodS: 9.7 }); console.assert(confirmedWnwGate.capped && confirmedWnwGate.ft === 3, 'W/WNW fallback with local confirmation can reach 3ft max'); const properSwGate = seafordWestFallbackCap({ local: { wave_height: 0.35, wind_wave_height: 0.3 } }, 3.4, { directionDeg: 230, periodS: 12 }); console.assert(!properSwGate.isWestFallback && !properSwGate.capped && properSwGate.ft === 3.4, 'Proper SW swell from 230° should not be capped by the W/WNW fallback gate'); const wnwConfirmedStorm = stormSurfInfo({ time: new Date().toISOString(), local: { wind_wave_height: 1.5, wave_height: 0.8, wave_period: 5 }, wind: { wind_speed_10m: 40, wind_direction_10m: 292 } }); const wnwConfirmedGate = seafordStormConfirmation({ time: new Date().toISOString(), local: { wind_wave_height: 1.5, wave_height: 0.8, wave_period: 5 }, wind: { wind_speed_10m: 40, wind_direction_10m: 292 } }, wnwConfirmedStorm); console.assert(wnwConfirmedGate.capped && wnwConfirmedGate.ft <= 2.5 && wnwConfirmedGate.directionGate.quality === 'partial', 'WNW 292° with high local wind-wave should cap around 2.5ft max if confirmed'); const wnwUnconfirmedStorm = stormSurfInfo({ time: new Date().toISOString(), local: { wind_wave_height: 0.3, wave_height: 0.4, wave_period: 5 }, wind: { wind_speed_10m: 40, wind_direction_10m: 292 } }); const wnwUnconfirmedGate = seafordStormConfirmation({ time: new Date().toISOString(), local: { wind_wave_height: 0.3, wave_height: 0.4, wave_period: 5 }, wind: { wind_speed_10m: 40, wind_direction_10m: 292 } }, wnwUnconfirmedStorm); console.assert(wnwUnconfirmedGate.capped && wnwUnconfirmedGate.ft <= 1.8 && wnwUnconfirmedGate.directionGate.quality === 'partial', 'WNW 292° without local confirmation should cap around 1.8ft'); const wConfirmedStorm = stormSurfInfo({ time: new Date().toISOString(), local: { wind_wave_height: 1.6, wave_height: 0.8, wave_period: 5 }, wind: { wind_speed_10m: 40, wind_direction_10m: 280 } }); const wConfirmedGate = seafordStormConfirmation({ time: new Date().toISOString(), local: { wind_wave_height: 1.6, wave_height: 0.8, wave_period: 5 }, wind: { wind_speed_10m: 40, wind_direction_10m: 280 } }, wConfirmedStorm); console.assert(wConfirmedGate.capped && wConfirmedGate.ft <= 3 && wConfirmedGate.directionGate.quality === 'poor', 'W 280° with high local wind-wave should cap around 3ft max if confirmed'); const wswStorm = stormSurfInfo({ time: new Date().toISOString(), local: { wind_wave_height: 1.6, wave_height: 0.8, wave_period: 5 }, wind: { wind_speed_10m: 40, wind_direction_10m: 250 } }); console.assert(!wswStorm.active, 'WSW 250° should not trigger full storm surf from local wind-wave alone'); const previousCalibration = $('calibrationSelect').value; $('calibrationSelect').value = 'generous'; const gromStormCapped = buildHourReport({ time: new Date().toISOString().slice(0, 13) + ':00', offshore: { swell_wave_height: 0, swell_wave_direction: 0, swell_wave_period: 0, secondary_swell_wave_height: 0, secondary_swell_wave_direction: 0, secondary_swell_wave_period: 0, wind_wave_height: 0, wind_wave_direction: 0, wind_wave_period: 0 }, local: { wind_wave_height: 1.5, wave_height: 0.8, wave_period: 5, wave_direction: 280 }, wind: { wind_speed_10m: 40, wind_direction_10m: 292 }, _allRows: [], _index: 0 }); $('calibrationSelect').value = previousCalibration; console.assert(gromStormCapped.stormCapped && gromStormCapped.finalFt <= gromStormCapped.stormSurfFt, 'Frothing Grom Mode must not push storm-capped values above the cap'); const stormTest = stormSurfInfo({ local: { wind_wave_height: 1.2, wave_height: 1.2 }, wind: { wind_speed_10m: 35, wind_direction_10m: 330 } }); console.assert(stormTest.active && stormTest.ft >= 2.5, 'N-NW storm wind with 1.2m local wind wave should trigger 2-3ft storm surf'); const fetchStormTest = stormSurfInfo({ local: { wind_wave_height: 0.2, wave_height: 0.4 }, wind: { wind_speed_10m: 40, wind_direction_10m: 330 } }); console.assert(fetchStormTest.active && fetchStormTest.ft >= 2.4, 'Strong N-NW fetch should trigger storm surf even when local wind_wave_height underreads'); const weakLocalFetchGate = seafordStormConfirmation({ time: new Date().toISOString(), local: { wind_wave_height: 0.2, wave_height: 0.4, wave_period: 4 }, wind: { wind_speed_10m: 40, wind_direction_10m: 330 } }, fetchStormTest); console.assert(weakLocalFetchGate.capped && weakLocalFetchGate.ft <= 1.5, 'Strong N-NW wind with weak Seaford wind-wave should stay around 1-2ft, not 2-3ft+'); const confirmedWindWaveStorm = stormSurfInfo({ local: { wind_wave_height: 0.8, wave_height: 0.6, wave_period: 5 }, wind: { wind_speed_10m: 40, wind_direction_10m: 330 } }); const confirmedWindWaveGate = seafordStormConfirmation({ time: new Date().toISOString(), local: { wind_wave_height: 0.8, wave_height: 0.6, wave_period: 5 }, wind: { wind_speed_10m: 40, wind_direction_10m: 330 } }, confirmedWindWaveStorm); console.assert(confirmedWindWaveGate.confirmed && !confirmedWindWaveGate.capped && confirmedWindWaveGate.ft >= 2, 'Strong N-NW wind with wind_wave_height >= 0.8m can show 2ft+'); const futureMemoryDate = new Date(Date.now() + 36e5 * 36).toISOString().slice(0, 10); const futureMemoryRows = [10,11,12].map(h => ({ time: `${futureMemoryDate}T${String(h).padStart(2,'0')}:00`, local: { wind_wave_height: 0.1, wave_height: 0.3, wave_period: 4 }, wind: { wind_speed_10m: h < 12 ? 40 : 18, wind_direction_10m: h < 12 ? 330 : 250 } })); futureMemoryRows.forEach((r, i) => { r._index = i; r._allRows = futureMemoryRows; }); const futureMemoryStorm = stormSurfInfo(futureMemoryRows[2]); const futureMemoryGate = seafordStormConfirmation(futureMemoryRows[2], futureMemoryStorm); console.assert(futureMemoryStorm.active && futureMemoryGate.capped && futureMemoryGate.ft <= 1.5, 'Fetch memory alone should not overcall future forecasts without local Seaford wind-wave confirmation'); console.assert(stormSurfSizeFromWindFt(35, 330) >= 2, '35 km/h NNW fetch should produce about 2ft storm surf potential'); const memoryRows = [12,13,14,15,16,17,18].map((h, i, arr) => ({ time: `2026-06-01T${String(h).padStart(2,'0')}:00`, local: { wind_wave_height: 0.1, wave_height: 0.3 }, wind: { wind_speed_10m: h <= 16 ? 40 : 18, wind_direction_10m: h <= 16 ? 330 : 250 } })); memoryRows.forEach((r, i) => { r._index = i; r._allRows = memoryRows; }); const memoryStorm = stormSurfInfo(memoryRows[6]); console.assert(memoryStorm.active && memoryStorm.ft >= 1.4, '6pm should keep storm surf alive when 12pm-4pm had strong N-NW fetch'); console.assert(!stormSurfInfo({ local: { wind_wave_height: 1.2 }, wind: { wind_speed_10m: 15, wind_direction_10m: 330 } }).active, 'Light wind should not trigger storm surf mode'); console.assert(seafordGulfRealityLimit(3, 3, 1.2, 245, '2026-05-10T18:00').ft >= 3, '3m-ish 243-245 degree swell should show 3ft, not be capped at 2.5ft'); console.assert(seafordGulfRealityLimit(2, 2, 1.2, 245, '2026-05-10T18:00').ft <= 2.2, 'Smaller late west swell should still be capped by inside-gulf reality check'); console.assert(seafordGulfRealityLimit(3.2, 3.2, 2.1, 245, '2026-05-10T18:00').ft >= 2.8, 'Confirmed inside-gulf energy should prevent under-sizing real swell'); const confirmedLow = lowTideDrag('2026-04-28T11:00', 224, 2.4, 1.65); console.assert(!confirmedLow.capFt || confirmedLow.capFt >= 2.5, 'Confirmed energy near low tide should allow 2.5ft during the early push'); console.assert(windStrengthLabel(0) === 'light', '0 km/h should be light'); console.assert(windStrengthLabel(15) === 'moderate', '15 km/h should be moderate'); console.assert(windStrengthLabel(30) === 'strong', '30 km/h should be strong'); console.assert(windStrengthLabel(45) === 'stormy', '45 km/h should be stormy'); console.assert(calibrationSizeAdjustFt(1.5, 'conservative') === -0.5, 'Real surfers wave size should be normal minus 0.5ft'); console.assert(calibrationSizeAdjustFt(1.5, 'generous') === 0.5 && calibrationSizeAdjustFt(3, 'generous') === 1, 'Frothing Grom Mode should be normal plus 0.5-1ft'); console.assert(CONFIG.weather.lat === CONFIG.local.lat && CONFIG.weather.lon === CONFIG.local.lon, 'Weather should use Seaford local coordinates'); console.assert(Number.isFinite(CONFIG.cacheMs), 'CONFIG must parse correctly and include cacheMs'); console.assert(weatherLabel(0) === 'Sunny', 'weather code 0 should be Sunny'); console.assert(weatherLabel(61) === 'Cloud and rain', 'weather code 61 should be Cloud and rain'); console.assert(weatherEmoji(0) === '☀️', 'weather code 0 should show sun'); console.assert(weatherEmoji(1) === '🌤️', 'weather code 1 should show sun cloud'); console.assert(weatherEmoji(3) === '🌤️', 'dry mostly-cloudy weather should show sun cloud'); console.assert(weatherEmoji(45) === '☁️', 'fog/grey cloud should show cloud'); console.assert(weatherEmoji(61) === '🌧️', 'weather code 61 should show rain cloud'); console.assert(weatherEmoji(61, 40) === '🌧️💨', 'rain plus wind should show rain wind'); console.assert(weatherEmoji(3, 40) === '☁️💨', 'cloud plus wind should show cloud wind'); console.assert(weatherSummaryText(61, 88) === 'Cloud and rain · 88%', 'Rain percentage should not repeat the word rain'); console.assert(weatherSummaryText(1, 7) === 'Sun and cloud', 'Under 10% rain should hide the percentage'); console.assert(weatherPositiveLine(12, 15, 0, 2).includes('Fresh air') || weatherPositiveLine(12, 15, 0, 2).includes('make the most of it'), 'Weather line should stay positive'); console.assert(weatherPositiveLine(13, 17, 24, 2, 'Sun, 10 May').startsWith('Sun, 10 May:'), 'Selected weather day should use selected date label, not Today'); console.assert(weatherPositiveLine(13, 17, 24, 2, 'Sun, 10 May', 12).includes('12pm rain chance 24%'), 'Weather summary should focus on 12pm rain chance'); console.assert(Math.round(windArrowRotation(90)) === 270, 'East wind FROM 90 should point toward west 270'); console.assert(isEastWind(90) === true, '90 degrees should be east wind'); console.assert(isLightWind(12) === true && isLightWind(16) === false, 'Light wind should be under 15 km/h'); console.assert(highTideWarning({ date: '2026-04-28' }).includes('too full'), 'High tide above 1.9m during daylight should trigger warning'); console.assert(boardDayText(1).includes('Foamboard'), '1ft should be foamboard day'); console.assert(boardDayText(2).includes('Longboard or fish'), '1–2ft should be longboard or fish day'); console.assert(boardDayText(3).includes('Pumping'), '3ft should be pumping'); const weakGulfChecks = GULF_CHECK_POINTS.map(point => ({ name: point.name, point, data: { wave_height: 0.35, wind_wave_height: 0.3, wave_period: 6 } })); const confirmingGulfChecks = GULF_CHECK_POINTS.map((point, i) => ({ name: point.name, point, data: i < 2 ? { wave_height: 0.75, wind_wave_height: 0.76, wave_period: 10 } : { wave_height: 0.35, wind_wave_height: 0.3, wave_period: 6 } })); const oneConfirmingGulfChecks = GULF_CHECK_POINTS.map((point, i) => ({ name: point.name, point, data: i === 0 ? { wave_height: 0.75, wind_wave_height: 0.3, wave_period: 9 } : { wave_height: 0.35, wind_wave_height: 0.3, wave_period: 6 } })); const weakPointReality = midCoastRealityFromGulfPoints({ gulfChecks: weakGulfChecks }, 3); console.assert(!weakPointReality.confirmed && weakPointReality.confidence === 'low' && weakPointReality.recommendedCapFt <= 2, '3ft model with all Gulf points weak should cap around 2ft'); const confirmedPointReality = midCoastRealityFromGulfPoints({ gulfChecks: confirmingGulfChecks }, 3); console.assert(confirmedPointReality.confirmed && confirmedPointReality.confidence === 'high' && confirmedPointReality.recommendedCapFt === null, '3ft model with two Gulf points confirming should allow 3ft'); const onePointReality = midCoastRealityFromGulfPoints({ gulfChecks: oneConfirmingGulfChecks }, 2.5); console.assert(onePointReality.confirmed && onePointReality.confidence === 'medium', 'One Gulf point confirming should give medium confidence'); console.assert(weakPointReality.confidence === 'low', 'No Gulf points confirming should give low confidence'); console.assert(DEBUG_MODE === false, 'Debug mode should be false by default'); const nowForNearest = Date.now(); const nearestReports = [{ time: new Date(nowForNearest - 2 * 36e5).toISOString(), finalFt: 1 }, { time: new Date(nowForNearest + 20 * 60000).toISOString(), finalFt: 2 }, { time: new Date(nowForNearest + 2 * 36e5).toISOString(), finalFt: 3 }]; console.assert(nearestCurrentHourReport(nearestReports).finalFt === 2, 'nearestCurrentHourReport should select the closest time'); console.assert(['1.5', '1.5-2'].includes(publicSizeText(1.5)), 'publicSizeText(1.5) should return 1.5 or 1.5-2'); console.assert(publicSizeText(1.6) === '2', 'publicSizeText(1.6) should return 2'); const todaySanityDate = localIsoDate(); const weakGulfRow = (hour, date = todaySanityDate) => ({ time: `${date}T${String(hour).padStart(2, '0')}:00`, local: { wave_height: 0.35, wind_wave_height: 0.3, wave_period: 6 }, wind: { wind_speed_10m: 12, wind_direction_10m: 250 } }); const weakGulfReport = { activeDriver: { directionDeg: 250, heightM: 1, periodS: 8 }, offshoreModelFt: 3, insideFloorFt: 0.9, stormSurfFt: 0, westFallbackCapped: false, windSpeed: 12, windDir: 250, gulfRealityNote: 'weak test signal' }; const weakGulfGate = applyMidCoastRealityGate(weakGulfRow(12, '2026-04-28'), weakGulfReport, 3); console.assert(!weakGulfGate.gulf.confirmed && weakGulfGate.ft <= 2, 'Offshore 3ft with weak local Gulf signal should cap at 2ft max'); const building9Row = { time: `${todaySanityDate}T09:00`, local: { wave_height: 0.6, wind_wave_height: 0.55, wave_period: 8 }, wind: { wind_speed_10m: 12, wind_direction_10m: 110 }, gulfChecks: oneConfirmingGulfChecks }; const buildingReport = { activeDriver: { directionDeg: 230, heightM: 2.2, periodS: 11 }, offshoreModelFt: 2.2, insideFloorFt: 1.3, stormSurfFt: 0, westFallbackCapped: false, windSpeed: 12, windDir: 110, gulfRealityConfirmed: true, gulfRealityNote: 'building test signal' }; const buildingRealityGate = applyMidCoastRealityGate(building9Row, buildingReport, 2.1); const buildingOvercheck = applyOvercheckConfidenceGate(building9Row, { ...buildingReport, gulfRealityConfirmed: buildingRealityGate.gulf.confirmed, gulfRealityNote: buildingRealityGate.note }, buildingRealityGate.ft, 2.1); console.assert(buildingOvercheck.ft >= 2 && buildingOvercheck.sanityCheckBuilding, '1.5ft morning sanity check should allow 2ft by 9 AM when building signal exists'); const weak9Gate = applyMidCoastRealityGate(weakGulfRow(9), weakGulfReport, 3); const weak9Overcheck = applyOvercheckConfidenceGate(weakGulfRow(9), { ...weakGulfReport, gulfRealityConfirmed: weak9Gate.gulf.confirmed, gulfRealityNote: weak9Gate.note }, weak9Gate.ft, 3); console.assert(weak9Overcheck.ft <= 2.25 && weak9Overcheck.needsBeachCheck, '1.5ft morning sanity check should not allow 3ft if Gulf/local signal is weak'); const trustedSwellReport = { activeDriver: { directionDeg: 230, heightM: 3, periodS: 12 }, offshoreModelFt: 3, insideFloorFt: 0.9, stormSurfFt: 0, westFallbackCapped: false, windSpeed: 10, windDir: 110, gulfRealityNote: 'trusted 230 swell test' }; const trustedGate = applyMidCoastRealityGate(weakGulfRow(10, '2026-04-28'), trustedSwellReport, 3); console.assert(isTrustedMidCoastSwell(trustedSwellReport.activeDriver) && trustedGate.ft >= 2, 'Trusted 3m @ 230° swell should be allowed at least 2ft'); const strongTodayRow = { time: `${todaySanityDate}T16:00`, local: { wave_height: 0.75, wind_wave_height: 0.8, wave_period: 8 }, wind: { wind_speed_10m: 28, wind_direction_10m: 305 } }; const strongGulfReport = { activeDriver: { directionDeg: 230, heightM: 3, periodS: 12 }, offshoreModelFt: 3, insideFloorFt: 1.6, stormSurfFt: 2.4, westFallbackCapped: false, windSpeed: 28, windDir: 305, gulfRealityNote: 'strong test signal' }; const strongGulfGate = applyMidCoastRealityGate(strongTodayRow, strongGulfReport, 3); const strongOvercheck = applyOvercheckConfidenceGate(strongTodayRow, { ...strongGulfReport, gulfRealityConfirmed: strongGulfGate.gulf.confirmed, gulfRealityNote: strongGulfGate.note }, strongGulfGate.ft, 3); console.assert(strongGulfGate.gulf.confirmed && strongOvercheck.ft === 3 && !strongOvercheck.needsBeachCheck, 'Strong Gulf confirmation can override the sanity-check overcall cap'); const otherDateStrongRow = { time: '2026-04-28T15:00', local: { wave_height: 0.75, wind_wave_height: 0.8, wave_period: 8 }, wind: { wind_speed_10m: 28, wind_direction_10m: 305 } }; const noSanityStrongGate = applyMidCoastRealityGate(otherDateStrongRow, strongGulfReport, 3); const noSanityStrongOvercheck = applyOvercheckConfidenceGate(otherDateStrongRow, { ...strongGulfReport, gulfRealityConfirmed: noSanityStrongGate.gulf.confirmed, gulfRealityNote: noSanityStrongGate.note }, noSanityStrongGate.ft, 3); console.assert(!noSanityStrongGate.sanityCheckApplied && noSanityStrongOvercheck.ft === 3 && noSanityStrongOvercheck.modelDisagreementFt === null, 'No sanity check still uses normal model when Gulf confirmation is strong'); const calibrationPreviousStateData = state.data, calibrationPreviousReport = state.report, calibrationPreviousSelectedDay = state.selectedDay, calibrationPreviousExpandedDay = state.expandedDay, calibrationPreviousMode = $('calibrationSelect').value; const calibrationDate = '2026-04-28'; state.data = { offshore: { hourly: { time: [`${calibrationDate}T06:00`], swell_wave_height: [1], swell_wave_direction: [240], swell_wave_period: [12], secondary_swell_wave_height: [0], secondary_swell_wave_direction: [0], secondary_swell_wave_period: [0], wind_wave_height: [0], wind_wave_direction: [0], wind_wave_period: [0] } }, local: { hourly: { time: [`${calibrationDate}T06:00`], wave_height: [0.45], wave_direction: [235], wave_period: [8], wind_wave_height: [0.25], wind_wave_direction: [230], wind_wave_period: [6] } }, wind: { hourly: { time: [`${calibrationDate}T06:00`], wind_speed_10m: [8], wind_direction_10m: [90] } }, gulfChecks: [] }; $('calibrationSelect').value = 'normal'; rebuildReportsFromState(); const normalLiveFt = state.report.days[0].reports[0].finalFt; $('calibrationSelect').value = 'generous'; rebuildReportsFromState(); const generousLiveFt = state.report.days[0].reports[0].finalFt; console.assert(generousLiveFt > normalLiveFt, 'Calibration change rebuilds live/current report, not only future days'); state.data = calibrationPreviousStateData; state.report = calibrationPreviousReport; state.selectedDay = calibrationPreviousSelectedDay; state.expandedDay = calibrationPreviousExpandedDay; $('calibrationSelect').value = calibrationPreviousMode; const otherDateWeakGate = applyMidCoastRealityGate(weakGulfRow(14, '2026-04-28'), weakGulfReport, 3); console.assert(!otherDateWeakGate.sanityCheckApplied && otherDateWeakGate.ft <= 2, 'No sanity check on another date should still use local Gulf confirmation when signal is weak'); const sampleDayForHeadline = { date: '2026-04-28', reports: [{ time: '2026-04-28T06:00', finalFt: 1.5, windDir: 90, windSpeed: 8, windQuality: 0.9, tideDrag: { penaltyFt: 0 } }, { time: '2026-04-28T12:00', finalFt: 2, windDir: 100, windSpeed: 10, windQuality: 0.95, tideDrag: { penaltyFt: 0 } }, { time: '2026-04-28T18:00', finalFt: 1.5, windDir: 180, windSpeed: 12, windQuality: 0.6, tideDrag: { penaltyFt: 0 } }] }; console.assert(!buildDailySummary(sampleDayForHeadline, sampleDayForHeadline.reports[0]).headline.includes('Best surf window'), 'Hero headline should not repeat best window'); const sampleDayPeak = groupByDay([{ time: '2026-04-28T06:00', finalFt: 1, windQuality: 0.7, windDir: 90, windSpeed: 5 }, { time: '2026-04-28T12:00', finalFt: 3, windQuality: 0.4, windDir: 180, windSpeed: 10 }, { time: '2026-04-28T18:00', finalFt: 2, windQuality: 0.9, windDir: 90, windSpeed: 5 }])[0]; console.assert(sampleDayPeak.sizeText.includes('2.5') || sampleDayPeak.sizeText.includes('3'), '7-day outlook should show the biggest 6/12/6 size, not the average or best wind window'); console.assert(axisLabels().join('').includes('12am') && axisLabels().join('').includes('6am') && axisLabels().join('').includes('6pm') && axisLabels().join('').includes('9pm'), 'Trend graphs should show a full 24-hour scale'); console.assert(clampSurfHour(2) === 6 && clampSurfHour(21) === 18, 'Surf report hours should clamp to daylight'); const sampleSwellPath = makeSwellTrendPath([{ hour: 0, sizeFt: 1 }, { hour: 12, sizeFt: 2 }, { hour: 24, sizeFt: 1.5 }], 0, 3); console.assert(sampleSwellPath.startsWith('M '), 'Swell trend path should render'); const smoothedSpike = smoothSwellTrendPoints([{ time:'2026-06-01T06:00', finalFt:1, sizeText:'1', windDir:90, windSpeed:5, activeDriver:{} }, { time:'2026-06-01T07:00', finalFt:2.5, sizeText:'2.5', windDir:90, windSpeed:5, activeDriver:{} }, { time:'2026-06-01T08:00', finalFt:1, sizeText:'1', windDir:90, windSpeed:5, activeDriver:{} }]); console.assert(smoothedSpike[1].sizeFt < 2, 'Swell trend smoothing should remove isolated one-hour bumps'); const grid = makeSwellGridLines(0, 3); console.assert(grid.includes('1ft') && grid.includes('2ft') && grid.includes('3ft'), 'Swell grid should include 1ft, 2ft and 3ft labels'); const sampleWindPath = makeWindTrendPath([{ hour: 0, speed: 5 }, { hour: 12, speed: 20 }, { hour: 24, speed: 10 }], 0, 65); console.assert(sampleWindPath.startsWith('M '), 'Wind trend path should render with explicit minSpeed/maxSpeed'); const windGrid = makeWindGridLines(0, 4); console.assert(windGrid.includes('light') && windGrid.includes('moderate') && windGrid.includes('strong') && windGrid.includes('stormy'), 'Wind grid should include light, moderate, strong and stormy labels'); console.assert(windLevel(10) > 0 && windLevel(10) < 1, '0–15 km/h should plot inside light band'); console.assert(windLevel(20) > 1 && windLevel(20) < 2, '15–30 km/h should plot inside moderate band'); console.assert(windLevel(35) > 2 && windLevel(35) < 3, '30–45 km/h should plot inside strong band'); console.assert(windLevel(50) > 3 && windLevel(50) <= 4, '45+ km/h should plot inside stormy band'); console.assert(!renderTidePanel.toString().includes('swellGridLines'), 'Tide render must not reference swellGridLines'); const tideGrid = makeTideGridLines(0, 3); console.assert(tideGrid.includes('0m') && tideGrid.includes('1m') && tideGrid.includes('2m') && tideGrid.includes('3m'), 'Tide grid should include 0m, 1m, 2m and 3m labels'); const previousSelected = state.selectedDay; const previousExpanded = state.expandedDay; state.selectedDay = 0; state.expandedDay = 0; console.assert(state.expandedDay === state.selectedDay, 'Selected day detail can be open'); state.expandedDay = null; console.assert(state.expandedDay === null, 'Selected day detail can be closed'); state.selectedDay = previousSelected; state.expandedDay = previousExpanded; console.info('Seaford Surf Report tests passed'); }
 
     $('refreshBtn').addEventListener('click', () => loadReport(true));
     $('timeSelect').addEventListener('change', render);
-    $('calibrationSelect').addEventListener('change', () => { if (!state.data) return; const combined = combineHourly(state.data.offshore, state.data.local, state.data.wind), reports = applySizeCorrections(combined.map(buildHourReport)); state.report = { reports, days: groupByDay(reports) }; render(); });
+    $('calibrationSelect').addEventListener('change', () => { if (!state.data) return; rebuildReportsFromState(); render(); });
     $('copyBtn').addEventListener('click', copySummary);
     $('saveLiveCorrectionBtn').addEventListener('click', saveLiveCorrection);
     $('clearLiveCorrectionBtn').addEventListener('click', clearLiveCorrection);
