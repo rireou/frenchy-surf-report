@@ -369,11 +369,11 @@
       weather: { lat: -35.19, lon: 138.48 },
       cacheMs: 15 * 60 * 1000,
       forecastDays: 7,
-      portNoarlungaTideFiles: ['port_noarlunga_2026_tides jdson.json', 'port-noarlunga-2026.json', 'port_noarlunga_2026_tides.json'],
+      portNoarlungaTideFiles: ['port_noarlunga_2026_tides.json', 'port-noarlunga-2026.json'],
       tideApiEndpoint: ''
     };
 
-    const state = { selectedDay: 0, expandedDay: null, selectedWeatherDay: null, data: null, report: null, tides: {}, portNoarlungaTides: {} };
+    const state = { selectedDay: 0, expandedDay: null, selectedWeatherDay: null, data: null, report: null, tides: {}, portNoarlungaTides: {}, dataWarnings: [], staleDataUsed: false, optionalFetchFailures: [], lastSuccessfulFetchTime: null };
     const DEBUG_MODE = new URLSearchParams(window.location.search).get('debug') === '1';
     const GULF_CHECK_POINTS = [
       { name: 'Seaford local cell', lat: -35.19, lon: 138.48 },
@@ -422,11 +422,59 @@
       const params = new URLSearchParams({ latitude: CONFIG.weather.lat, longitude: CONFIG.weather.lon, current: 'temperature_2m,weather_code,precipitation,wind_speed_10m', hourly: 'temperature_2m,weather_code,precipitation_probability,wind_speed_10m', daily: 'temperature_2m_max,temperature_2m_min,weather_code,precipitation_probability_max,wind_speed_10m_max', timezone: CONFIG.tz, forecast_days: String(CONFIG.forecastDays) });
       return `https://api.open-meteo.com/v1/forecast?${params}`;
     }
-    function cacheGet(key) { try { const raw = localStorage.getItem(key); if (!raw) return null; const parsed = JSON.parse(raw); if (Date.now() - parsed.savedAt > CONFIG.cacheMs) return null; return parsed.value; } catch { return null; } }
+    const FETCH_TIMEOUT_MS = 8000;
+    const FETCH_RETRY_DELAY_MS = 700;
+    function cacheEntry(key) { try { const raw = localStorage.getItem(key); if (!raw) return null; const parsed = JSON.parse(raw); return parsed && Object.prototype.hasOwnProperty.call(parsed, 'value') ? parsed : null; } catch { return null; } }
+    function cacheGet(key) { const parsed = cacheEntry(key); if (!parsed || Date.now() - Number(parsed.savedAt || 0) > CONFIG.cacheMs) return null; return parsed.value; }
     function cacheSet(key, value) { try { localStorage.setItem(key, JSON.stringify({ savedAt: Date.now(), value })); } catch {} }
     function permanentGet(key) { try { const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : null; } catch { return null; } }
     function permanentSet(key, value) { try { localStorage.setItem(key, JSON.stringify(value)); } catch {} }
-    async function fetchJsonCached(key, url) { const cached = cacheGet(key); if (cached) return { data: cached, cached: true }; const res = await fetch(url); if (!res.ok) throw new Error(`${key} fetch failed: ${res.status}`); const data = await res.json(); cacheSet(key, data); return { data, cached: false }; }
+    function delay(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
+    async function fetchJsonFresh(key, url, timeoutMs = FETCH_TIMEOUT_MS) {
+      const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+      const timer = controller ? setTimeout(() => controller.abort(), timeoutMs) : null;
+      try {
+        const res = await fetch(url, controller ? { signal: controller.signal } : undefined);
+        if (!res.ok) throw new Error(`${key} fetch failed: ${res.status}`);
+        return await res.json();
+      } catch (err) {
+        const message = err?.name === 'AbortError' ? `${key} fetch timed out after ${timeoutMs}ms` : (err?.message || String(err));
+        throw new Error(message);
+      } finally {
+        if (timer) clearTimeout(timer);
+      }
+    }
+    async function fetchJsonCached(key, url, options = {}) {
+      const cacheMs = options.cacheMs ?? CONFIG.cacheMs;
+      const entry = cacheEntry(key);
+      if (entry && Date.now() - Number(entry.savedAt || 0) <= cacheMs) return { data: entry.value, cached: true, stale: false };
+      let lastError = null;
+      for (let attempt = 0; attempt < 2; attempt++) {
+        try {
+          const data = await fetchJsonFresh(key, url, options.timeoutMs ?? FETCH_TIMEOUT_MS);
+          cacheSet(key, data);
+          return { data, cached: false, stale: false };
+        } catch (err) {
+          lastError = err;
+          if (attempt === 0) await delay(options.retryDelayMs ?? FETCH_RETRY_DELAY_MS);
+        }
+      }
+      if (entry?.value) {
+        return { data: entry.value, cached: true, stale: true, warning: `${key}: using stale cached data after fetch failed (${lastError?.message || lastError})` };
+      }
+      const hardError = new Error(`${key}: no cached data available and fetch failed (${lastError?.message || lastError})`);
+      hardError.key = key;
+      hardError.url = url;
+      throw hardError;
+    }
+    async function fetchOptionalJsonCached(key, url, options = {}) {
+      try {
+        const result = await fetchJsonCached(key, url, options);
+        return { ...result, failed: false, error: null };
+      } catch (err) {
+        return { data: null, cached: false, stale: false, failed: true, error: err?.message || String(err), key, url };
+      }
+    }
 
     function directionScore(deg) { const d = Number(deg); if (!Number.isFinite(d)) return 0; if (d < 200) return 0; if (d <= 205) return lerp(0.05, 0.10, (d - 200) / 5); if (d <= 215) return lerp(0.10, 0.25, (d - 205) / 10); if (d <= 225) return lerp(0.25, 0.65, (d - 215) / 10); if (d <= 235) return lerp(0.65, 1.00, (d - 225) / 10); if (d <= 240) return lerp(1.00, 0.82, (d - 235) / 5); if (d <= 245) return lerp(0.82, 0.58, (d - 240) / 5); if (d <= 250) return lerp(0.58, 0.34, (d - 245) / 5); if (d <= 260) return lerp(0.34, 0.16, (d - 250) / 10); return 0.06; }
     function periodBonusFt(period) { const p = Number(period); if (!p) return 0; if (p <= 9) return -0.5; if (p <= 13) return 0; if (p <= 16) return 0.5; if (p <= 20) return 1.0; return 0.7; }
@@ -633,7 +681,7 @@
     function confidenceLabel(report) { let score = 0.52; if (report.insideFloorFt > 0.9) score += 0.12; if (report.activeDriver.directionScore > 0.65) score += 0.12; if (report.activeDriver.periodS >= 10) score += 0.06; if (report.windQuality < 0.4) score -= 0.05; score = clamp(score, 0, 1); if (score >= 0.72) return 'High'; if (score >= 0.48) return 'Medium'; return 'Low'; }
     function indexByTime(hourly) { const out = {}; hourly.time.forEach((time, i) => out[time] = pickHour(hourly, i)); return out; }
     function pickHour(hourly, i) { const obj = {}; Object.keys(hourly).forEach(k => obj[k] = Array.isArray(hourly[k]) ? hourly[k][i] : hourly[k]); return obj; }
-    function combineHourly(offshore, local, wind, gulfData = []) { const mapLocal = indexByTime(local.hourly), mapWind = indexByTime(wind.hourly), gulfMaps = gulfData.map(item => ({ point: item.point, map: item.data?.hourly ? indexByTime(item.data.hourly) : {} })); const rows = offshore.hourly.time.map((time, i) => ({ time, offshore: pickHour(offshore.hourly, i), local: mapLocal[time] || null, wind: mapWind[time] || null, gulfChecks: gulfMaps.map(g => ({ name: g.point.name, point: g.point, data: g.map[time] || null })).filter(g => g.data) })).filter(x => x.local && x.wind); rows.forEach((row, index) => { row._index = index; row._allRows = rows; }); return rows; }
+    function combineHourly(offshore, local, wind, gulfData = []) { const mapLocal = indexByTime(local.hourly), mapWind = indexByTime(wind.hourly), gulfMaps = gulfData.filter(item => item?.data?.hourly).map(item => ({ point: item.point, map: indexByTime(item.data.hourly) })), gulfFailures = gulfData.filter(item => item?.failed).map(item => ({ name: item.point?.name || item.key || 'Gulf check point', error: item.error || 'Fetch failed' })); const rows = offshore.hourly.time.map((time, i) => ({ time, offshore: pickHour(offshore.hourly, i), local: mapLocal[time] || null, wind: mapWind[time] || null, gulfChecks: gulfMaps.map(g => ({ name: g.point.name, point: g.point, data: g.map[time] || null })).filter(g => g.data), gulfCheckFailures: gulfFailures })).filter(x => x.local && x.wind); rows.forEach((row, index) => { row._index = index; row._allRows = rows; }); return rows; }
 
     const TIDE_SOURCE_BY_DATE = {};
     const TIDE_POINTS = {
@@ -764,6 +812,9 @@
         const confirms = waveM >= 0.7 || windWaveM >= 0.75 || estimatedFt >= 1.8;
         return { name: g.name, waveM, windWaveM, period, estimatedFt, confirms };
       });
+      if (!checks.length) {
+        return { confirmed: false, confidence: 'unknown', recommendedCapFt: null, reason: 'Gulf point checks unavailable; using core Seaford data only.', strongestPointName: null, strongestPointFt: 0, checks };
+      }
       const confirming = checks.filter(c => c.confirms);
       const strongest = checks.slice().sort((a, b) => b.estimatedFt - a.estimatedFt)[0] || null;
       let confidence = 'medium';
@@ -1043,7 +1094,7 @@
       finalFt = clamp(finalFt + calibrationSizeAdjustFt(finalFt, calibration), 0, 6);
       const lifted = insideFloorFt > gatedOffshoreModelFt + 0.15;
       const why = stormSurf.capped ? `${stormSurf.capNote || 'N/NW fetch is showing, but the local Seaford signal has not filled in yet.'} Expect around ${sizeRange(stormSurf.ft)} ft for now. Watch for it to build only if the local wind-wave fills in.` : stormSurf.active ? `Storm surf running on the Mid Coast. Swell surf is about ${sizeRange(gatedOffshoreModelFt)} ft, but ${stormSurf.source} is creating about ${sizeRange(stormSurf.ft)} ft. Windy and messy, but rideable for foamies, mals and keen surfers.` : lifted ? `Inside-gulf signal is lifting the forecast. Offshore alone suggests about ${sizeRange(gatedOffshoreModelFt)} ft, but the Seaford local cell shows energy already in the gulf.` : 'Offshore driver is doing most of the work. The local Seaford cell is not lifting the forecast much.';
-      const report = { time: row.time, activeDriver, offshoreModelFt: gatedOffshoreModelFt, offshoreUncappedFt: offshoreModelFt, westFallbackCapped: westFallbackGate.capped, westFallbackCapNote: westFallbackGate.note, singleDriverFt, combinedEnergy, insideFloorFt, stormSurfFt: stormSurf.ft, hasLocalStormSurf: stormSurf.active, localWindWaveM: stormSurf.localWindWave, stormFetchFt: stormSurf.fetchFt, stormMemoryFetchFt: stormSurf.memoryFetchFt, stormSurfSource: stormSurf.source, stormSurfNote: stormSurf.note, stormConfirmed: stormSurf.confirmed, stormCapped: stormSurf.capped, stormCapNote: stormSurf.capNote, stormDirectionQuality: stormSurf.directionGate?.quality, groundswellFt, originalFinalFt: finalFt, finalFt, sizeText: '', windSpeed, windDir, windQuality: wq, confidence: null, why, suppressionNote, gulfLimit, tideDrag, tidePush, sourceMode: stormSurf.active ? 'storm-surf-mode' : 'fallback-only', localRaw: row.local, offshoreRaw: row.offshore, windRaw: row.wind };
+      const report = { time: row.time, activeDriver, offshoreModelFt: gatedOffshoreModelFt, offshoreUncappedFt: offshoreModelFt, westFallbackCapped: westFallbackGate.capped, westFallbackCapNote: westFallbackGate.note, singleDriverFt, combinedEnergy, insideFloorFt, stormSurfFt: stormSurf.ft, hasLocalStormSurf: stormSurf.active, localWindWaveM: stormSurf.localWindWave, stormFetchFt: stormSurf.fetchFt, stormMemoryFetchFt: stormSurf.memoryFetchFt, stormSurfSource: stormSurf.source, stormSurfNote: stormSurf.note, stormConfirmed: stormSurf.confirmed, stormCapped: stormSurf.capped, stormCapNote: stormSurf.capNote, stormDirectionQuality: stormSurf.directionGate?.quality, groundswellFt, originalFinalFt: finalFt, finalFt, sizeText: '', windSpeed, windDir, windQuality: wq, confidence: null, why, suppressionNote, gulfLimit, tideDrag, tidePush, sourceMode: stormSurf.active ? 'storm-surf-mode' : 'fallback-only', localRaw: row.local, offshoreRaw: row.offshore, windRaw: row.wind, gulfCheckFailures: row.gulfCheckFailures || [] };
       const modelFinalFt = finalFt;
       const realityGate = applyMidCoastRealityGate(row, report, modelFinalFt);
       finalFt = realityGate.ft;
@@ -1212,24 +1263,25 @@
       const windShift = shift ? `${formatTime(shift.time)} · ${windDirectionName(shift.windDir)} ${Math.round(shift.windSpeed)} km/h` : 'No major shift today';
       const gulfRealityText = report.gulfPointRealityConfidence === 'low' ? 'Offshore swell is showing, but the Mid Coast / Gulf signal is weak — worth a beach check.' : report.gulfPointRealityConfidence === 'high' ? 'Multiple Gulf points confirm the size.' : report.needsBeachCheck ? 'Offshore swell is showing, but the Mid Coast signal is weak — worth a beach check.' : report.gulfRealityConfirmed ? 'Gulf signal confirms the size.' : report.gulfRealityConfirmed === false ? 'Offshore swell is showing, but the Mid Coast signal has not fully confirmed it yet.' : '';
       const reportTimeText = `Live check: ${formatTime(report.time)}.`;
+      const staleText = state.data?.staleDataUsed ? 'Using recently cached data.' : '';
       const sanityCheckText = report.sanityCheckBuilding ? `Morning beach check started around ${formatFtValue(report.sanityCheckObservedFt)}ft, and the Mid Coast signal is now building.` : report.sanityCheckHolding ? 'Morning check is holding the report down until the Gulf signal confirms more size.' : report.sanityCheckApplied ? `Morning sanity check applied: ${report.sanityCheckSource || 'manual check'} reported around ${formatFtValue(report.sanityCheckObservedFt)} ft.` : '';
       if (report.stormCapped) {
-        const text = [`${report.stormCapNote || 'N/NW fetch is showing, but the local Seaford signal has not filled in yet.'} Expect around ${report.sizeText} ft for now. Watch for it to build only if the local wind-wave fills in.`, reportTimeText, gulfRealityText, sanityCheckText].filter(Boolean).join(' ');
+        const text = [`${report.stormCapNote || 'N/NW fetch is showing, but the local Seaford signal has not filled in yet.'} Expect around ${report.sizeText} ft for now. Watch for it to build only if the local wind-wave fills in.`, reportTimeText, gulfRealityText, sanityCheckText, staleText].filter(Boolean).join(' ');
         return { headline: 'Storm surf watch', text, bestWindow, windShift, swellTrend: `${swellTrend} · storm surf watch` };
       }
       if (report.hasLocalStormSurf) {
-        const text = [`Storm surf running on the Mid Coast. Swell surf is around ${sizeRange(report.offshoreModelFt)} ft, but ${report.stormSurfSource || 'local N–NW fetch'} is making ${report.sizeText} ft. Messy, windy and not pretty — but surfable for foamies, mals and keen surfers.`, reportTimeText, gulfRealityText, sanityCheckText].filter(Boolean).join(' ');
+        const text = [`Storm surf running on the Mid Coast. Swell surf is around ${sizeRange(report.offshoreModelFt)} ft, but ${report.stormSurfSource || 'local N–NW fetch'} is making ${report.sizeText} ft. Messy, windy and not pretty — but surfable for foamies, mals and keen surfers.`, reportTimeText, gulfRealityText, sanityCheckText, staleText].filter(Boolean).join(' ');
         return { headline: 'Storm surf mode', text, bestWindow, windShift, swellTrend: `${swellTrend} · storm surf` };
       }
       const windReason = isEastWind(best.windDir) && isLightWind(best.windSpeed) ? `The wind is light and from the east — chef’s kiss for Seaford.` : isEastWind(best.windDir) ? `The east angle is doing the right thing, even if the strength needs watching.` : isLightWind(best.windSpeed) ? `The wind is light, so even with a less-perfect direction it should stay manageable.` : `${bestEffect.note}.`;
       const surfPlanText = surfPlanStory(day, report, bestEffect);
       const highText = highTideWarning(day);
       const headline = `Surf plan`;
-      const text = [windReason, surfPlanText, highText, reportTimeText, gulfRealityText, sanityCheckText].filter(Boolean).join(' ');
+      const text = [windReason, surfPlanText, highText, reportTimeText, gulfRealityText, sanityCheckText, staleText].filter(Boolean).join(' ');
       return { headline, text, bestWindow, windShift, swellTrend: `${swellTrend} · ${bestEffect.label}` };
     }
 
-    function render() { if (!state.report) return; const days = state.report.days; const day = days[state.selectedDay] || days[0]; const liveReport = nearestCurrentHourReport(state.report.reports || []); const liveDay = days.find(d => d.date === liveReport?.time?.slice(0, 10)) || days.find(d => d.date === localIsoDate()) || days[0]; $('mainSize').textContent = liveSizeText(liveReport); const dailySummary = buildDailySummary(liveDay, liveReport); $('dailyHeadline').textContent = dailySummary.headline; $('plainWhy').textContent = dailySummary.text; $('bestWindowStat').textContent = dailySummary.bestWindow; $('windShiftStat').textContent = dailySummary.windShift; $('swellTrendStat').textContent = dailySummary.swellTrend; $('windMain').textContent = `${Math.round(liveReport.windSpeed)} km/h`; $('windSub').textContent = `${compassFromDeg(liveReport.windDir)} wind · ${Math.round(liveReport.windDir)}°`; $('sourceRow').innerHTML = ''; $('tideTitle').textContent = `Tide · ${formatDay(day.date)}`; $('swellTrendTitle').textContent = `Swell trend · ${formatDay(day.date)}`; $('windTrendTitle').textContent = `Wind trend · ${formatDay(day.date)}`; renderDays(days); renderSwellDetail(day); renderTidePanel(day); renderSwellTrendPanel(day); renderWindTrendPanel(day); renderWeatherPanel(); }
+    function render() { if (!state.report) return; const days = state.report.days; const day = days[state.selectedDay] || days[0]; const liveReport = nearestCurrentHourReport(state.report.reports || []); const liveDay = days.find(d => d.date === liveReport?.time?.slice(0, 10)) || days.find(d => d.date === localIsoDate()) || days[0]; $('mainSize').textContent = liveSizeText(liveReport); const dailySummary = buildDailySummary(liveDay, liveReport); $('dailyHeadline').textContent = dailySummary.headline; $('plainWhy').textContent = dailySummary.text; $('bestWindowStat').textContent = dailySummary.bestWindow; $('windShiftStat').textContent = dailySummary.windShift; $('swellTrendStat').textContent = dailySummary.swellTrend; $('windMain').textContent = `${Math.round(liveReport.windSpeed)} km/h`; $('windSub').textContent = `${compassFromDeg(liveReport.windDir)} wind · ${Math.round(liveReport.windDir)}°`; $('sourceRow').innerHTML = state.data?.staleDataUsed ? '<span>Using recently cached data.</span>' : ''; $('tideTitle').textContent = `Tide · ${formatDay(day.date)}`; $('swellTrendTitle').textContent = `Swell trend · ${formatDay(day.date)}`; $('windTrendTitle').textContent = `Wind trend · ${formatDay(day.date)}`; renderDays(days); renderSwellDetail(day); renderTidePanel(day); renderSwellTrendPanel(day); renderWindTrendPanel(day); renderWeatherPanel(); }
     function renderDays(days) { $('days').innerHTML = days.map((day, i) => { const best = day.best; const peak = day.peak; const note = peak ? `Biggest size near ${formatTime(peak.time)} · ${compassFromDeg(peak.windDir)} ${Math.round(peak.windSpeed)} km/h` : best ? `Best daylight pulse near ${formatTime(best.time)} · ${compassFromDeg(best.windDir)} ${Math.round(best.windSpeed)} km/h` : 'No daylight report'; return `<div class="day-card ${i === state.selectedDay ? 'active' : ''}" data-day="${i}"><div class="day-name">${formatDay(day.date)}</div><div class="day-size">${day.sizeText}<span style="font-size:14px;color:var(--muted);letter-spacing:0;"> ft</span></div><div class="day-note">${note}</div></div>`; }).join(''); document.querySelectorAll('.day-card').forEach(card => card.addEventListener('click', () => { const clicked = Number(card.dataset.day); if (state.selectedDay === clicked && state.expandedDay === clicked) { state.expandedDay = null; } else { state.selectedDay = clicked; state.expandedDay = clicked; } render(); })); }
     function fmtM(value) { const n = Number(value || 0); return n ? `${n.toFixed(1)}m` : '--'; }
     function fmtPeriod(value) { const n = Number(value || 0); return n ? `${n.toFixed(1)}s` : '--'; }
@@ -1240,8 +1292,11 @@
     function renderGulfDebug(report) {
       if (!DEBUG_MODE) return '';
       const checks = report.gulfPointChecks || [];
-      if (!checks.length) return `<div class="swell-data"><strong>Gulf debug</strong><small>No Gulf point data matched this hour.</small></div>`;
-      return checks.map(c => `<div class="swell-data"><strong>${c.name}: ${formatFtValue(c.estimatedFt)} ft · ${c.confirms ? 'confirms yes' : 'confirms no'}</strong><small>wave ${c.waveM.toFixed(2)}m · wind-wave ${c.windWaveM.toFixed(2)}m · period ${c.period.toFixed(1)}s</small></div>`).join('');
+      const failures = report.gulfCheckFailures || [];
+      const renderedChecks = checks.map(c => `<div class="swell-data"><strong>${c.name}: ${formatFtValue(c.estimatedFt)} ft · ${c.confirms ? 'confirms yes' : 'confirms no'}</strong><small>wave ${c.waveM.toFixed(2)}m · wind-wave ${c.windWaveM.toFixed(2)}m · period ${c.period.toFixed(1)}s</small></div>`).join('');
+      const renderedFailures = failures.map(f => `<div class="swell-data"><strong>${f.name}: optional check failed</strong><small>${f.error}</small></div>`).join('');
+      if (!renderedChecks && !renderedFailures) return `<div class="swell-data"><strong>Gulf debug</strong><small>No Gulf point data matched this hour.</small></div>`;
+      return renderedChecks + renderedFailures;
     }
     function renderSwellDetail(day) { if (state.expandedDay !== state.selectedDay) { $('swellDetail').innerHTML = ''; $('swellDetailHint').textContent = 'Tap any date above to open the 6 AM, 12 PM and 6 PM read.'; return; } $('swellDetailHint').textContent = 'Tap the same date again to close the 6 AM, 12 PM and 6 PM read.'; const rows = [6, 12, 18].map(hour => nearestHour(day.reports, hour)).filter(Boolean); $('swellDetail').innerHTML = rows.map(r => { const primary = { h: r.offshoreRaw.swell_wave_height, p: r.offshoreRaw.swell_wave_period, d: r.offshoreRaw.swell_wave_direction }, secondary = { h: r.offshoreRaw.secondary_swell_wave_height, p: r.offshoreRaw.secondary_swell_wave_period, d: r.offshoreRaw.secondary_swell_wave_direction }; const driverLabel = r.activeDriver.kind === 'Secondary swell' ? 'Secondary driving' : r.activeDriver.kind === 'Primary swell' ? 'Primary driving' : 'Mixed / weak'; return `<div class="swell-row"><div><b>${formatTime(r.time)}</b><small style="display:block;color:var(--muted);margin-top:2px;">${driverLabel}</small></div><div class="swell-pill">${r.sizeText} ft</div><div class="swell-data"><strong>Primary: ${fmtM(primary.h)} @ ${fmtPeriod(primary.p)}</strong><small>${fmtDirection(primary.d)} · offshore fallback</small></div><div class="swell-data"><strong>Secondary: ${fmtM(secondary.h)} @ ${fmtPeriod(secondary.p)}</strong><small>${fmtDirection(secondary.d)} · checked as possible real driver</small></div><div class="swell-data wind-read"><strong>Wind: ${simpleWindText(r.windDir, r.windSpeed)}</strong><small>Clean simple read for coaching decisions</small></div>${renderGulfDebug(r)}</div>`; }).join(''); }
 
@@ -1340,30 +1395,46 @@
     async function loadReport(force = false) {
       $('statusText').textContent = 'Loading report...';
       try {
-        if (force) ['offshore','local','wind','weather-seaford','weather-adelaide', ...GULF_CHECK_POINTS.map((_, i) => `gulf-check-${i}`)].forEach(k => localStorage.removeItem(k));
+        const fetchOptions = force ? { cacheMs: 0 } : {};
         await loadPortNoarlungaBaseTides();
-        const gulfFetches = GULF_CHECK_POINTS.map((point, i) => fetchJsonCached(`gulf-check-${i}`, marineUrl(point, true)).then(res => ({ point, data: res.data, cached: res.cached })));
-        const [offshoreRes, localRes, windRes, weatherRes, ...gulfChecks] = await Promise.all([
-          fetchJsonCached('offshore', marineUrl(CONFIG.offshore, false)),
-          fetchJsonCached('local', marineUrl(CONFIG.local, true)),
-          fetchJsonCached('wind', windUrl()),
-          fetchJsonCached('weather-seaford', weatherUrl()),
-          ...gulfFetches
+        const [offshoreRes, localRes, windRes, weatherRes] = await Promise.all([
+          fetchJsonCached('offshore', marineUrl(CONFIG.offshore, false), fetchOptions),
+          fetchJsonCached('local', marineUrl(CONFIG.local, true), fetchOptions),
+          fetchJsonCached('wind', windUrl(), fetchOptions),
+          fetchOptionalJsonCached('weather-seaford', weatherUrl(), fetchOptions)
         ]);
+        const gulfResults = await Promise.allSettled(GULF_CHECK_POINTS.map((point, i) => fetchOptionalJsonCached(`gulf-check-${i}`, marineUrl(point, true), fetchOptions).then(res => ({ ...res, point }))));
+        const gulfChecks = gulfResults.map((result, i) => result.status === 'fulfilled' ? result.value : { data: null, failed: true, error: result.reason?.message || String(result.reason), point: GULF_CHECK_POINTS[i] });
+        const optionalFetchFailures = [
+          ...(weatherRes.failed ? [{ key: 'weather-seaford', name: 'Seaford weather', error: weatherRes.error }] : []),
+          ...gulfChecks.filter(g => g.failed).map(g => ({ key: g.key || g.point?.name, name: g.point?.name || 'Gulf check point', error: g.error }))
+        ];
+        const coreResults = [offshoreRes, localRes, windRes];
+        const staleWarnings = [...coreResults, weatherRes, ...gulfChecks].filter(r => r?.stale).map(r => r.warning).filter(Boolean);
+        const dataWarnings = [...staleWarnings, ...optionalFetchFailures.map(f => `${f.name}: ${f.error}`)];
+        const lastSuccessfulFetchTime = [...coreResults, weatherRes, ...gulfChecks].some(r => r && !r.cached && !r.failed) ? new Date().toISOString() : (state.data?.lastSuccessfulFetchTime || null);
         state.data = {
           offshore: offshoreRes.data,
           local: localRes.data,
           wind: windRes.data,
-          weather: weatherRes.data,
+          weather: weatherRes.data || {},
           gulfChecks,
+          dataWarnings,
+          staleDataUsed: [...coreResults, weatherRes, ...gulfChecks].some(r => r?.stale),
+          optionalFetchFailures,
+          lastSuccessfulFetchTime,
           meta: { offshoreCached: offshoreRes.cached, localCached: localRes.cached, windCached: windRes.cached, weatherCached: weatherRes.cached, gulfCached: gulfChecks.map(g => g.cached), loadedAt: new Date().toISOString(), tide: CONFIG.tideApiEndpoint ? 'Live tide proxy enabled' : 'BOM Port Noarlunga 2026 yearly tide file mode' }
         };
         const combined = combineHourly(state.data.offshore, state.data.local, state.data.wind, state.data.gulfChecks || []), reports = applySizeCorrections(combined.map(buildHourReport));
-        state.report = { reports, days: groupByDay(reports) };
+        state.report = { reports, days: groupByDay(reports), dataWarnings, staleDataUsed: state.data.staleDataUsed, optionalFetchFailures, lastSuccessfulFetchTime };
+        state.dataWarnings = dataWarnings;
+        state.staleDataUsed = state.data.staleDataUsed;
+        state.optionalFetchFailures = optionalFetchFailures;
+        state.lastSuccessfulFetchTime = lastSuccessfulFetchTime;
         state.selectedDay = 0;
         state.expandedDay = null;
         await loadTidesForDays(state.report.days);
-        $('statusText').textContent = 'Report updated';
+        $('statusText').textContent = state.data.staleDataUsed ? 'Report updated · cached data' : 'Report updated';
         render();
       } catch (err) {
         console.error(err);
