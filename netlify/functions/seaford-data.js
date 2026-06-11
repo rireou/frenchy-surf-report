@@ -18,7 +18,7 @@ const CACHE_HEADERS = {
   'Content-Type': 'application/json',
   'Cache-Control': 'public, max-age=300, stale-while-revalidate=900'
 };
-const TIMEOUT_MS = 8000;
+const TIMEOUT_MS = 15000;
 
 function marineUrl(point, localSea = false) {
   const params = new URLSearchParams({
@@ -50,8 +50,8 @@ function weatherUrl() {
   const params = new URLSearchParams({
     latitude: CONFIG.weather.lat,
     longitude: CONFIG.weather.lon,
-    current: 'temperature_2m,weather_code,precipitation,wind_speed_10m',
-    hourly: 'temperature_2m,weather_code,precipitation_probability,wind_speed_10m',
+    current: 'temperature_2m,weather_code,precipitation,wind_speed_10m,wind_direction_10m',
+    hourly: 'temperature_2m,weather_code,precipitation_probability,wind_speed_10m,wind_direction_10m',
     daily: 'temperature_2m_max,temperature_2m_min,weather_code,precipitation_probability_max,wind_speed_10m_max',
     timezone: CONFIG.tz,
     forecast_days: String(CONFIG.forecastDays)
@@ -82,17 +82,49 @@ async function optionalFetch(label, url) {
   }
 }
 
+function buildFallbackWindFromWeather(weatherData) {
+  const hourly = weatherData?.hourly || {};
+  const times = Array.isArray(hourly.time) ? hourly.time : [];
+  const currentSpeedRaw = weatherData?.current?.wind_speed_10m;
+  const hasCurrentSpeed = currentSpeedRaw != null && Number.isFinite(Number(currentSpeedRaw));
+  const currentSpeed = hasCurrentSpeed ? Number(currentSpeedRaw) : 0;
+  const currentDirRaw = weatherData?.current?.wind_direction_10m;
+  const currentDir = Number.isFinite(Number(currentDirRaw)) ? Number(currentDirRaw) : null;
+  const hasHourlySpeed = times.some((_, i) => Number.isFinite(Number(hourly.wind_speed_10m?.[i])));
+  if (!times.length || (!hasHourlySpeed && !hasCurrentSpeed)) return null;
+  const speeds = times.map((_, i) => Number.isFinite(Number(hourly.wind_speed_10m?.[i])) ? Number(hourly.wind_speed_10m[i]) : currentSpeed);
+  const dirs = times.map((_, i) => Number.isFinite(Number(hourly.wind_direction_10m?.[i])) ? Number(hourly.wind_direction_10m[i]) : currentDir);
+  return { hourly: { time: times, wind_speed_10m: speeds, wind_direction_10m: dirs }, current: { wind_speed_10m: currentSpeed, wind_direction_10m: currentDir }, fallback: true };
+}
+
+function buildCalmWindFallback(referenceData) {
+  const times = Array.isArray(referenceData?.hourly?.time) ? referenceData.hourly.time : [];
+  return { hourly: { time: times, wind_speed_10m: times.map(() => 0), wind_direction_10m: times.map(() => null) }, current: { wind_speed_10m: 0, wind_direction_10m: null }, fallback: true, calm: true };
+}
+
 exports.handler = async () => {
   const warnings = [];
   try {
-    const [offshore, local, wind] = await Promise.all([
+    const [offshore, local, weatherResult, windResult] = await Promise.all([
       fetchJson('Seaford offshore marine', marineUrl(CONFIG.offshore, false)),
       fetchJson('Seaford local marine', marineUrl(CONFIG.local, true)),
-      fetchJson('Seaford wind', windUrl())
+      optionalFetch('Seaford weather', weatherUrl()),
+      optionalFetch('Seaford wind', windUrl())
     ]);
 
-    const weatherResult = await optionalFetch('Seaford weather', weatherUrl());
     if (weatherResult.failed) warnings.push(`Seaford weather: ${weatherResult.error}`);
+    let wind = windResult.data;
+    if (windResult.failed) {
+      const weatherWind = buildFallbackWindFromWeather(weatherResult.data);
+      if (weatherWind?.hourly?.time?.length) {
+        wind = weatherWind;
+        warnings.push('Using weather wind fallback.');
+      } else {
+        wind = buildCalmWindFallback(offshore);
+        warnings.push('Wind data unavailable; using calm fallback.');
+      }
+      warnings.push(`Seaford wind: ${windResult.error}`);
+    }
 
     const gulfResults = await Promise.allSettled(GULF_CHECK_POINTS.map(async point => {
       const result = await optionalFetch(point.name, marineUrl(point, true));

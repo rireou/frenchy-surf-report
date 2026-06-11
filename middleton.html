@@ -241,11 +241,29 @@
     const $ = id => document.getElementById(id);
     function clamp(n, min, max) { return Math.max(min, Math.min(max, n)); }
     function lerp(a, b, t) { return a + (b - a) * clamp(t, 0, 1); }
-    function compassFromDeg(deg) { if (deg == null || Number.isNaN(Number(deg))) return '--'; const dirs = ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW']; return dirs[Math.round(Number(deg) / 22.5) % 16]; }
+    function compassFromDeg(deg) { if (deg == null || Number.isNaN(Number(deg))) return 'wind direction unavailable'; const dirs = ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW']; return dirs[Math.round(Number(deg) / 22.5) % 16]; }
     function marineUrl(point) { const params = new URLSearchParams({ latitude: point.lat, longitude: point.lon, current: 'wave_height,wave_direction,wave_period,wind_wave_height,wind_wave_direction,wind_wave_period,swell_wave_height,swell_wave_direction,swell_wave_period,secondary_swell_wave_height,secondary_swell_wave_direction,secondary_swell_wave_period', hourly: 'wave_height,wave_direction,wave_period,wind_wave_height,wind_wave_direction,wind_wave_period,swell_wave_height,swell_wave_direction,swell_wave_period,secondary_swell_wave_height,secondary_swell_wave_direction,secondary_swell_wave_period', timezone: CONFIG.tz, forecast_days: String(CONFIG.forecastDays) }); return `https://marine-api.open-meteo.com/v1/marine?${params}`; }
     function windUrl() { const params = new URLSearchParams({ latitude: CONFIG.wind.lat, longitude: CONFIG.wind.lon, current: 'wind_speed_10m,wind_direction_10m', hourly: 'wind_speed_10m,wind_direction_10m', daily: 'wind_speed_10m_max,wind_direction_10m_dominant', timezone: CONFIG.tz, forecast_days: String(CONFIG.forecastDays) }); return `https://api.open-meteo.com/v1/forecast?${params}`; }
-    function weatherUrl() { const params = new URLSearchParams({ latitude: CONFIG.weather.lat, longitude: CONFIG.weather.lon, current: 'temperature_2m,weather_code,precipitation,wind_speed_10m', hourly: 'temperature_2m,weather_code,precipitation_probability,wind_speed_10m', daily: 'temperature_2m_max,temperature_2m_min,weather_code,precipitation_probability_max,wind_speed_10m_max', timezone: CONFIG.tz, forecast_days: String(CONFIG.forecastDays) }); return `https://api.open-meteo.com/v1/forecast?${params}`; }
-    const FETCH_TIMEOUT_MS = 8000;
+    function weatherUrl() { const params = new URLSearchParams({ latitude: CONFIG.weather.lat, longitude: CONFIG.weather.lon, current: 'temperature_2m,weather_code,precipitation,wind_speed_10m,wind_direction_10m', hourly: 'temperature_2m,weather_code,precipitation_probability,wind_speed_10m,wind_direction_10m', daily: 'temperature_2m_max,temperature_2m_min,weather_code,precipitation_probability_max,wind_speed_10m_max', timezone: CONFIG.tz, forecast_days: String(CONFIG.forecastDays) }); return `https://api.open-meteo.com/v1/forecast?${params}`; }
+    function buildFallbackWindFromWeather(weatherData) {
+      const hourly = weatherData?.hourly || {};
+      const times = Array.isArray(hourly.time) ? hourly.time : [];
+      const currentSpeedRaw = weatherData?.current?.wind_speed_10m;
+      const hasCurrentSpeed = currentSpeedRaw != null && Number.isFinite(Number(currentSpeedRaw));
+      const currentSpeed = hasCurrentSpeed ? Number(currentSpeedRaw) : 0;
+      const currentDirRaw = weatherData?.current?.wind_direction_10m;
+      const currentDir = Number.isFinite(Number(currentDirRaw)) ? Number(currentDirRaw) : null;
+      const hasHourlySpeed = times.some((_, i) => Number.isFinite(Number(hourly.wind_speed_10m?.[i])));
+      if (!times.length || (!hasHourlySpeed && !hasCurrentSpeed)) return null;
+      const speeds = times.map((_, i) => Number.isFinite(Number(hourly.wind_speed_10m?.[i])) ? Number(hourly.wind_speed_10m[i]) : currentSpeed);
+      const dirs = times.map((_, i) => Number.isFinite(Number(hourly.wind_direction_10m?.[i])) ? Number(hourly.wind_direction_10m[i]) : currentDir);
+      return { hourly: { time: times, wind_speed_10m: speeds, wind_direction_10m: dirs }, current: { wind_speed_10m: currentSpeed, wind_direction_10m: currentDir }, fallback: true };
+    }
+    function buildCalmWindFallback(referenceData) {
+      const times = Array.isArray(referenceData?.hourly?.time) ? referenceData.hourly.time : [];
+      return { hourly: { time: times, wind_speed_10m: times.map(() => 0), wind_direction_10m: times.map(() => null) }, current: { wind_speed_10m: 0, wind_direction_10m: null }, fallback: true, calm: true };
+    }
+    const FETCH_TIMEOUT_MS = 15000;
     const FETCH_RETRY_DELAY_MS = 700;
     function cacheEntry(key) { try { const raw = localStorage.getItem(key); if (!raw) return null; const parsed = JSON.parse(raw); return parsed && Object.prototype.hasOwnProperty.call(parsed, 'value') ? parsed : null; } catch { return null; } }
     function cacheGet(key) { const parsed = cacheEntry(key); if (!parsed || Date.now() - Number(parsed.savedAt || 0) > CONFIG.cacheMs) return null; return parsed.value; }
@@ -370,7 +388,8 @@
     function buildCandidate(hour, sourceName, kind, heightKey, dirKey, periodKey) { return { sourceName, kind, heightM: Number(hour[heightKey] || 0), directionDeg: Number(hour[dirKey] || 0), periodS: Number(hour[periodKey] || 0) }; }
     function scoreCandidate(c) { return c.heightM * southCoastDirectionScore(c.directionDeg) * periodFactor(c.periodS); }
     function windQuality(speedKmh, directionDeg) {
-      const dir = Number(directionDeg || 0); let score = 0.55;
+      if (directionDeg == null || Number.isNaN(Number(directionDeg))) return 0.55;
+      const dir = Number(directionDeg); let score = 0.55;
       // Middleton local read from Robin:
       // North = clean/offshore. South = bumpy. East and South-East are the worst winds here.
       if (dir >= 330 || dir <= 45) score = 0.98;
@@ -535,17 +554,30 @@
           if (!offshoreSources.length) throw new Error('Middleton offshore forecast unavailable and no cached data could be used.');
           const [localRes, windRes, weatherRes] = await Promise.all([
             fetchJsonCached('middleton-local', marineUrl(CONFIG.local), fetchOptions),
-            fetchJsonCached('middleton-wind', windUrl(), fetchOptions),
+            fetchOptionalJsonCached('middleton-wind', windUrl(), fetchOptions),
             fetchOptionalJsonCached('middleton-weather', weatherUrl(), fetchOptions)
           ]);
+          const windWarnings = [];
+          let windData = windRes.data;
+          if (windRes.failed) {
+            const weatherWind = buildFallbackWindFromWeather(weatherRes.data);
+            if (weatherWind?.hourly?.time?.length) {
+              windData = weatherWind;
+              windWarnings.push('Using weather wind fallback.');
+            } else {
+              windData = buildCalmWindFallback(state.data?.offshore || offshoreSources[0]?.data);
+              windWarnings.push('Wind data unavailable; using calm fallback.');
+            }
+          }
           const optionalFetchFailures = [
             ...offshoreResults.map((result, i) => result.status === 'fulfilled' ? result.value : { failed: true, error: result.reason?.message || String(result.reason), name: CONFIG.offshorePoints[i].name, key: `middleton-offshore-${i}` }).filter(r => r.failed).map(r => ({ key: r.key || r.name, name: r.name || 'Middleton offshore point', error: r.error })),
+            ...(windRes.failed ? [{ key: 'middleton-wind', name: 'Middleton wind', error: windRes.error }] : []),
             ...(weatherRes.failed ? [{ key: 'middleton-weather', name: 'Middleton weather', error: weatherRes.error }] : [])
           ];
           const allResults = [...offshoreSources, localRes, windRes, weatherRes];
-          const dataWarnings = [serverWarning, ...allResults.filter(r => r?.stale).map(r => r.warning).filter(Boolean), ...optionalFetchFailures.map(f => `${f.name}: ${f.error}`)];
+          const dataWarnings = [serverWarning, ...windWarnings, ...allResults.filter(r => r?.stale).map(r => r.warning).filter(Boolean), ...optionalFetchFailures.map(f => `${f.name}: ${f.error}`)];
           const lastSuccessfulFetchTime = allResults.some(r => r && !r.cached && !r.failed) ? new Date().toISOString() : (state.data?.lastSuccessfulFetchTime || null);
-          source = { dataSource: 'direct-fallback', offshorePoints: offshoreSources, offshore: offshoreSources[0]?.data, local: localRes.data, wind: windRes.data, weather: weatherRes.data || {}, dataWarnings, staleDataUsed: allResults.some(r => r?.stale), optionalFetchFailures, lastSuccessfulFetchTime };
+          source = { dataSource: 'direct-fallback', offshorePoints: offshoreSources, offshore: offshoreSources[0]?.data, local: localRes.data, wind: windData, weather: weatherRes.data || {}, dataWarnings, staleDataUsed: allResults.some(r => r?.stale), optionalFetchFailures, lastSuccessfulFetchTime };
         }
         state.data = source;
         const combined = combineHourly(state.data.offshorePoints, state.data.local, state.data.wind), reports = combined.map(buildHourReport);
