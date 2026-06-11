@@ -518,28 +518,42 @@
       try {
         const fetchOptions = force ? { cacheMs: 0 } : {};
         await loadYearlyTides();
-        const offshoreResults = await Promise.allSettled(CONFIG.offshorePoints.map((point, i) => fetchOptionalJsonCached(`middleton-offshore-${i}`, marineUrl(point), fetchOptions).then(res => ({ ...res, name: point.name, point }))));
-        const offshoreSources = offshoreResults.map((result, i) => result.status === 'fulfilled' ? result.value : { data: null, failed: true, error: result.reason?.message || String(result.reason), name: CONFIG.offshorePoints[i].name, point: CONFIG.offshorePoints[i] }).filter(source => source.data);
-        if (!offshoreSources.length) throw new Error('Middleton offshore forecast unavailable and no cached data could be used.');
-        const [localRes, windRes, weatherRes] = await Promise.all([
-          fetchJsonCached('middleton-local', marineUrl(CONFIG.local), fetchOptions),
-          fetchJsonCached('middleton-wind', windUrl(), fetchOptions),
-          fetchOptionalJsonCached('middleton-weather', weatherUrl(), fetchOptions)
-        ]);
-        const optionalFetchFailures = [
-          ...offshoreResults.map((result, i) => result.status === 'fulfilled' ? result.value : { failed: true, error: result.reason?.message || String(result.reason), name: CONFIG.offshorePoints[i].name, key: `middleton-offshore-${i}` }).filter(r => r.failed).map(r => ({ key: r.key || r.name, name: r.name || 'Middleton offshore point', error: r.error })),
-          ...(weatherRes.failed ? [{ key: 'middleton-weather', name: 'Middleton weather', error: weatherRes.error }] : [])
-        ];
-        const allResults = [...offshoreSources, localRes, windRes, weatherRes];
-        const dataWarnings = [...allResults.filter(r => r?.stale).map(r => r.warning).filter(Boolean), ...optionalFetchFailures.map(f => `${f.name}: ${f.error}`)];
-        const lastSuccessfulFetchTime = allResults.some(r => r && !r.cached && !r.failed) ? new Date().toISOString() : (state.data?.lastSuccessfulFetchTime || null);
-        state.data = { offshorePoints: offshoreSources, offshore: offshoreSources[0]?.data, local: localRes.data, wind: windRes.data, weather: weatherRes.data || {}, dataWarnings, staleDataUsed: allResults.some(r => r?.stale), optionalFetchFailures, lastSuccessfulFetchTime };
+        let source = null;
+        try {
+          const serverRes = await fetchJsonCached('middleton-server-data', '/.netlify/functions/middleton-data', fetchOptions);
+          const serverData = serverRes.data;
+          if (!serverData?.ok) throw new Error(serverData?.error || 'Middleton server data failed');
+          const offshoreSources = (serverData.offshore || []).filter(source => source.data);
+          if (!offshoreSources.length) throw new Error('Middleton server data had no offshore points');
+          const optionalFetchFailures = !serverData.weather ? [{ key: 'middleton-weather', name: 'Middleton weather', error: 'Server weather data unavailable' }] : [];
+          const dataWarnings = [...(serverData.warnings || []), ...(serverRes.stale ? [serverRes.warning || 'Using stale server forecast data'] : [])].filter(Boolean);
+          source = { dataSource: 'server', offshorePoints: offshoreSources, offshore: offshoreSources[0]?.data, local: serverData.local, wind: serverData.wind, weather: serverData.weather || {}, dataWarnings, staleDataUsed: !!serverRes.stale, optionalFetchFailures, lastSuccessfulFetchTime: serverData.generatedAt || new Date().toISOString() };
+        } catch (serverErr) {
+          const serverWarning = `Server data failed, using direct fallback: ${serverErr?.message || serverErr}`;
+          const offshoreResults = await Promise.allSettled(CONFIG.offshorePoints.map((point, i) => fetchOptionalJsonCached(`middleton-offshore-${i}`, marineUrl(point), fetchOptions).then(res => ({ ...res, name: point.name, point }))));
+          const offshoreSources = offshoreResults.map((result, i) => result.status === 'fulfilled' ? result.value : { data: null, failed: true, error: result.reason?.message || String(result.reason), name: CONFIG.offshorePoints[i].name, point: CONFIG.offshorePoints[i] }).filter(source => source.data);
+          if (!offshoreSources.length) throw new Error('Middleton offshore forecast unavailable and no cached data could be used.');
+          const [localRes, windRes, weatherRes] = await Promise.all([
+            fetchJsonCached('middleton-local', marineUrl(CONFIG.local), fetchOptions),
+            fetchJsonCached('middleton-wind', windUrl(), fetchOptions),
+            fetchOptionalJsonCached('middleton-weather', weatherUrl(), fetchOptions)
+          ]);
+          const optionalFetchFailures = [
+            ...offshoreResults.map((result, i) => result.status === 'fulfilled' ? result.value : { failed: true, error: result.reason?.message || String(result.reason), name: CONFIG.offshorePoints[i].name, key: `middleton-offshore-${i}` }).filter(r => r.failed).map(r => ({ key: r.key || r.name, name: r.name || 'Middleton offshore point', error: r.error })),
+            ...(weatherRes.failed ? [{ key: 'middleton-weather', name: 'Middleton weather', error: weatherRes.error }] : [])
+          ];
+          const allResults = [...offshoreSources, localRes, windRes, weatherRes];
+          const dataWarnings = [serverWarning, ...allResults.filter(r => r?.stale).map(r => r.warning).filter(Boolean), ...optionalFetchFailures.map(f => `${f.name}: ${f.error}`)];
+          const lastSuccessfulFetchTime = allResults.some(r => r && !r.cached && !r.failed) ? new Date().toISOString() : (state.data?.lastSuccessfulFetchTime || null);
+          source = { dataSource: 'direct-fallback', offshorePoints: offshoreSources, offshore: offshoreSources[0]?.data, local: localRes.data, wind: windRes.data, weather: weatherRes.data || {}, dataWarnings, staleDataUsed: allResults.some(r => r?.stale), optionalFetchFailures, lastSuccessfulFetchTime };
+        }
+        state.data = source;
         const combined = combineHourly(state.data.offshorePoints, state.data.local, state.data.wind), reports = combined.map(buildHourReport);
-        state.report = { reports, days: groupByDay(reports), dataWarnings, staleDataUsed: state.data.staleDataUsed, optionalFetchFailures, lastSuccessfulFetchTime };
-        state.dataWarnings = dataWarnings;
+        state.report = { reports, days: groupByDay(reports), dataWarnings: state.data.dataWarnings, staleDataUsed: state.data.staleDataUsed, optionalFetchFailures: state.data.optionalFetchFailures, lastSuccessfulFetchTime: state.data.lastSuccessfulFetchTime, dataSource: state.data.dataSource };
+        state.dataWarnings = state.data.dataWarnings;
         state.staleDataUsed = state.data.staleDataUsed;
-        state.optionalFetchFailures = optionalFetchFailures;
-        state.lastSuccessfulFetchTime = lastSuccessfulFetchTime;
+        state.optionalFetchFailures = state.data.optionalFetchFailures;
+        state.lastSuccessfulFetchTime = state.data.lastSuccessfulFetchTime;
         state.selectedDay = 0;
         state.expandedDay = null;
         await loadTidesForDays(state.report.days);

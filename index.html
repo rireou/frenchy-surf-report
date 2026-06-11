@@ -1397,40 +1397,70 @@
       try {
         const fetchOptions = force ? { cacheMs: 0 } : {};
         await loadPortNoarlungaBaseTides();
-        const [offshoreRes, localRes, windRes, weatherRes] = await Promise.all([
-          fetchJsonCached('offshore', marineUrl(CONFIG.offshore, false), fetchOptions),
-          fetchJsonCached('local', marineUrl(CONFIG.local, true), fetchOptions),
-          fetchJsonCached('wind', windUrl(), fetchOptions),
-          fetchOptionalJsonCached('weather-seaford', weatherUrl(), fetchOptions)
-        ]);
-        const gulfResults = await Promise.allSettled(GULF_CHECK_POINTS.map((point, i) => fetchOptionalJsonCached(`gulf-check-${i}`, marineUrl(point, true), fetchOptions).then(res => ({ ...res, point }))));
-        const gulfChecks = gulfResults.map((result, i) => result.status === 'fulfilled' ? result.value : { data: null, failed: true, error: result.reason?.message || String(result.reason), point: GULF_CHECK_POINTS[i] });
-        const optionalFetchFailures = [
-          ...(weatherRes.failed ? [{ key: 'weather-seaford', name: 'Seaford weather', error: weatherRes.error }] : []),
-          ...gulfChecks.filter(g => g.failed).map(g => ({ key: g.key || g.point?.name, name: g.point?.name || 'Gulf check point', error: g.error }))
-        ];
-        const coreResults = [offshoreRes, localRes, windRes];
-        const staleWarnings = [...coreResults, weatherRes, ...gulfChecks].filter(r => r?.stale).map(r => r.warning).filter(Boolean);
-        const dataWarnings = [...staleWarnings, ...optionalFetchFailures.map(f => `${f.name}: ${f.error}`)];
-        const lastSuccessfulFetchTime = [...coreResults, weatherRes, ...gulfChecks].some(r => r && !r.cached && !r.failed) ? new Date().toISOString() : (state.data?.lastSuccessfulFetchTime || null);
-        state.data = {
-          offshore: offshoreRes.data,
-          local: localRes.data,
-          wind: windRes.data,
-          weather: weatherRes.data || {},
-          gulfChecks,
-          dataWarnings,
-          staleDataUsed: [...coreResults, weatherRes, ...gulfChecks].some(r => r?.stale),
-          optionalFetchFailures,
-          lastSuccessfulFetchTime,
-          meta: { offshoreCached: offshoreRes.cached, localCached: localRes.cached, windCached: windRes.cached, weatherCached: weatherRes.cached, gulfCached: gulfChecks.map(g => g.cached), loadedAt: new Date().toISOString(), tide: CONFIG.tideApiEndpoint ? 'Live tide proxy enabled' : 'BOM Port Noarlunga 2026 yearly tide file mode' }
-        };
+        let source = null;
+        let serverWarning = '';
+        try {
+          const serverRes = await fetchJsonCached('seaford-server-data', '/.netlify/functions/seaford-data', fetchOptions);
+          const serverData = serverRes.data;
+          if (!serverData?.ok) throw new Error(serverData?.error || 'Seaford server data failed');
+          const gulfChecks = (serverData.gulfChecks || []).map(g => ({ ...g, cached: serverRes.cached, stale: serverRes.stale }));
+          const optionalFetchFailures = [
+            ...gulfChecks.filter(g => g.failed).map(g => ({ key: g.point?.name || 'gulf-check', name: g.point?.name || 'Gulf check point', error: g.error || 'Optional Gulf check failed' })),
+            ...(!serverData.weather ? [{ key: 'weather-seaford', name: 'Seaford weather', error: 'Server weather data unavailable' }] : [])
+          ];
+          const dataWarnings = [...(serverData.warnings || []), ...(serverRes.stale ? [serverRes.warning || 'Using stale server forecast data'] : [])].filter(Boolean);
+          source = {
+            dataSource: 'server',
+            offshore: serverData.offshore,
+            local: serverData.local,
+            wind: serverData.wind,
+            weather: serverData.weather || {},
+            gulfChecks,
+            dataWarnings,
+            staleDataUsed: !!serverRes.stale,
+            optionalFetchFailures,
+            lastSuccessfulFetchTime: serverData.generatedAt || new Date().toISOString(),
+            meta: { loadedAt: new Date().toISOString(), dataSource: 'server', serverGeneratedAt: serverData.generatedAt, tide: CONFIG.tideApiEndpoint ? 'Live tide proxy enabled' : 'BOM Port Noarlunga 2026 yearly tide file mode' }
+          };
+        } catch (serverErr) {
+          serverWarning = `Server data failed, using direct fallback: ${serverErr?.message || serverErr}`;
+          const [offshoreRes, localRes, windRes, weatherRes] = await Promise.all([
+            fetchJsonCached('offshore', marineUrl(CONFIG.offshore, false), fetchOptions),
+            fetchJsonCached('local', marineUrl(CONFIG.local, true), fetchOptions),
+            fetchJsonCached('wind', windUrl(), fetchOptions),
+            fetchOptionalJsonCached('weather-seaford', weatherUrl(), fetchOptions)
+          ]);
+          const gulfResults = await Promise.allSettled(GULF_CHECK_POINTS.map((point, i) => fetchOptionalJsonCached(`gulf-check-${i}`, marineUrl(point, true), fetchOptions).then(res => ({ ...res, point }))));
+          const gulfChecks = gulfResults.map((result, i) => result.status === 'fulfilled' ? result.value : { data: null, failed: true, error: result.reason?.message || String(result.reason), point: GULF_CHECK_POINTS[i] });
+          const optionalFetchFailures = [
+            ...(weatherRes.failed ? [{ key: 'weather-seaford', name: 'Seaford weather', error: weatherRes.error }] : []),
+            ...gulfChecks.filter(g => g.failed).map(g => ({ key: g.key || g.point?.name, name: g.point?.name || 'Gulf check point', error: g.error }))
+          ];
+          const coreResults = [offshoreRes, localRes, windRes];
+          const staleWarnings = [...coreResults, weatherRes, ...gulfChecks].filter(r => r?.stale).map(r => r.warning).filter(Boolean);
+          const dataWarnings = [serverWarning, ...staleWarnings, ...optionalFetchFailures.map(f => `${f.name}: ${f.error}`)];
+          const lastSuccessfulFetchTime = [...coreResults, weatherRes, ...gulfChecks].some(r => r && !r.cached && !r.failed) ? new Date().toISOString() : (state.data?.lastSuccessfulFetchTime || null);
+          source = {
+            dataSource: 'direct-fallback',
+            offshore: offshoreRes.data,
+            local: localRes.data,
+            wind: windRes.data,
+            weather: weatherRes.data || {},
+            gulfChecks,
+            dataWarnings,
+            staleDataUsed: [...coreResults, weatherRes, ...gulfChecks].some(r => r?.stale),
+            optionalFetchFailures,
+            lastSuccessfulFetchTime,
+            meta: { offshoreCached: offshoreRes.cached, localCached: localRes.cached, windCached: windRes.cached, weatherCached: weatherRes.cached, gulfCached: gulfChecks.map(g => g.cached), loadedAt: new Date().toISOString(), dataSource: 'direct-fallback', tide: CONFIG.tideApiEndpoint ? 'Live tide proxy enabled' : 'BOM Port Noarlunga 2026 yearly tide file mode' }
+          };
+        }
+        state.data = source;
         const combined = combineHourly(state.data.offshore, state.data.local, state.data.wind, state.data.gulfChecks || []), reports = applySizeCorrections(combined.map(buildHourReport));
-        state.report = { reports, days: groupByDay(reports), dataWarnings, staleDataUsed: state.data.staleDataUsed, optionalFetchFailures, lastSuccessfulFetchTime };
-        state.dataWarnings = dataWarnings;
+        state.report = { reports, days: groupByDay(reports), dataWarnings: state.data.dataWarnings, staleDataUsed: state.data.staleDataUsed, optionalFetchFailures: state.data.optionalFetchFailures, lastSuccessfulFetchTime: state.data.lastSuccessfulFetchTime, dataSource: state.data.dataSource };
+        state.dataWarnings = state.data.dataWarnings;
         state.staleDataUsed = state.data.staleDataUsed;
-        state.optionalFetchFailures = optionalFetchFailures;
-        state.lastSuccessfulFetchTime = lastSuccessfulFetchTime;
+        state.optionalFetchFailures = state.data.optionalFetchFailures;
+        state.lastSuccessfulFetchTime = state.data.lastSuccessfulFetchTime;
         state.selectedDay = 0;
         state.expandedDay = null;
         await loadTidesForDays(state.report.days);
