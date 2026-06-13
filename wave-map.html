@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wave Map &amp; Buoy Check</title>
+  <style>
+    :root { --bg:#071720; --text:#ffffff; --muted:#d2e3ec; --line:rgba(255,255,255,0.20); --accent:#9cf2ca; --accent-2:#77d8ff; --shadow:0 18px 50px rgba(0,0,0,0.35); --radius:24px; }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family:Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color:var(--text); background:radial-gradient(circle at top left, rgba(95,211,255,0.2), transparent 34%), radial-gradient(circle at 75% 15%, rgba(0,255,170,0.12), transparent 28%), linear-gradient(145deg, #061118, #082031 55%, #06131a); min-height:100vh; }
+    .wrap { max-width:1180px; margin:0 auto; padding:24px; }
+    header, .card { border:1px solid var(--line); background:linear-gradient(145deg, rgba(255,255,255,0.115), rgba(255,255,255,0.060)); border-radius:var(--radius); box-shadow:var(--shadow); backdrop-filter:blur(18px); }
+    header { display:grid; grid-template-columns:1fr auto; gap:16px; align-items:center; padding:18px; margin-bottom:16px; }
+    .brand-kicker { color:var(--accent); font-size:13px; font-weight:900; text-transform:uppercase; letter-spacing:0.13em; margin-bottom:7px; }
+    h1 { margin:0; font-size:clamp(34px, 5vw, 64px); letter-spacing:-0.055em; line-height:0.96; font-weight:950; }
+    h2 { margin:0 0 10px; font-size:24px; letter-spacing:-0.035em; }
+    p { color:var(--muted); line-height:1.55; font-weight:650; }
+    .top-actions, .button-row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; justify-content:flex-end; }
+    .button-row { justify-content:flex-start; margin-top:14px; }
+    .cta-link, .ghost-link { display:inline-flex; align-items:center; justify-content:center; text-decoration:none; padding:10px 13px; border-radius:999px; font-weight:900; font-size:13px; white-space:nowrap; }
+    .cta-link { color:#06202d; background:linear-gradient(135deg, var(--accent), var(--accent-2)); box-shadow:0 10px 25px rgba(119,216,255,0.20); }
+    .ghost-link { color:var(--text); border:1px solid var(--line); background:rgba(255,255,255,0.06); }
+    .card { padding:18px; margin-top:16px; overflow:hidden; }
+    .map-frame { width:100%; min-height:560px; border:1px solid var(--line); border-radius:20px; background:rgba(0,0,0,0.18); }
+    .iframe-note, .debug-note { color:var(--muted); font-size:14px; margin-top:10px; }
+    .buoy-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:12px; margin-top:14px; }
+    .buoy-card { padding:14px; border:1px solid rgba(255,255,255,0.14); border-radius:18px; background:rgba(255,255,255,0.07); }
+    .buoy-card small { display:block; color:var(--muted); font-weight:800; margin-top:5px; line-height:1.35; }
+    .buoy-card b { font-size:18px; }
+    .warning { margin-top:12px; border:1px solid rgba(255,224,138,0.36); background:rgba(255,224,138,0.1); color:#fff1bd; padding:13px; border-radius:18px; line-height:1.45; font-size:14px; }
+    @media (max-width: 760px) { header { grid-template-columns:1fr; } .top-actions { justify-content:flex-start; } .map-frame { min-height:420px; } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div>
+        <div class="brand-kicker">Frenchy Surf School · Context</div>
+        <h1>Wave Map &amp; Buoy Check</h1>
+      </div>
+      <div class="top-actions">
+        <a class="ghost-link" href="./index.html">Seaford report</a>
+        <a class="ghost-link" href="./middleton.html">Middleton report</a>
+      </div>
+    </header>
+
+    <section class="card">
+      <h2>Incoming swell context</h2>
+      <p>Use this as context for incoming swell pulses. The local report still does the Seaford/Middleton translation.</p>
+      <div class="button-row">
+        <a class="cta-link" href="https://www.bom.gov.au/australia/charts/viewer/index.shtml?domain=combinedW&amp;type=sigWaveHgt" target="_blank" rel="noopener">Open BOM Interactive Weather and Wave Forecast Maps</a>
+      </div>
+      <iframe class="map-frame" title="BOM Interactive Weather and Wave Forecast Maps" src="https://www.bom.gov.au/australia/charts/viewer/index.shtml?domain=combinedW&amp;type=sigWaveHgt" loading="lazy" referrerpolicy="no-referrer"></iframe>
+      <p class="iframe-note">If the BOM Interactive map is blocked by your browser or by BOM iframe settings, use the button above to open it in a new tab.</p>
+    </section>
+
+    <section class="card">
+      <h2>Latest useful buoy readings</h2>
+      <p>Near-real-time wave buoy observations are pulled from the public data.gov.au / AODN WFS layer when available. They are shown as a live confidence check only, not as a replacement for the surf model.</p>
+      <div id="buoyStatus" class="warning">Loading buoy check...</div>
+      <div id="buoyGrid" class="buoy-grid"></div>
+      <p class="debug-note">Future: use Cape du Couedic / Gulf entrance buoy pulse as a 1.5–3 hour lead floor for Seaford live report.</p>
+    </section>
+  </div>
+
+  <script>
+    const $ = id => document.getElementById(id);
+    function valueText(value, suffix) { return Number.isFinite(Number(value)) ? `${Number(value).toFixed(1)}${suffix}` : '--'; }
+    function degreeText(value) { return Number.isFinite(Number(value)) ? `${Math.round(Number(value))}°` : '--'; }
+    function formatTime(iso) { if (!iso) return 'No timestamp'; const date = new Date(iso); return Number.isNaN(date.getTime()) ? String(iso) : date.toLocaleString('en-AU', { timeZone: 'Australia/Adelaide', dateStyle: 'medium', timeStyle: 'short' }); }
+    function renderBuoys(data) {
+      const warnings = Array.isArray(data?.warnings) ? data.warnings : [];
+      $('buoyStatus').textContent = data?.ok ? `Buoy check loaded · ${data.buoys?.length || 0} useful readings` : `Buoy check unavailable. ${warnings[0] || 'Try again later.'}`;
+      $('buoyGrid').innerHTML = (data?.buoys || []).map(buoy => `<div class="buoy-card"><b>${buoy.name}</b><small>${formatTime(buoy.time)}</small><small>Height ${valueText(buoy.waveHeightM, 'm')} · Period ${valueText(buoy.periodS, 's')} · Direction ${degreeText(buoy.directionDeg)}</small><small>${buoy.lat?.toFixed?.(2) || '--'}, ${buoy.lon?.toFixed?.(2) || '--'} · ${buoy.source || 'AODN WFS'}</small></div>`).join('');
+      if (warnings.length) $('buoyGrid').insertAdjacentHTML('beforeend', `<div class="warning">${warnings.map(w => `<div>${w}</div>`).join('')}</div>`);
+    }
+    async function loadBuoys() {
+      try {
+        const response = await fetch('/.netlify/functions/wave-buoys', { cache: 'no-store' });
+        renderBuoys(await response.json());
+      } catch (err) {
+        renderBuoys({ ok: false, buoys: [], warnings: [err?.message || String(err)] });
+      }
+    }
+    loadBuoys();
+  </script>
+</body>
+</html>
