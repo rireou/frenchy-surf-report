@@ -205,11 +205,13 @@
     .live-correction-box input { width: 100%; border: 1px solid var(--line); background: rgba(0,0,0,0.18); color: var(--text); padding: 10px 11px; border-radius: 13px; font-size: 13px; outline: none; }
     .mini-btn { padding: 10px 11px; border-radius: 13px; font-size: 13px; white-space: nowrap; }
 
-    .days { display: grid; grid-template-columns: repeat(7, minmax(160px, 1fr)); gap: 12px; overflow-x: auto; padding-bottom: 4px; margin-top: 16px; }
-    .day-card { padding: 14px; border-radius: 20px; border: 1px solid var(--line); background: rgba(255,255,255,0.065); cursor: pointer; min-height: 164px; }
+    .days { display: grid; grid-template-columns: repeat(7, minmax(145px, 1fr)); gap: 12px; overflow-x: auto; padding-bottom: 4px; margin-top: 16px; }
+    .day-card { padding: 14px; border-radius: 20px; border: 1px solid var(--line); background: rgba(255,255,255,0.065); cursor: pointer; min-height: 118px; display: flex; flex-direction: column; justify-content: flex-start; gap: 7px; }
     .day-card.active { background: rgba(119,216,255,0.16); border-color: rgba(119,216,255,0.55); }
-    .day-name { color: var(--soft-muted); font-size: 13px; font-weight: 950; text-transform: uppercase; letter-spacing: 0.08em; }
-    .day-size { font-size: 36px; letter-spacing: -0.06em; font-weight: 950; margin: 9px 0 6px; color: #fff; text-shadow: var(--text-shadow-strong); }
+    .day-name { color: var(--soft-muted); font-size: 12px; font-weight: 950; text-transform: uppercase; letter-spacing: 0.08em; line-height: 1.2; }
+    .day-size { font-size: 36px; line-height: 0.95; letter-spacing: -0.06em; font-weight: 950; margin: 1px 0 0; color: #fff; text-shadow: var(--text-shadow-strong); }
+    .day-size span { font-size: 14px; color: var(--muted); letter-spacing: 0; }
+    .day-wind { color: #effbff; font-size: 14px; line-height: 1.2; font-weight: 800; }
     .day-note { color: #effbff; font-size: 14px; line-height: 1.4; font-weight: 650; }
 
     .inline-swell-detail { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--line); }
@@ -1400,7 +1402,8 @@
 
 
     function render() { if (!state.report) return; const days = state.report.days; const day = days[state.selectedDay] || days[0]; const liveReport = nearestCurrentHourReport(state.report.reports || []); const liveDay = days.find(d => d.date === liveReport?.time?.slice(0, 10)) || days.find(d => d.date === localIsoDate()) || days[0]; $('mainSize').textContent = liveSizeText(liveReport); const dailySummary = buildDailySummary(liveDay, liveReport); $('dailyHeadline').textContent = dailySummary.headline; $('plainWhy').textContent = dailySummary.text; $('bestWindowStat').textContent = dailySummary.bestWindow; $('windShiftStat').textContent = dailySummary.windShift; $('windMain').textContent = `${Math.round(liveReport.windSpeed)} km/h`; $('windSub').textContent = `${compassFromDeg(liveReport.windDir)} wind · ${Math.round(liveReport.windDir)}°`; $('sourceRow').innerHTML = state.data?.staleDataUsed ? '<span>Using recently cached data.</span>' : ''; $('tideTitle').textContent = `Tide · ${formatDay(day.date)}`; $('swellTrendTitle').textContent = `Swell trend · ${formatDay(day.date)}`; $('windTrendTitle').textContent = `Wind trend · ${formatDay(day.date)}`; renderDays(days); renderSwellDetail(day); renderTidePanel(day); renderSwellTrendPanel(day); renderWindTrendPanel(day); renderWeatherPanel(); }
-    function renderDays(days) { $('days').innerHTML = days.map((day, i) => `<div class="day-card ${i === state.selectedDay ? 'active' : ''}" data-day="${i}"><div class="day-name">${formatDay(day.date)}</div><div class="day-size">${day.sizeText}<span style="font-size:14px;color:var(--muted);letter-spacing:0;"> ft</span></div></div>`).join(''); document.querySelectorAll('.day-card').forEach(card => card.addEventListener('click', () => { const clicked = Number(card.dataset.day); if (state.selectedDay === clicked && state.expandedDay === clicked) { state.expandedDay = null; } else { state.selectedDay = clicked; state.expandedDay = clicked; } render(); })); }
+    function dailyCardWindText(day) { const report = day.best || day.peak || selectedReportForDay(day); return `${compassFromDeg(report.windDir)} ${Math.round(report.windSpeed)}km/h`; }
+    function renderDays(days) { $('days').innerHTML = days.map((day, i) => `<div class="day-card ${i === state.selectedDay ? 'active' : ''}" data-day="${i}"><div class="day-name">${formatDay(day.date)}</div><div class="day-size">${day.sizeText}<span>ft</span></div><div class="day-wind">${dailyCardWindText(day)}</div></div>`).join(''); document.querySelectorAll('.day-card').forEach(card => card.addEventListener('click', () => { const clicked = Number(card.dataset.day); if (state.selectedDay === clicked && state.expandedDay === clicked) { state.expandedDay = null; } else { state.selectedDay = clicked; state.expandedDay = clicked; } render(); })); }
     function fmtM(value) { const n = Number(value || 0); return n ? `${n.toFixed(1)}m` : '--'; }
     function fmtPeriod(value) { const n = Number(value || 0); return n ? `${n.toFixed(1)}s` : '--'; }
     function fmtDirection(value) { const n = Number(value || 0); return n ? `${Math.round(n)}° ${compassFromDeg(n)}` : '--'; }
