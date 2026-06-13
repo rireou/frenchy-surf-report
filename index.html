@@ -382,6 +382,7 @@
       { name: 'Christies / O’Sullivan cell', lat: -35.12, lon: 138.47 },
       { name: 'Outer Gulf entrance cell', lat: -35.35, lon: 138.20 }
     ];
+    const CAPE_JERVIS_POINT = { name: 'Cape Jervis / Gulf entrance', lat: -35.60, lon: 138.10 };
 
 
     const DAILY_SANITY_CHECKS = [
@@ -700,7 +701,7 @@
     function confidenceLabel(report) { let score = 0.52; if (report.insideFloorFt > 0.9) score += 0.12; if (report.activeDriver.directionScore > 0.65) score += 0.12; if (report.activeDriver.periodS >= 10) score += 0.06; if (report.windQuality < 0.4) score -= 0.05; score = clamp(score, 0, 1); if (score >= 0.72) return 'High'; if (score >= 0.48) return 'Medium'; return 'Low'; }
     function indexByTime(hourly) { const out = {}; hourly.time.forEach((time, i) => out[time] = pickHour(hourly, i)); return out; }
     function pickHour(hourly, i) { const obj = {}; Object.keys(hourly).forEach(k => obj[k] = Array.isArray(hourly[k]) ? hourly[k][i] : hourly[k]); return obj; }
-    function combineHourly(offshore, local, wind, gulfData = []) { const mapLocal = indexByTime(local.hourly), mapWind = indexByTime(wind.hourly), gulfMaps = gulfData.filter(item => item?.data?.hourly).map(item => ({ point: item.point, map: indexByTime(item.data.hourly) })), gulfFailures = gulfData.filter(item => item?.failed).map(item => ({ name: item.point?.name || item.key || 'Gulf check point', error: item.error || 'Fetch failed' })); const rows = offshore.hourly.time.map((time, i) => ({ time, offshore: pickHour(offshore.hourly, i), local: mapLocal[time] || null, wind: mapWind[time] || null, gulfChecks: gulfMaps.map(g => ({ name: g.point.name, point: g.point, data: g.map[time] || null })).filter(g => g.data), gulfCheckFailures: gulfFailures })).filter(x => x.local && x.wind); rows.forEach((row, index) => { row._index = index; row._allRows = rows; }); return rows; }
+    function combineHourly(offshore, local, wind, gulfData = [], capeJervisData = null) { const mapLocal = indexByTime(local.hourly), mapWind = indexByTime(wind.hourly), mapCapeJervis = capeJervisData?.hourly ? indexByTime(capeJervisData.hourly) : {}, gulfMaps = gulfData.filter(item => item?.data?.hourly).map(item => ({ point: item.point, map: indexByTime(item.data.hourly) })), gulfFailures = gulfData.filter(item => item?.failed).map(item => ({ name: item.point?.name || item.key || 'Gulf check point', error: item.error || 'Fetch failed' })); const rows = offshore.hourly.time.map((time, i) => ({ time, offshore: pickHour(offshore.hourly, i), local: mapLocal[time] || null, wind: mapWind[time] || null, capeJervis: mapCapeJervis[time] || null, gulfChecks: gulfMaps.map(g => ({ name: g.point.name, point: g.point, data: g.map[time] || null })).filter(g => g.data), gulfCheckFailures: gulfFailures })).filter(x => x.local && x.wind); rows.forEach((row, index) => { row._index = index; row._allRows = rows; }); return rows; }
 
     const TIDE_SOURCE_BY_DATE = {};
     const TIDE_POINTS = {
@@ -1146,7 +1147,7 @@
       finalFt = clamp(finalFt + calibrationSizeAdjustFt(finalFt, calibration), 0, 6);
       const lifted = insideFloorFt > gatedOffshoreModelFt + 0.15;
       const why = stormSurf.capped ? `${stormSurf.capNote || 'N/NW fetch is showing, but the local Seaford signal has not filled in yet.'} Expect around ${sizeRange(stormSurf.ft)} ft for now. Watch for it to build only if the local wind-wave fills in.` : stormSurf.active ? `Storm surf running on the Mid Coast. Swell surf is about ${sizeRange(gatedOffshoreModelFt)} ft, but ${stormSurf.source} is creating about ${sizeRange(stormSurf.ft)} ft. Windy and messy, but rideable for foamies, mals and keen surfers.` : lifted ? `Inside-gulf signal is lifting the forecast. Offshore alone suggests about ${sizeRange(gatedOffshoreModelFt)} ft, but the Seaford local cell shows energy already in the gulf.` : 'Offshore driver is doing most of the work. The local Seaford cell is not lifting the forecast much.';
-      const report = { time: row.time, activeDriver, offshoreModelFt: gatedOffshoreModelFt, offshoreUncappedFt: offshoreModelFt, westFallbackCapped: westFallbackGate.capped, westFallbackCapNote: westFallbackGate.note, singleDriverFt, combinedEnergy, insideFloorFt, stormSurfFt: stormSurf.ft, hasLocalStormSurf: stormSurf.active, localWindWaveM: stormSurf.localWindWave, stormFetchFt: stormSurf.fetchFt, stormMemoryFetchFt: stormSurf.memoryFetchFt, stormSurfSource: stormSurf.source, stormSurfNote: stormSurf.note, stormConfirmed: stormSurf.confirmed, stormCapped: stormSurf.capped, stormCapNote: stormSurf.capNote, stormDirectionQuality: stormSurf.directionGate?.quality, groundswellFt, originalFinalFt: finalFt, finalFt, sizeText: '', windSpeed, windDir, windQuality: wq, confidence: null, why, suppressionNote, gulfLimit, tideDrag, tidePush, sourceMode: stormSurf.active ? 'storm-surf-mode' : 'fallback-only', localRaw: row.local, offshoreRaw: row.offshore, windRaw: row.wind, gulfCheckFailures: row.gulfCheckFailures || [] };
+      const report = { time: row.time, activeDriver, offshoreModelFt: gatedOffshoreModelFt, offshoreUncappedFt: offshoreModelFt, westFallbackCapped: westFallbackGate.capped, westFallbackCapNote: westFallbackGate.note, singleDriverFt, combinedEnergy, insideFloorFt, stormSurfFt: stormSurf.ft, hasLocalStormSurf: stormSurf.active, localWindWaveM: stormSurf.localWindWave, stormFetchFt: stormSurf.fetchFt, stormMemoryFetchFt: stormSurf.memoryFetchFt, stormSurfSource: stormSurf.source, stormSurfNote: stormSurf.note, stormConfirmed: stormSurf.confirmed, stormCapped: stormSurf.capped, stormCapNote: stormSurf.capNote, stormDirectionQuality: stormSurf.directionGate?.quality, groundswellFt, originalFinalFt: finalFt, finalFt, sizeText: '', windSpeed, windDir, windQuality: wq, confidence: null, why, suppressionNote, gulfLimit, tideDrag, tidePush, sourceMode: stormSurf.active ? 'storm-surf-mode' : 'fallback-only', localRaw: row.local, offshoreRaw: row.offshore, windRaw: row.wind, gulfCheckFailures: row.gulfCheckFailures || [], capeJervis: row.capeJervis || null, _allRows: row._allRows || [] };
       const modelFinalFt = finalFt;
       const realityGate = applyMidCoastRealityGate(row, report, modelFinalFt);
       finalFt = realityGate.ft;
@@ -1240,7 +1241,7 @@
       if (!state.data || !state.data.offshore) return;
       const previousDate = state.report?.days?.[state.selectedDay]?.date;
       const previousExpandedDate = state.expandedDay == null ? null : state.report?.days?.[state.expandedDay]?.date;
-      const combined = combineHourly(state.data.offshore, state.data.local, state.data.wind, state.data.gulfChecks || []);
+      const combined = combineHourly(state.data.offshore, state.data.local, state.data.wind, state.data.gulfChecks || [], state.data.capeJervis);
       const reports = applySizeCorrections(combined.map(buildHourReport));
       state.report = { reports, days: groupByDay(reports) };
       const nextSelected = previousDate ? state.report.days.findIndex(day => day.date === previousDate) : state.selectedDay;
@@ -1402,7 +1403,60 @@
     }
 
 
-    function render() { if (!state.report) return; const days = state.report.days; const day = days[state.selectedDay] || days[0]; const liveReport = nearestCurrentHourReport(state.report.reports || []); const liveDay = days.find(d => d.date === liveReport?.time?.slice(0, 10)) || days.find(d => d.date === localIsoDate()) || days[0]; $('mainSize').textContent = liveSizeText(liveReport); const dailySummary = buildDailySummary(liveDay, liveReport); $('dailyHeadline').textContent = dailySummary.headline; $('plainWhy').textContent = dailySummary.text; $('bestWindowStat').textContent = dailySummary.bestWindow; $('windShiftStat').textContent = dailySummary.windShift; $('windMain').textContent = `${Math.round(liveReport.windSpeed)} km/h`; $('windSub').textContent = `${compassFromDeg(liveReport.windDir)} wind · ${Math.round(liveReport.windDir)}°`; const sourceBits = [state.data?.staleDataUsed ? '<span>Using recently cached data.</span>' : '', renderBuoyPulseDebug()].filter(Boolean); $('sourceRow').style.display = DEBUG_MODE && sourceBits.length ? 'block' : 'none'; $('sourceRow').innerHTML = sourceBits.join(' '); $('tideTitle').textContent = `Tide · ${formatDay(day.date)}`; $('swellTrendTitle').textContent = `Swell trend · ${formatDay(day.date)}`; $('windTrendTitle').textContent = `Wind trend · ${formatDay(day.date)}`; renderDays(days); renderSwellDetail(day); renderTidePanel(day); renderSwellTrendPanel(day); renderWindTrendPanel(day); renderWeatherPanel(); }
+    function capeJervisPulseFt(data) {
+      if (!data) return 0;
+      const swellHeight = Number(data.swell_wave_height || 0), swellDir = Number(data.swell_wave_direction || 0), swellPeriod = Number(data.swell_wave_period || 0);
+      const waveHeight = Number(data.wave_height || 0), waveDir = Number(data.wave_direction || swellDir || 0), wavePeriod = Number(data.wave_period || swellPeriod || 0);
+      const direction = swellHeight > 0 ? swellDir : waveDir;
+      const period = Math.max(swellPeriod, wavePeriod);
+      const height = Math.max(swellHeight, waveHeight * 0.85);
+      if (!(direction >= 215 && direction <= 250) || period < 9 || height < 0.6) return 0;
+      return clamp(sectorCalibratedSizeFt(height, direction, period, 'normal') * 0.9, 0, 2.5);
+    }
+    function capeJervisLeadPulseForTime(report, rows = []) {
+      const target = new Date(report.time).getTime();
+      const leadRows = rows.filter(r => r.capeJervis && target - new Date(r.time).getTime() >= 90 * 60 * 1000 && target - new Date(r.time).getTime() <= 3 * 60 * 60 * 1000);
+      const selected = (leadRows.length ? leadRows : rows.filter(r => r.capeJervis && Math.abs(target - new Date(r.time).getTime()) <= 90 * 60 * 1000)).map(r => ({ row: r, ft: capeJervisPulseFt(r.capeJervis) })).sort((a, b) => b.ft - a.ft)[0];
+      return { ft: selected?.ft || 0, time: selected?.row?.time || null, source: selected ? CAPE_JERVIS_POINT.name : 'No Cape Jervis lead match' };
+    }
+    function buoyPulseFtForReport(report, spot = 'seaford') {
+      const buoys = state.buoyPulse?.ok && Array.isArray(state.buoyPulse.buoys) ? state.buoyPulse.buoys : [];
+      const buoy = spot === 'middleton'
+        ? buoys.find(b => /cape du couedic|kangaroo/i.test(b.name || '')) || buoys[0]
+        : buoys.find(b => /cape du couedic|gulf|fleurieu|jervis/i.test(b.name || '')) || buoys[0];
+      if (!buoy) return { ft: 0, source: 'No buoy match', time: null };
+      const height = Number(buoy.waveHeightM || 0), period = Number(buoy.periodS || 0), direction = Number(buoy.directionDeg || 0);
+      if (!height || !period) return { ft: 0, source: buoy.name, time: buoy.time };
+      const ft = direction >= 215 && direction <= 250 && period >= 9 ? clamp(sectorCalibratedSizeFt(height, direction, period, 'normal') * 0.7, 0, 3) : 0;
+      return { ft, source: buoy.name, time: buoy.time };
+    }
+    function liveConfidenceEngine(report, context = {}) {
+      const warnings = [];
+      const modelFt = Number(report.finalFt || 0);
+      const localFt = Number(context.localFt ?? report.insideFloorFt ?? 0);
+      const gulfConfirmed = Boolean(context.gulfConfirmed ?? report.gulfPointRealityConfirmed ?? report.gulfRealityConfirmed);
+      const capeJervisLeadFt = Number(context.capeJervisLeadFt || 0);
+      const buoyPulseFt = Number(context.buoyPulseFt || 0);
+      const windPenaltyFt = Number(context.windPenaltyFt ?? report.windCompressionPenaltyFt ?? 0);
+      const tideEffectFt = Number(context.tideEffectFt ?? ((report.tidePush?.boostFt || 0) - (report.tideDrag?.penaltyFt || 0)));
+      const strongestConfirmation = Math.max(localFt, Number(context.gulfPointFt || 0), capeJervisLeadFt, buoyPulseFt);
+      let adjustedLiveFt = modelFt;
+      let confidence = 'medium';
+      let reason = 'Model is plausible, with partial live confirmation.';
+      if (gulfConfirmed && Math.abs(modelFt - strongestConfirmation) <= 0.75) { confidence = 'high'; reason = 'Model, Gulf/local checks and live pulse evidence agree.'; }
+      if (!gulfConfirmed && modelFt >= 2.5 && strongestConfirmation < 1.4) { adjustedLiveFt = Math.min(adjustedLiveFt, modelFt >= 3 ? 2.25 : 2); confidence = 'low'; reason = 'Offshore swell is high, but Gulf/local confirmation is weak, so hype is capped.'; }
+      if (capeJervisLeadFt >= 1.2 && adjustedLiveFt < capeJervisLeadFt && localFt >= 0.45) { adjustedLiveFt = Math.max(adjustedLiveFt, Math.min(2.5, capeJervisLeadFt)); confidence = gulfConfirmed ? 'high' : 'medium'; reason = 'Cape Jervis / Gulf entrance pulse is leading into Seaford, with some local signal.'; }
+      if (buoyPulseFt >= 1.5 && adjustedLiveFt < buoyPulseFt && (gulfConfirmed || localFt >= 0.5)) { adjustedLiveFt = Math.max(adjustedLiveFt, Math.min(modelFt + 0.5, buoyPulseFt)); confidence = confidence === 'low' ? 'medium' : confidence; reason = 'AODN buoy pulse supports the live model.'; }
+      if (!context.optionalOk) warnings.push('Optional buoy/Cape Jervis confirmation missing; using existing model as the safe fallback.');
+      adjustedLiveFt = clamp(adjustedLiveFt, 0, 6);
+      return { adjustedLiveFt, confidence, reason, evidence: { modelFt, localFt, gulfConfirmed, capeJervisLeadFt, buoyPulseFt, windPenaltyFt, tideEffectFt }, warnings };
+    }
+    function liveConfidenceContext(report) { const lead = capeJervisLeadPulseForTime(report, report._allRows || []), buoy = buoyPulseFtForReport(report, 'seaford'); return { localFt: report.insideFloorFt, gulfConfirmed: report.gulfPointRealityConfirmed || report.gulfRealityConfirmed, gulfPointFt: report.gulfPointStrongestFt || 0, capeJervisLeadFt: lead.ft, capeJervisLeadTime: lead.time, buoyPulseFt: buoy.ft, buoySource: buoy.source, buoyTime: buoy.time, windPenaltyFt: report.windCompressionPenaltyFt || 0, tideEffectFt: (report.tidePush?.boostFt || 0) - (report.tideDrag?.penaltyFt || 0), optionalOk: Boolean(report.capeJervis || state.buoyPulse?.ok) }; }
+    function applyLiveConfidence(report) { const context = liveConfidenceContext(report); const engine = liveConfidenceEngine(report, context); return { ...report, finalFt: engine.adjustedLiveFt, sizeText: sizeRange(engine.adjustedLiveFt), confidence: engine.confidence[0].toUpperCase() + engine.confidence.slice(1), liveConfidence: { ...engine, context } }; }
+    function renderLiveConfidenceDebug(report) { if (!DEBUG_MODE || !report?.liveConfidence) return ''; const c = report.liveConfidence, e = c.evidence; return `<span><b>Live confidence</b>: model ${formatFtValue(e.modelFt)}ft · local ${formatFtValue(e.localFt)}ft · Gulf ${e.gulfConfirmed ? 'yes' : 'no'} · Cape Jervis ${formatFtValue(e.capeJervisLeadFt)}ft · buoy ${formatFtValue(e.buoyPulseFt)}ft · wind -${formatFtValue(e.windPenaltyFt)}ft · tide ${e.tideEffectFt >= 0 ? '+' : ''}${formatFtValue(e.tideEffectFt)}ft · final ${formatFtValue(c.adjustedLiveFt)}ft · ${c.confidence}. ${c.reason}</span>`; }
+
+
+    function render() { if (!state.report) return; const days = state.report.days; const day = days[state.selectedDay] || days[0]; const baseLiveReport = nearestCurrentHourReport(state.report.reports || []); const liveReport = applyLiveConfidence(baseLiveReport); const liveDay = days.find(d => d.date === liveReport?.time?.slice(0, 10)) || days.find(d => d.date === localIsoDate()) || days[0]; $('mainSize').textContent = liveSizeText(liveReport); const dailySummary = buildDailySummary(liveDay, liveReport); $('dailyHeadline').textContent = dailySummary.headline; $('plainWhy').textContent = dailySummary.text; $('bestWindowStat').textContent = dailySummary.bestWindow; $('windShiftStat').textContent = dailySummary.windShift; $('windMain').textContent = `${Math.round(liveReport.windSpeed)} km/h`; $('windSub').textContent = `${compassFromDeg(liveReport.windDir)} wind · ${Math.round(liveReport.windDir)}°`; const sourceBits = [state.data?.staleDataUsed ? '<span>Using recently cached data.</span>' : '', renderLiveConfidenceDebug(liveReport), renderBuoyPulseDebug()].filter(Boolean); $('sourceRow').style.display = DEBUG_MODE && sourceBits.length ? 'block' : 'none'; $('sourceRow').innerHTML = sourceBits.join(' '); $('tideTitle').textContent = `Tide · ${formatDay(day.date)}`; $('swellTrendTitle').textContent = `Swell trend · ${formatDay(day.date)}`; $('windTrendTitle').textContent = `Wind trend · ${formatDay(day.date)}`; renderDays(days); renderSwellDetail(day); renderTidePanel(day); renderSwellTrendPanel(day); renderWindTrendPanel(day); renderWeatherPanel(); }
     function dailyCardWindText(day) { const report = day.best || day.peak || selectedReportForDay(day); return `${compassFromDeg(report.windDir)} ${Math.round(report.windSpeed)}km/h`; }
     function renderDays(days) { $('days').innerHTML = days.map((day, i) => `<div class="day-card ${i === state.selectedDay ? 'active' : ''}" data-day="${i}"><div class="day-name">${formatDay(day.date)}</div><div class="day-size">${day.sizeText}<span>ft</span></div><div class="day-wind">${dailyCardWindText(day)}</div></div>`).join(''); document.querySelectorAll('.day-card').forEach(card => card.addEventListener('click', () => { const clicked = Number(card.dataset.day); if (state.selectedDay === clicked && state.expandedDay === clicked) { state.expandedDay = null; } else { state.selectedDay = clicked; state.expandedDay = clicked; } render(); })); }
     function fmtM(value) { const n = Number(value || 0); return n ? `${n.toFixed(1)}m` : '--'; }
@@ -1434,13 +1488,17 @@
       return `<span><b>Buoy pulse check</b>: ${buoy.name} ${height} @ ${period} from ${direction} · ${formatDebugBuoyTime(buoy.time)}. Future: use Cape du Couedic / Gulf entrance buoy pulse as a 1.5–3 hour lead floor for Seaford live report.</span>`;
     }
     async function loadBuoyPulseDebug() {
-      if (!DEBUG_MODE) return;
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 3500);
       try {
-        const res = await fetch('/.netlify/functions/wave-buoys', { cache: 'no-store' });
+        const res = await fetch('/.netlify/functions/wave-buoys', { cache: 'no-store', signal: controller.signal });
         state.buoyPulse = await res.json();
       } catch (err) {
-        state.buoyPulse = { ok: false, buoys: [], warnings: [err?.message || String(err)] };
+        state.buoyPulse = { ok: false, buoys: [], warnings: [err?.name === 'AbortError' ? 'Buoy check timed out' : (err?.message || String(err))] };
+      } finally {
+        clearTimeout(timer);
       }
+      if (state.report) render();
     }
     function renderSwellDetail(day) { if (state.expandedDay !== state.selectedDay) { $('swellDetail').innerHTML = ''; $('swellDetailHint').textContent = 'Tap any date above to open the 6 AM, 12 PM and 6 PM read.'; return; } $('swellDetailHint').textContent = 'Tap the same date again to close the 6 AM, 12 PM and 6 PM read.'; const rows = [6, 12, 18].map(hour => nearestHour(day.reports, hour)).filter(Boolean); $('swellDetail').innerHTML = rows.map(r => { const primary = { h: r.offshoreRaw.swell_wave_height, p: r.offshoreRaw.swell_wave_period, d: r.offshoreRaw.swell_wave_direction }, secondary = { h: r.offshoreRaw.secondary_swell_wave_height, p: r.offshoreRaw.secondary_swell_wave_period, d: r.offshoreRaw.secondary_swell_wave_direction }; const driverLabel = r.activeDriver.kind === 'Secondary swell' ? 'Secondary' : r.activeDriver.kind === 'Primary swell' ? 'Primary' : 'Mixed'; return `<div class="swell-row"><div><b>${formatTime(r.time)}</b><small style="display:block;color:var(--muted);margin-top:2px;">${driverLabel}</small></div><div class="swell-pill">${r.sizeText} ft</div><div class="swell-data"><strong>Primary: ${fmtM(primary.h)} @ ${fmtPeriod(primary.p)}</strong><small>${fmtDirection(primary.d)}</small></div><div class="swell-data"><strong>Secondary: ${fmtM(secondary.h)} @ ${fmtPeriod(secondary.p)}</strong><small>${secondary.h ? fmtDirection(secondary.d) : 'No useful secondary line'}</small></div><div class="swell-data wind-read"><strong>Wind: ${simpleWindText(r.windDir, r.windSpeed)}</strong></div>${renderGulfDebug(r)}</div>`; }).join(''); }
 
@@ -1559,6 +1617,7 @@
             local: serverData.local,
             wind: serverData.wind,
             weather: serverData.weather || {},
+            capeJervis: serverData.capeJervis || null,
             gulfChecks,
             dataWarnings,
             staleDataUsed: !!serverRes.stale,
@@ -1568,11 +1627,12 @@
           };
         } catch (serverErr) {
           serverWarning = `Server data failed, using direct fallback: ${serverErr?.message || serverErr}`;
-          const [offshoreRes, localRes, windRes, weatherRes] = await Promise.all([
+          const [offshoreRes, localRes, windRes, weatherRes, capeJervisRes] = await Promise.all([
             fetchJsonCached('offshore', marineUrl(CONFIG.offshore, false), fetchOptions),
             fetchJsonCached('local', marineUrl(CONFIG.local, true), fetchOptions),
             fetchOptionalJsonCached('wind', windUrl(), fetchOptions),
-            fetchOptionalJsonCached('weather-seaford', weatherUrl(), fetchOptions)
+            fetchOptionalJsonCached('weather-seaford', weatherUrl(), fetchOptions),
+            fetchOptionalJsonCached('cape-jervis-lead', marineUrl(CAPE_JERVIS_POINT, true), fetchOptions)
           ]);
           const windWarnings = [];
           let windData = windRes.data;
@@ -1591,28 +1651,30 @@
           const optionalFetchFailures = [
             ...(windRes.failed ? [{ key: 'wind', name: 'Seaford wind', error: windRes.error }] : []),
             ...(weatherRes.failed ? [{ key: 'weather-seaford', name: 'Seaford weather', error: weatherRes.error }] : []),
+            ...(capeJervisRes.failed ? [{ key: 'cape-jervis-lead', name: CAPE_JERVIS_POINT.name, error: capeJervisRes.error }] : []),
             ...gulfChecks.filter(g => g.failed).map(g => ({ key: g.key || g.point?.name, name: g.point?.name || 'Gulf check point', error: g.error }))
           ];
           const coreResults = [offshoreRes, localRes, windRes];
-          const staleWarnings = [...coreResults, windRes, weatherRes, ...gulfChecks].filter(r => r?.stale).map(r => r.warning).filter(Boolean);
+          const staleWarnings = [...coreResults, windRes, weatherRes, capeJervisRes, ...gulfChecks].filter(r => r?.stale).map(r => r.warning).filter(Boolean);
           const dataWarnings = [serverWarning, ...windWarnings, ...staleWarnings, ...optionalFetchFailures.map(f => `${f.name}: ${f.error}`)];
-          const lastSuccessfulFetchTime = [...coreResults, windRes, weatherRes, ...gulfChecks].some(r => r && !r.cached && !r.failed) ? new Date().toISOString() : (state.data?.lastSuccessfulFetchTime || null);
+          const lastSuccessfulFetchTime = [...coreResults, windRes, weatherRes, capeJervisRes, ...gulfChecks].some(r => r && !r.cached && !r.failed) ? new Date().toISOString() : (state.data?.lastSuccessfulFetchTime || null);
           source = {
             dataSource: 'direct-fallback',
             offshore: offshoreRes.data,
             local: localRes.data,
             wind: windData,
             weather: weatherRes.data || {},
+            capeJervis: capeJervisRes.data || null,
             gulfChecks,
             dataWarnings,
-            staleDataUsed: [...coreResults, windRes, weatherRes, ...gulfChecks].some(r => r?.stale),
+            staleDataUsed: [...coreResults, windRes, weatherRes, capeJervisRes, ...gulfChecks].some(r => r?.stale),
             optionalFetchFailures,
             lastSuccessfulFetchTime,
-            meta: { offshoreCached: offshoreRes.cached, localCached: localRes.cached, windCached: windRes.cached, weatherCached: weatherRes.cached, gulfCached: gulfChecks.map(g => g.cached), loadedAt: new Date().toISOString(), dataSource: 'direct-fallback', tide: CONFIG.tideApiEndpoint ? 'Live tide proxy enabled' : 'BOM Port Noarlunga 2026 yearly tide file mode' }
+            meta: { offshoreCached: offshoreRes.cached, localCached: localRes.cached, windCached: windRes.cached, weatherCached: weatherRes.cached, capeJervisCached: capeJervisRes.cached, gulfCached: gulfChecks.map(g => g.cached), loadedAt: new Date().toISOString(), dataSource: 'direct-fallback', tide: CONFIG.tideApiEndpoint ? 'Live tide proxy enabled' : 'BOM Port Noarlunga 2026 yearly tide file mode' }
           };
         }
         state.data = source;
-        const combined = combineHourly(state.data.offshore, state.data.local, state.data.wind, state.data.gulfChecks || []), reports = applySizeCorrections(combined.map(buildHourReport));
+        const combined = combineHourly(state.data.offshore, state.data.local, state.data.wind, state.data.gulfChecks || [], state.data.capeJervis), reports = applySizeCorrections(combined.map(buildHourReport));
         state.report = { reports, days: groupByDay(reports), dataWarnings: state.data.dataWarnings, staleDataUsed: state.data.staleDataUsed, optionalFetchFailures: state.data.optionalFetchFailures, lastSuccessfulFetchTime: state.data.lastSuccessfulFetchTime, dataSource: state.data.dataSource };
         state.dataWarnings = state.data.dataWarnings;
         state.staleDataUsed = state.data.staleDataUsed;
@@ -1621,7 +1683,7 @@
         state.selectedDay = 0;
         state.expandedDay = null;
         await loadTidesForDays(state.report.days);
-        await loadBuoyPulseDebug();
+        loadBuoyPulseDebug();
         $('statusText').textContent = state.data.staleDataUsed ? 'Report updated · cached data' : 'Report updated';
         render();
       } catch (err) {

@@ -195,6 +195,7 @@
       </div>
       <div class="wind-box"><div class="label">Wind</div><div class="wind-main" id="windMain">--</div><div class="wind-sub" id="windSub">--</div></div>
     </section>
+    <div class="source-row" id="sourceRow"></div>
 
     <section class="card panel" style="margin-top:16px;">
       <div class="section-head"><h2>7-day outlook</h2><span class="section-tag">Daily pulse</span></div>
@@ -236,8 +237,9 @@
       tideApiEndpoint: ''
     };
 
-    const state = { selectedDay: 0, expandedDay: null, selectedWeatherDay: null, data: null, report: null, tides: {}, yearlyTides: {}, dataWarnings: [], staleDataUsed: false, optionalFetchFailures: [], lastSuccessfulFetchTime: null };
+    const state = { selectedDay: 0, expandedDay: null, selectedWeatherDay: null, data: null, report: null, tides: {}, yearlyTides: {}, dataWarnings: [], staleDataUsed: false, optionalFetchFailures: [], lastSuccessfulFetchTime: null, buoyPulse: null };
     const MIDDLETON_SIZE_OFFSET_FT = 0;
+    const DEBUG_MODE = new URLSearchParams(window.location.search).get('debug') === '1';
     const MIDDLETON_TIDE_CACHE_KEY = 'middleton-yearly-tides-victor-harbor-bom-2026-v3-24h';
 
     const $ = id => document.getElementById(id);
@@ -499,7 +501,53 @@
     function findWindShift(day, fromReport) { const startHour = Number((fromReport || day.reports[0]).time.slice(11, 13)); const start = fromReport || nearestHour(day.reports, 6) || day.reports[0]; const startEffect = windEffect(start.windDir, start.windSpeed); const future = daylightReports(day.reports).filter(r => Number(r.time.slice(11, 13)) > startHour); return future.find(r => windEffect(r.windDir, r.windSpeed).label !== startEffect.label || Math.abs(Number(r.windSpeed || 0) - Number(start.windSpeed || 0)) >= 8 || Number(r.windSpeed || 0) >= 22) || null; }
     function buildDailySummary(day, report) { const useful = daylightReports(day.reports); const best = useful.slice().sort((a, b) => surfWindowScore(b) - surfWindowScore(a))[0] || report; const morning = nearestHour(day.reports, 6) || report, evening = nearestHour(day.reports, 17.5) || report, shift = findWindShift(day, morning); const delta = evening.finalFt - morning.finalFt; const swellTrend = delta > 0.25 ? 'building' : delta < -0.25 ? 'fading' : 'holding steady'; const liveReport = { ...report, trendLabel: swellTrend }; const bestWindow = `${formatTime(best.time)} · ${liveSizeText(best)} ft`; const windShift = shift ? `${formatTime(shift.time)} · ${compassFromDeg(shift.windDir)} ${Math.round(shift.windSpeed)}km/h` : 'No big shift'; const staleText = state.data?.staleDataUsed ? ' Using recently cached data.' : ''; const text = `${shortSurfRead(liveReport, { ...day, best })}${staleText}`; return { headline: 'Surf plan', text, bestWindow, windShift, swellTrend }; }
 
-    function render() { if (!state.report) return; const days = state.report.days; const day = days[state.selectedDay] || days[0]; const liveDay = days.find(d => d.date === localIsoDate()) || days[0]; const liveReport = selectedReportForDay(liveDay); $('mainSize').textContent = liveSizeText(liveReport); const dailySummary = buildDailySummary(liveDay, liveReport); $('dailyHeadline').textContent = dailySummary.headline; $('plainWhy').textContent = dailySummary.text; $('bestWindowStat').textContent = dailySummary.bestWindow; $('windShiftStat').textContent = dailySummary.windShift; $('windMain').textContent = `${Math.round(liveReport.windSpeed)} km/h`; $('windSub').textContent = `${compassFromDeg(liveReport.windDir)} wind · ${Math.round(liveReport.windDir)}°`; $('tideTitle').textContent = `Tide · ${formatDay(day.date)}`; $('swellTrendTitle').textContent = `Swell trend · ${formatDay(day.date)}`; $('windTrendTitle').textContent = `Wind trend · ${formatDay(day.date)}`; renderDays(days); renderSwellDetail(day); renderTidePanel(day); renderSwellTrendPanel(day); renderWindTrendPanel(day); renderWeatherPanel(); }
+    function buoyPulseFtForReport(report) {
+      const buoys = state.buoyPulse?.ok && Array.isArray(state.buoyPulse.buoys) ? state.buoyPulse.buoys : [];
+      const buoy = buoys.find(b => /cape du couedic|kangaroo/i.test(b.name || '')) || buoys.find(b => /fleurieu|jervis|gulf/i.test(b.name || '')) || buoys[0];
+      if (!buoy) return { ft: 0, source: 'No buoy match', time: null };
+      const height = Number(buoy.waveHeightM || 0), period = Number(buoy.periodS || 0), direction = Number(buoy.directionDeg || 225);
+      if (!height || !period) return { ft: 0, source: buoy.name, time: buoy.time };
+      return { ft: clamp(southCoastSizeFt(height, direction, period, 'normal') * 0.7, 0, 6), source: buoy.name, time: buoy.time };
+    }
+    function liveConfidenceEngine(report, context = {}) {
+      const warnings = [];
+      const modelFt = Number(report.finalFt || 0);
+      const localFt = Number(context.localFt ?? report.insideFloorFt ?? 0);
+      const gulfConfirmed = Boolean(context.gulfConfirmed ?? localFt >= Math.max(1, modelFt * 0.35));
+      const capeJervisLeadFt = Number(context.capeJervisLeadFt || 0);
+      const buoyPulseFt = Number(context.buoyPulseFt || 0);
+      const windPenaltyFt = Number(context.windPenaltyFt || (report.windQuality < 0.35 ? 0.35 : 0));
+      const tideEffectFt = Number(context.tideEffectFt || 0);
+      const confirmationFt = Math.max(localFt, buoyPulseFt, capeJervisLeadFt, Number(context.offshorePointFt || 0));
+      let adjustedLiveFt = modelFt;
+      let confidence = 'medium';
+      let reason = 'Model is plausible, with partial live confirmation.';
+      if (confirmationFt >= modelFt * 0.7 && modelFt >= 1) { confidence = 'high'; reason = 'Cape du Couedic / nearby model and local checks agree with the live report.'; }
+      if (modelFt >= 3 && confirmationFt < 1.5) { adjustedLiveFt = Math.max(modelFt - 0.5, 1.5); confidence = 'low'; reason = 'Open-ocean model is stronger than local confirmation, so confidence is low rather than hyped.'; }
+      if (buoyPulseFt >= 2 && adjustedLiveFt < Math.min(modelFt + 0.75, buoyPulseFt)) { adjustedLiveFt = Math.min(modelFt + 0.75, buoyPulseFt); confidence = confidence === 'low' ? 'medium' : confidence; reason = 'Cape du Couedic buoy pulse supports the Middleton call.'; }
+      if (!context.optionalOk) warnings.push('Optional AODN buoy confirmation missing; using existing Middleton model as fallback.');
+      adjustedLiveFt = clamp(adjustedLiveFt, 0, 8);
+      return { adjustedLiveFt, confidence, reason, evidence: { modelFt, localFt, gulfConfirmed, capeJervisLeadFt, buoyPulseFt, windPenaltyFt, tideEffectFt }, warnings };
+    }
+    function liveConfidenceContext(report) { const buoy = buoyPulseFtForReport(report); return { localFt: report.insideFloorFt, gulfConfirmed: report.insideFloorFt >= Math.max(1, report.finalFt * 0.35), capeJervisLeadFt: report.offshorePointName?.includes('Cape du Couedic') ? report.offshorePointSizeFt : 0, offshorePointFt: report.offshorePointSizeFt || 0, buoyPulseFt: buoy.ft, buoySource: buoy.source, buoyTime: buoy.time, windPenaltyFt: report.windQuality < 0.35 ? 0.35 : 0, tideEffectFt: 0, optionalOk: Boolean(state.buoyPulse?.ok || report.offshorePointSizeFt) }; }
+    function applyLiveConfidence(report) { const context = liveConfidenceContext(report); const engine = liveConfidenceEngine(report, context); return { ...report, finalFt: engine.adjustedLiveFt, sizeText: sizeRange(engine.adjustedLiveFt), confidence: engine.confidence[0].toUpperCase() + engine.confidence.slice(1), liveConfidence: { ...engine, context } }; }
+    function renderLiveConfidenceDebug(report) { if (!DEBUG_MODE || !report?.liveConfidence) return ''; const c = report.liveConfidence, e = c.evidence; return `<span><b>Live confidence</b>: model ${formatFtValue(e.modelFt)}ft · local ${formatFtValue(e.localFt)}ft · Cape du Couedic/model ${formatFtValue(e.capeJervisLeadFt)}ft · buoy ${formatFtValue(e.buoyPulseFt)}ft · wind -${formatFtValue(e.windPenaltyFt)}ft · tide ${e.tideEffectFt >= 0 ? '+' : ''}${formatFtValue(e.tideEffectFt)}ft · final ${formatFtValue(c.adjustedLiveFt)}ft · ${c.confidence}. ${c.reason}</span>`; }
+    async function loadBuoyPulseDebug() {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 3500);
+      try {
+        const res = await fetch('/.netlify/functions/wave-buoys', { cache: 'no-store', signal: controller.signal });
+        state.buoyPulse = await res.json();
+      } catch (err) {
+        state.buoyPulse = { ok: false, buoys: [], warnings: [err?.name === 'AbortError' ? 'Buoy check timed out' : (err?.message || String(err))] };
+      } finally {
+        clearTimeout(timer);
+      }
+      if (state.report) render();
+    }
+
+
+    function render() { if (!state.report) return; const days = state.report.days; const day = days[state.selectedDay] || days[0]; const liveDay = days.find(d => d.date === localIsoDate()) || days[0]; const liveReport = applyLiveConfidence(selectedReportForDay(liveDay)); $('mainSize').textContent = liveSizeText(liveReport); const dailySummary = buildDailySummary(liveDay, liveReport); $('dailyHeadline').textContent = dailySummary.headline; $('plainWhy').textContent = dailySummary.text; $('bestWindowStat').textContent = dailySummary.bestWindow; $('windShiftStat').textContent = dailySummary.windShift; $('windMain').textContent = `${Math.round(liveReport.windSpeed)} km/h`; $('windSub').textContent = `${compassFromDeg(liveReport.windDir)} wind · ${Math.round(liveReport.windDir)}°`; const debugBits = [renderLiveConfidenceDebug(liveReport)].filter(Boolean); $('sourceRow').style.display = DEBUG_MODE && debugBits.length ? 'block' : 'none'; $('sourceRow').innerHTML = debugBits.join(' '); $('tideTitle').textContent = `Tide · ${formatDay(day.date)}`; $('swellTrendTitle').textContent = `Swell trend · ${formatDay(day.date)}`; $('windTrendTitle').textContent = `Wind trend · ${formatDay(day.date)}`; renderDays(days); renderSwellDetail(day); renderTidePanel(day); renderSwellTrendPanel(day); renderWindTrendPanel(day); renderWeatherPanel(); }
     function dailyCardWindText(day) { const report = day.best || day.peak || selectedReportForDay(day); return `${compassFromDeg(report.windDir)} ${Math.round(report.windSpeed)}km/h`; }
     function renderDays(days) { $('days').innerHTML = days.map((day, i) => `<div class="day-card ${i === state.selectedDay ? 'active' : ''}" data-day="${i}"><div class="day-name">${formatDay(day.date)}</div><div class="day-size">${day.sizeText}<span>ft</span></div><div class="day-wind">${dailyCardWindText(day)}</div></div>`).join(''); document.querySelectorAll('.day-card').forEach(card => card.addEventListener('click', () => { const clicked = Number(card.dataset.day); if (state.selectedDay === clicked && state.expandedDay === clicked) state.expandedDay = null; else { state.selectedDay = clicked; state.expandedDay = clicked; } render(); })); }
     function fmtM(value) { const n = Number(value || 0); return n ? `${n.toFixed(1)}m` : '--'; }
@@ -596,6 +644,7 @@
         state.selectedDay = 0;
         state.expandedDay = null;
         await loadTidesForDays(state.report.days);
+        loadBuoyPulseDebug();
         $('statusText').textContent = state.data.staleDataUsed ? 'Report updated · cached data' : 'Report updated';
         render();
       } catch (err) {

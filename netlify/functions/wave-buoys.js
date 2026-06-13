@@ -3,7 +3,7 @@ const CACHE_HEADERS = {
   'Cache-Control': 'public, max-age=300, stale-while-revalidate=900'
 };
 
-const TIMEOUT_MS = 12000;
+const TIMEOUT_MS = 5000;
 const WFS_ENDPOINTS = [
   'https://geoserver-123.aodn.org.au/geoserver/ows',
   'http://geoserver-123.aodn.org.au/geoserver/ows'
@@ -57,7 +57,7 @@ async function fetchWfsJson() {
   const errors = [];
   for (const endpoint of WFS_ENDPOINTS) {
     const url = wfsUrl(endpoint);
-    for (let attempt = 1; attempt <= 2; attempt += 1) {
+    for (let attempt = 1; attempt <= 1; attempt += 1) {
       try {
         return { json: await fetchWithTimeout(url, `AODN wave buoy WFS attempt ${attempt}`), url };
       } catch (err) {
