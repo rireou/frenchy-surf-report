@@ -298,6 +298,7 @@
       </div>
       <div class="top-actions">
         <a class="ghost-link" href="./middleton.html">Middleton report</a>
+        <a class="ghost-link" href="./wave-map.html">Wave map</a>
         <a class="cta-link" href="https://frenchysurfschool.square.site/" target="_blank" rel="noopener">Progress faster</a>
         <div class="status-pill"><span class="dot"></span><span id="statusText">Loading report...</span></div>
       </div>
@@ -373,7 +374,7 @@
       tideApiEndpoint: ''
     };
 
-    const state = { selectedDay: 0, expandedDay: null, selectedWeatherDay: null, data: null, report: null, tides: {}, portNoarlungaTides: {}, dataWarnings: [], staleDataUsed: false, optionalFetchFailures: [], lastSuccessfulFetchTime: null };
+    const state = { selectedDay: 0, expandedDay: null, selectedWeatherDay: null, data: null, report: null, tides: {}, portNoarlungaTides: {}, dataWarnings: [], staleDataUsed: false, optionalFetchFailures: [], lastSuccessfulFetchTime: null, buoyPulse: null };
     const DEBUG_MODE = new URLSearchParams(window.location.search).get('debug') === '1';
     const GULF_CHECK_POINTS = [
       { name: 'Seaford local cell', lat: -35.19, lon: 138.48 },
@@ -1401,7 +1402,7 @@
     }
 
 
-    function render() { if (!state.report) return; const days = state.report.days; const day = days[state.selectedDay] || days[0]; const liveReport = nearestCurrentHourReport(state.report.reports || []); const liveDay = days.find(d => d.date === liveReport?.time?.slice(0, 10)) || days.find(d => d.date === localIsoDate()) || days[0]; $('mainSize').textContent = liveSizeText(liveReport); const dailySummary = buildDailySummary(liveDay, liveReport); $('dailyHeadline').textContent = dailySummary.headline; $('plainWhy').textContent = dailySummary.text; $('bestWindowStat').textContent = dailySummary.bestWindow; $('windShiftStat').textContent = dailySummary.windShift; $('windMain').textContent = `${Math.round(liveReport.windSpeed)} km/h`; $('windSub').textContent = `${compassFromDeg(liveReport.windDir)} wind · ${Math.round(liveReport.windDir)}°`; $('sourceRow').innerHTML = state.data?.staleDataUsed ? '<span>Using recently cached data.</span>' : ''; $('tideTitle').textContent = `Tide · ${formatDay(day.date)}`; $('swellTrendTitle').textContent = `Swell trend · ${formatDay(day.date)}`; $('windTrendTitle').textContent = `Wind trend · ${formatDay(day.date)}`; renderDays(days); renderSwellDetail(day); renderTidePanel(day); renderSwellTrendPanel(day); renderWindTrendPanel(day); renderWeatherPanel(); }
+    function render() { if (!state.report) return; const days = state.report.days; const day = days[state.selectedDay] || days[0]; const liveReport = nearestCurrentHourReport(state.report.reports || []); const liveDay = days.find(d => d.date === liveReport?.time?.slice(0, 10)) || days.find(d => d.date === localIsoDate()) || days[0]; $('mainSize').textContent = liveSizeText(liveReport); const dailySummary = buildDailySummary(liveDay, liveReport); $('dailyHeadline').textContent = dailySummary.headline; $('plainWhy').textContent = dailySummary.text; $('bestWindowStat').textContent = dailySummary.bestWindow; $('windShiftStat').textContent = dailySummary.windShift; $('windMain').textContent = `${Math.round(liveReport.windSpeed)} km/h`; $('windSub').textContent = `${compassFromDeg(liveReport.windDir)} wind · ${Math.round(liveReport.windDir)}°`; const sourceBits = [state.data?.staleDataUsed ? '<span>Using recently cached data.</span>' : '', renderBuoyPulseDebug()].filter(Boolean); $('sourceRow').style.display = DEBUG_MODE && sourceBits.length ? 'block' : 'none'; $('sourceRow').innerHTML = sourceBits.join(' '); $('tideTitle').textContent = `Tide · ${formatDay(day.date)}`; $('swellTrendTitle').textContent = `Swell trend · ${formatDay(day.date)}`; $('windTrendTitle').textContent = `Wind trend · ${formatDay(day.date)}`; renderDays(days); renderSwellDetail(day); renderTidePanel(day); renderSwellTrendPanel(day); renderWindTrendPanel(day); renderWeatherPanel(); }
     function dailyCardWindText(day) { const report = day.best || day.peak || selectedReportForDay(day); return `${compassFromDeg(report.windDir)} ${Math.round(report.windSpeed)}km/h`; }
     function renderDays(days) { $('days').innerHTML = days.map((day, i) => `<div class="day-card ${i === state.selectedDay ? 'active' : ''}" data-day="${i}"><div class="day-name">${formatDay(day.date)}</div><div class="day-size">${day.sizeText}<span>ft</span></div><div class="day-wind">${dailyCardWindText(day)}</div></div>`).join(''); document.querySelectorAll('.day-card').forEach(card => card.addEventListener('click', () => { const clicked = Number(card.dataset.day); if (state.selectedDay === clicked && state.expandedDay === clicked) { state.expandedDay = null; } else { state.selectedDay = clicked; state.expandedDay = clicked; } render(); })); }
     function fmtM(value) { const n = Number(value || 0); return n ? `${n.toFixed(1)}m` : '--'; }
@@ -1418,6 +1419,28 @@
       const renderedFailures = failures.map(f => `<div class="swell-data"><strong>${f.name}: optional check failed</strong><small>${f.error}</small></div>`).join('');
       if (!renderedChecks && !renderedFailures) return `<div class="swell-data"><strong>Gulf debug</strong><small>No Gulf point data matched this hour.</small></div>`;
       return renderedChecks + renderedFailures;
+    }
+    function formatDebugBuoyTime(iso) { if (!iso) return 'no timestamp'; const d = new Date(iso); return Number.isNaN(d.getTime()) ? String(iso) : d.toLocaleString('en-AU', { timeZone: CONFIG.tz, dateStyle: 'short', timeStyle: 'short' }); }
+    function renderBuoyPulseDebug() {
+      if (!DEBUG_MODE) return '';
+      const pulse = state.buoyPulse;
+      if (!pulse) return '<span><b>Buoy pulse check</b>: loading or not requested.</span>';
+      if (!pulse.ok) return `<span><b>Buoy pulse check</b>: unavailable · ${(pulse.warnings || [])[0] || 'AODN WFS did not respond.'}</span>`;
+      const buoy = (pulse.buoys || []).find(b => /cape du couedic|gulf|fleurieu|jervis/i.test(b.name || '')) || (pulse.buoys || [])[0];
+      if (!buoy) return `<span><b>Buoy pulse check</b>: no SA buoy match yet. ${(pulse.warnings || []).join(' ')}</span>`;
+      const height = Number.isFinite(Number(buoy.waveHeightM)) ? `${Number(buoy.waveHeightM).toFixed(1)}m` : '--';
+      const period = Number.isFinite(Number(buoy.periodS)) ? `${Number(buoy.periodS).toFixed(1)}s` : '--';
+      const direction = Number.isFinite(Number(buoy.directionDeg)) ? `${Math.round(Number(buoy.directionDeg))}°` : '--';
+      return `<span><b>Buoy pulse check</b>: ${buoy.name} ${height} @ ${period} from ${direction} · ${formatDebugBuoyTime(buoy.time)}. Future: use Cape du Couedic / Gulf entrance buoy pulse as a 1.5–3 hour lead floor for Seaford live report.</span>`;
+    }
+    async function loadBuoyPulseDebug() {
+      if (!DEBUG_MODE) return;
+      try {
+        const res = await fetch('/.netlify/functions/wave-buoys', { cache: 'no-store' });
+        state.buoyPulse = await res.json();
+      } catch (err) {
+        state.buoyPulse = { ok: false, buoys: [], warnings: [err?.message || String(err)] };
+      }
     }
     function renderSwellDetail(day) { if (state.expandedDay !== state.selectedDay) { $('swellDetail').innerHTML = ''; $('swellDetailHint').textContent = 'Tap any date above to open the 6 AM, 12 PM and 6 PM read.'; return; } $('swellDetailHint').textContent = 'Tap the same date again to close the 6 AM, 12 PM and 6 PM read.'; const rows = [6, 12, 18].map(hour => nearestHour(day.reports, hour)).filter(Boolean); $('swellDetail').innerHTML = rows.map(r => { const primary = { h: r.offshoreRaw.swell_wave_height, p: r.offshoreRaw.swell_wave_period, d: r.offshoreRaw.swell_wave_direction }, secondary = { h: r.offshoreRaw.secondary_swell_wave_height, p: r.offshoreRaw.secondary_swell_wave_period, d: r.offshoreRaw.secondary_swell_wave_direction }; const driverLabel = r.activeDriver.kind === 'Secondary swell' ? 'Secondary' : r.activeDriver.kind === 'Primary swell' ? 'Primary' : 'Mixed'; return `<div class="swell-row"><div><b>${formatTime(r.time)}</b><small style="display:block;color:var(--muted);margin-top:2px;">${driverLabel}</small></div><div class="swell-pill">${r.sizeText} ft</div><div class="swell-data"><strong>Primary: ${fmtM(primary.h)} @ ${fmtPeriod(primary.p)}</strong><small>${fmtDirection(primary.d)}</small></div><div class="swell-data"><strong>Secondary: ${fmtM(secondary.h)} @ ${fmtPeriod(secondary.p)}</strong><small>${secondary.h ? fmtDirection(secondary.d) : 'No useful secondary line'}</small></div><div class="swell-data wind-read"><strong>Wind: ${simpleWindText(r.windDir, r.windSpeed)}</strong></div>${renderGulfDebug(r)}</div>`; }).join(''); }
 
@@ -1598,6 +1621,7 @@
         state.selectedDay = 0;
         state.expandedDay = null;
         await loadTidesForDays(state.report.days);
+        await loadBuoyPulseDebug();
         $('statusText').textContent = state.data.staleDataUsed ? 'Report updated · cached data' : 'Report updated';
         render();
       } catch (err) {
