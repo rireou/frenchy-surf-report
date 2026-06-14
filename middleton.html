@@ -165,6 +165,7 @@
       </div>
       <div class="top-actions">
         <a class="ghost-link" href="./index.html">Seaford report</a>
+        <a class="ghost-link" href="./wave-map.html">Wave map</a>
         <a class="cta-link" href="https://frenchysurfschool.square.site/" target="_blank" rel="noopener">Progress faster</a>
         <div class="status-pill"><span class="dot"></span><span id="statusText">Loading report...</span></div>
       </div>
@@ -193,6 +194,7 @@
       </div>
       <div class="wind-box"><div class="label">Wind</div><div class="wind-main" id="windMain">--</div><div class="wind-sub" id="windSub">--</div></div>
     </section>
+    <div class="source-row" id="sourceRow"></div>
 
     <section class="card panel" style="margin-top:16px;">
       <div class="section-head"><h2>7-day outlook</h2><span class="section-tag">Daily pulse</span></div>
@@ -236,6 +238,7 @@
 
     const state = { selectedDay: 0, expandedDay: null, selectedWeatherDay: null, data: null, report: null, tides: {}, yearlyTides: {}, dataWarnings: [], staleDataUsed: false, optionalFetchFailures: [], lastSuccessfulFetchTime: null };
     const MIDDLETON_SIZE_OFFSET_FT = 0;
+    const DEBUG_MODE = new URLSearchParams(window.location.search).get('debug') === '1';
     const MIDDLETON_TIDE_CACHE_KEY = 'middleton-yearly-tides-victor-harbor-bom-2026-v3-24h';
 
     const $ = id => document.getElementById(id);
