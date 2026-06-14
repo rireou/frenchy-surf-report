@@ -13,7 +13,6 @@ const GULF_CHECK_POINTS = [
   { name: 'Christies / O’Sullivan cell', lat: -35.12, lon: 138.47 },
   { name: 'Outer Gulf entrance cell', lat: -35.35, lon: 138.20 }
 ];
-const CAPE_JERVIS_POINT = { name: 'Cape Jervis / Gulf entrance', lat: -35.60, lon: 138.10 };
 
 const CACHE_HEADERS = {
   'Content-Type': 'application/json',
@@ -106,16 +105,14 @@ function buildCalmWindFallback(referenceData) {
 exports.handler = async () => {
   const warnings = [];
   try {
-    const [offshore, local, weatherResult, windResult, capeJervisResult] = await Promise.all([
+    const [offshore, local, weatherResult, windResult] = await Promise.all([
       fetchJson('Seaford offshore marine', marineUrl(CONFIG.offshore, false)),
       fetchJson('Seaford local marine', marineUrl(CONFIG.local, true)),
       optionalFetch('Seaford weather', weatherUrl()),
-      optionalFetch('Seaford wind', windUrl()),
-      optionalFetch(CAPE_JERVIS_POINT.name, marineUrl(CAPE_JERVIS_POINT, true))
+      optionalFetch('Seaford wind', windUrl())
     ]);
 
     if (weatherResult.failed) warnings.push(`Seaford weather: ${weatherResult.error}`);
-    if (capeJervisResult.failed) warnings.push(`${CAPE_JERVIS_POINT.name}: ${capeJervisResult.error}`);
     let wind = windResult.data;
     if (windResult.failed) {
       const weatherWind = buildFallbackWindFromWeather(weatherResult.data);
@@ -141,7 +138,7 @@ exports.handler = async () => {
     return {
       statusCode: 200,
       headers: CACHE_HEADERS,
-      body: JSON.stringify({ ok: true, generatedAt: new Date().toISOString(), offshore, local, wind, weather: weatherResult.data, capeJervis: capeJervisResult.data, gulfChecks, warnings })
+      body: JSON.stringify({ ok: true, generatedAt: new Date().toISOString(), offshore, local, wind, weather: weatherResult.data, gulfChecks, warnings })
     };
   } catch (err) {
     return {
