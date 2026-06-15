@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>South Coast Wave Map QA</title>
+  <style>
+    :root {
+      --bg: #071720;
+      --text: #ffffff;
+      --muted: #d2e3ec;
+      --soft-muted: #afc7d3;
+      --line: rgba(255,255,255,0.20);
+      --accent: #9cf2ca;
+      --accent-2: #77d8ff;
+      --shadow: 0 18px 50px rgba(0,0,0,0.35);
+      --radius: 24px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(95,211,255,0.2), transparent 34%),
+        radial-gradient(circle at 75% 15%, rgba(0,255,170,0.12), transparent 28%),
+        linear-gradient(145deg, #061118, #082031 55%, #06131a);
+      min-height: 100vh;
+    }
+    .wrap { max-width: 980px; margin: 0 auto; padding: 24px; }
+    header, .card {
+      border: 1px solid var(--line);
+      background: linear-gradient(145deg, rgba(255,255,255,0.115), rgba(255,255,255,0.060));
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(18px);
+    }
+    header { padding: 22px; margin-bottom: 16px; }
+    .kicker { color: var(--accent); font-size: 13px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.13em; margin-bottom: 8px; }
+    h1 { margin: 0; font-size: clamp(34px, 5vw, 58px); letter-spacing: -0.055em; line-height: 0.98; font-weight: 950; }
+    h2 { margin: 0 0 10px; font-size: 26px; letter-spacing: -0.035em; }
+    p { color: #f0fbff; line-height: 1.55; font-weight: 650; }
+    .card { padding: 20px; margin: 16px 0; }
+    .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+    .cta-link, .ghost-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      padding: 11px 14px;
+      border-radius: 999px;
+      font-weight: 900;
+      font-size: 14px;
+    }
+    .cta-link { color: #06202d; background: linear-gradient(135deg, var(--accent), var(--accent-2)); }
+    .ghost-link { color: var(--text); border: 1px solid var(--line); background: rgba(255,255,255,0.06); }
+    .note { border-left: 4px solid var(--accent); padding: 12px 14px; border-radius: 14px; background: rgba(156,242,202,0.09); }
+    ul { margin: 10px 0 0; padding-left: 20px; color: var(--muted); font-weight: 650; line-height: 1.55; }
+    code { color: var(--accent); font-weight: 900; }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <div class="kicker">Regional QA context</div>
+      <h1>BOM wave model context</h1>
+      <p>Use this as a regional model sanity check. Local surf size still comes from the Middleton / Seaford transform.</p>
+    </header>
+
+    <section class="card" aria-labelledby="bom-wave-model-context">
+      <h2 id="bom-wave-model-context">BOM Interactive Weather and Wave Forecast Maps</h2>
+      <p>The BOM wave map is useful context for South Coast timing around Middleton, Waitpinga and Victor Harbor. It is not a surf-size driver for this report.</p>
+      <div class="actions">
+        <a class="cta-link" href="https://www.bom.gov.au/australia/charts/viewer/index.shtml?domain=combinedW&amp;type=sigWaveHgt" target="_blank" rel="noopener noreferrer">Open BOM wave map</a>
+        <a class="ghost-link" href="https://www.bom.gov.au/australia/charts/viewer/index.shtml?domain=combinedW&amp;type=sigWaveHgt" target="_blank" rel="noopener noreferrer">Total Wave Height</a>
+        <a class="ghost-link" href="https://www.bom.gov.au/australia/charts/viewer/index.shtml?domain=combinedW&amp;type=primSwell" target="_blank" rel="noopener noreferrer">Primary Swell</a>
+        <a class="ghost-link" href="https://www.bom.gov.au/australia/charts/viewer/index.shtml?domain=combinedW&amp;type=secSwell" target="_blank" rel="noopener noreferrer">Secondary Swell</a>
+        <a class="ghost-link" href="https://www.bom.gov.au/australia/charts/viewer/index.shtml?domain=combinedW&amp;type=windWave" target="_blank" rel="noopener noreferrer">Wind Waves</a>
+        <a class="ghost-link" href="https://www.bom.gov.au/australia/charts/viewer/index.shtml?domain=combinedW&amp;type=wavePeriod" target="_blank" rel="noopener noreferrer">Wave Period</a>
+      </div>
+      <p class="note">If a direct layer link opens the default view, open the map then choose <b>Show</b> → <b>Primary Swell</b>, <b>Secondary Swell</b>, <b>Wind Waves</b> or <b>Wave Period</b>. Use the South Australia / Australian Central-South time display when comparing timing.</p>
+    </section>
+
+    <section class="card">
+      <h2>Debug recommendation</h2>
+      <ul>
+        <li>For Middleton, Waitpinga and Victor Harbor, compare our Open-Meteo swell timing against the BOM regional wave map.</li>
+        <li>If BOM and Open-Meteo disagree by more than 6 hours, flag <code>model timing uncertainty</code> in debug notes.</li>
+        <li>Do not change public surf size from this context layer yet.</li>
+        <li>No scraping, OCR, image reading or map pixel extraction is used here.</li>
+      </ul>
+    </section>
+  </main>
+
+  <script>
+    const REGIONAL_QA_SOURCES = {
+      bomWaveMap: {
+        name: 'BOM Interactive Weather and Wave Forecast Maps',
+        use: 'Regional model sanity check only',
+        url: 'https://www.bom.gov.au/australia/charts/viewer/index.shtml?domain=combinedW&type=sigWaveHgt'
+      }
+    };
+
+    console.assert(REGIONAL_QA_SOURCES.bomWaveMap.url.includes('bom.gov.au'), 'BOM link exists');
+    console.assert(document.body.textContent.includes('regional model sanity check'), 'Page explains BOM is QA/context only');
+    console.assert(document.body.textContent.includes('Do not change public surf size'), 'Page confirms BOM does not drive public surf size');
+  </script>
+</body>
+</html>
