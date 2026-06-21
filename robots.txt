@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://frenchy-surf-report.netlify.app/sitemap.xml
