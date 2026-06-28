@@ -227,7 +227,7 @@
     <section class="card panel" style="margin-top:16px;">
       <div class="section-head"><h2>7-day outlook</h2><span class="section-tag">Daily pulse</span></div>
       <div class="days" id="days"></div>
-      <div class="inline-swell-detail"><p class="forecast-table-note" id="swellDetailHint">Tap any date above to see the 6 AM, 12 PM and 6 PM read. Tap the same date again to close it.</p><div class="swell-detail" id="swellDetail"></div></div>
+      <div class="inline-swell-detail"><p class="forecast-table-note" id="swellDetailHint">Tap any date above to see the 6 AM, 12 PM and 6 PM read. Tap the same date again to close it.</p><div class="swell-detail" id="swellDetail"></div><div id="sourceComparisonDebugPanel"></div></div>
     </section>
 
     <section class="card panel" style="margin-top:16px;"><div class="section-head"><h2 id="tideTitle">Tide</h2><span class="section-tag">Victor Harbor</span></div><div class="tide-panel" id="tidePanel"></div></section>
@@ -268,6 +268,22 @@
     const MIDDLETON_SIZE_OFFSET_FT = 0;
     const DEBUG_MODE = new URLSearchParams(window.location.search).get('debug') === '1';
     const MIDDLETON_TIDE_CACHE_KEY = 'middleton-yearly-tides-victor-harbor-bom-2026-v3-24h';
+
+    const SWELLNET_VICTOR_HARBOR_REFERENCE = {
+      '06:00': { surfFt: 2, primary: { h: 1.0, p: 18.3, d: 193 }, secondary: { h: 0.6, p: 12.1, d: 201 }, tertiary: { h: 1.4, p: 6.3, d: 222 } },
+      '12:00': { surfFt: 4, primary: { h: 2.5, p: 11.3, d: 207 }, secondary: { h: 1.0, p: 17.1, d: 194 } },
+      '18:00': { surfFt: 4, primary: { h: 2.4, p: 10.3, d: 197 }, secondary: { h: 1.2, p: 16.4, d: 194 } }
+    };
+    const DEBUG_SOURCE_COMPARE_DATE = '2026-06-19';
+    const DEBUG_SOURCE_COMPARE_POINTS = [
+      ...CONFIG.offshorePoints,
+      { name: 'Victor Harbor offshore test', lat: -35.65, lon: 138.45 },
+      { name: 'Deeper south of Victor Harbor test', lat: -35.95, lon: 138.45 },
+      { name: 'South of Middleton test', lat: -35.85, lon: 138.70 },
+      { name: 'Deeper south-west of Middleton test', lat: -36.05, lon: 138.45 },
+      { name: 'South-east of Kangaroo Island test', lat: -36.25, lon: 137.55 },
+      { name: 'Cape du Couedic area test', lat: -36.05, lon: 136.70 }
+    ];
 
     const $ = id => document.getElementById(id);
     function clamp(n, min, max) { return Math.max(min, Math.min(max, n)); }
@@ -535,6 +551,69 @@
     function fmtDirection(value) { const n = Number(value || 0); return n ? `${Math.round(n)}° ${compassFromDeg(n)}` : '--'; }
     function renderSwellDetail(day) { if (state.expandedDay !== state.selectedDay) { $('swellDetail').innerHTML = ''; $('swellDetailHint').textContent = 'Tap any date above to open the 6 AM, 12 PM and 6 PM read.'; return; } $('swellDetailHint').textContent = 'Tap the same date again to close the 6 AM, 12 PM and 6 PM read.'; const rows = [6, 12, 18].map(hour => nearestHour(day.reports, hour)).filter(Boolean); $('swellDetail').innerHTML = rows.map(r => { const primary = { h: r.offshoreRaw.swell_wave_height, p: r.offshoreRaw.swell_wave_period, d: r.offshoreRaw.swell_wave_direction }, secondary = { h: r.offshoreRaw.secondary_swell_wave_height, p: r.offshoreRaw.secondary_swell_wave_period, d: r.offshoreRaw.secondary_swell_wave_direction }; const driverLabel = r.activeDriver.kind === 'Secondary swell' ? 'Secondary' : r.activeDriver.kind === 'Primary swell' ? 'Primary' : 'Mixed'; return `<div class="swell-row"><div><b>${formatTime(r.time)}</b><small style="display:block;color:var(--muted);margin-top:2px;">${driverLabel}</small></div><div class="swell-pill">${r.sizeText} ft</div><div class="swell-data"><strong>Primary: ${fmtM(primary.h)} @ ${fmtPeriod(primary.p)}</strong><small>${fmtDirection(primary.d)}</small></div><div class="swell-data"><strong>Secondary: ${fmtM(secondary.h)} @ ${fmtPeriod(secondary.p)}</strong><small>${secondary.h ? fmtDirection(secondary.d) : 'No useful secondary line'}</small></div><div class="swell-data wind-read"><strong>Wind: ${simpleWindText(r.windDir, r.windSpeed)}</strong></div></div>`; }).join(''); }
 
+
+    function debugComparePointKey(point, index) { return `${point.name}-${point.lat}-${point.lon}-${index}`.replace(/[^a-z0-9.-]+/gi, '-').toLowerCase(); }
+    function debugDirectionDiff(a, b) { const diff = Math.abs(Number(a || 0) - Number(b || 0)) % 360; return Math.min(diff, 360 - diff); }
+    function debugTrainFromHour(hour, prefix) { return { h: Number(hour?.[`${prefix}_height`] || 0), p: Number(hour?.[`${prefix}_period`] || 0), d: Number(hour?.[`${prefix}_direction`] || 0) }; }
+    function debugTrainLabel(train) { return train?.h ? `${train.h.toFixed(1)}m @ ${train.p.toFixed(1)}s · ${Math.round(train.d)}° ${compassFromDeg(train.d)}` : '--'; }
+    function debugTrainMismatch(model, reference) {
+      if (!reference) return { heightDiff: 0, periodDiff: 0, directionDiff: 0, score: 0 };
+      const heightDiff = Math.abs(Number(model?.h || 0) - reference.h);
+      const periodDiff = Math.abs(Number(model?.p || 0) - reference.p);
+      const directionDiff = debugDirectionDiff(model?.d, reference.d);
+      const score = heightDiff * 3 + periodDiff * 0.45 + directionDiff * 0.08;
+      return { heightDiff, periodDiff, directionDiff, score };
+    }
+    function debugHourMismatch(hour, reference) {
+      const primary = debugTrainFromHour(hour, 'swell_wave');
+      const secondary = debugTrainFromHour(hour, 'secondary_swell_wave');
+      const windWave = debugTrainFromHour(hour, 'wind_wave');
+      const total = debugTrainFromHour(hour, 'wave');
+      const primaryMismatch = debugTrainMismatch(primary, reference.primary);
+      const secondaryMismatch = debugTrainMismatch(secondary, reference.secondary);
+      const totalScore = primaryMismatch.score + secondaryMismatch.score;
+      const trains = [primary, secondary, windWave].filter(t => t.h > 0);
+      const containsSwellnetLike = trains.some(t => t.d >= 190 && t.d <= 210 && t.p >= 10 && t.h >= 0.6);
+      return { primary, secondary, windWave, total, primaryMismatch, secondaryMismatch, totalScore, containsSwellnetLike };
+    }
+    function debugPickHour(data, hourLabel) {
+      const target = `${DEBUG_SOURCE_COMPARE_DATE}T${hourLabel}`;
+      const times = data?.hourly?.time || [];
+      let index = times.indexOf(target);
+      if (index < 0) index = times.map((time, i) => ({ i, diff: Math.abs(new Date(time).getTime() - new Date(target).getTime()) })).sort((a, b) => a.diff - b.diff)[0]?.i ?? -1;
+      return index >= 0 ? pickHour(data.hourly, index) : null;
+    }
+    function debugSourceComparisonHtml(results) {
+      const allRows = results.flatMap(result => result.hours.map(hour => ({ ...hour, point: result.point, failed: result.failed, error: result.error })));
+      const byHour = ['06:00', '12:00', '18:00'].map(hour => ({ hour, best: allRows.filter(row => row.hour === hour && !row.failed).sort((a, b) => a.totalScore - b.totalScore)[0] })).filter(x => x.best);
+      const byPoint = results.filter(r => !r.failed).map(result => ({ point: result.point, score: result.hours.reduce((sum, h) => sum + h.totalScore, 0) / Math.max(result.hours.length, 1) })).sort((a, b) => a.score - b.score);
+      const containsSwellnetLike = allRows.some(row => row.containsSwellnetLike);
+      const bestDetails = byHour.map(x => `<div class="warning"><b>Best matching coordinate at ${x.hour}</b><br>Coordinate label: ${x.best.point.name}<br>Primary swell: ${debugTrainLabel(x.best.primary)}<br>Secondary swell: ${debugTrainLabel(x.best.secondary)}<br>Wind wave: ${debugTrainLabel(x.best.windWave)}<br>Mismatch score: ${x.best.totalScore.toFixed(2)}<br>Mismatch reason: primary Δ ${x.best.primaryMismatch.heightDiff.toFixed(1)}m / ${x.best.primaryMismatch.periodDiff.toFixed(1)}s / ${Math.round(x.best.primaryMismatch.directionDiff)}°; secondary Δ ${x.best.secondaryMismatch.heightDiff.toFixed(1)}m / ${x.best.secondaryMismatch.periodDiff.toFixed(1)}s / ${Math.round(x.best.secondaryMismatch.directionDiff)}°</div>`).join('');
+      const summary = `<div class="warning"><b>Middleton source comparison debug panel · ${DEBUG_SOURCE_COMPARE_DATE}</b><br>Best matching coordinate at 6 AM: ${byHour.find(x => x.hour === '06:00')?.best.point.name || '--'}<br>Best matching coordinate at 12 PM: ${byHour.find(x => x.hour === '12:00')?.best.point.name || '--'}<br>Best matching coordinate at 6 PM: ${byHour.find(x => x.hour === '18:00')?.best.point.name || '--'}<br>Best overall coordinate for Friday 19 June: ${byPoint[0]?.point.name || '--'} · score ${byPoint[0]?.score.toFixed(2) || '--'}<br>Open-Meteo contains Swellnet-like SSW/S train: ${containsSwellnetLike ? 'yes' : 'no'}</div>${bestDetails}`;
+      const rows = results.map(result => {
+        if (result.failed) return `<div class="warning"><b>${result.point.name}</b><br>Fetch failed: ${result.error}</div>`;
+        return result.hours.map(hour => `<div class="warning"><b>${result.point.name} · ${hour.hour}</b><br>Primary: ${debugTrainLabel(hour.primary)}<br>Secondary: ${debugTrainLabel(hour.secondary)}<br>Wind wave: ${debugTrainLabel(hour.windWave)}<br>Total wave: ${debugTrainLabel(hour.total)}<br>Primary mismatch: height ${hour.primaryMismatch.heightDiff.toFixed(1)}m · period ${hour.primaryMismatch.periodDiff.toFixed(1)}s · direction ${Math.round(hour.primaryMismatch.directionDiff)}°<br>Secondary mismatch: height ${hour.secondaryMismatch.heightDiff.toFixed(1)}m · period ${hour.secondaryMismatch.periodDiff.toFixed(1)}s · direction ${Math.round(hour.secondaryMismatch.directionDiff)}°<br>Total mismatch score: ${hour.totalScore.toFixed(2)}<br>Swellnet-like SSW/S present: ${hour.containsSwellnetLike ? 'yes' : 'no'}</div>`).join('');
+      }).join('');
+      return summary + rows;
+    }
+    async function renderDebugSourceComparison() {
+      const panel = $('sourceComparisonDebugPanel');
+      if (!panel) return;
+      if (!DEBUG_MODE) { panel.innerHTML = ''; return; }
+      panel.innerHTML = '<div class="warning"><b>Loading Middleton source comparison debug panel...</b></div>';
+      const uniquePoints = DEBUG_SOURCE_COMPARE_POINTS.filter((point, index, points) => points.findIndex(p => p.lat === point.lat && p.lon === point.lon) === index);
+      const results = await Promise.all(uniquePoints.map(async (point, index) => {
+        try {
+          const data = await fetchJsonFresh(`middleton-debug-source-${debugComparePointKey(point, index)}`, marineUrl(point), 20000);
+          const hours = Object.keys(SWELLNET_VICTOR_HARBOR_REFERENCE).map(hour => ({ hour, ...debugHourMismatch(debugPickHour(data, hour), SWELLNET_VICTOR_HARBOR_REFERENCE[hour]) }));
+          return { point, hours };
+        } catch (err) {
+          return { point, failed: true, error: err?.message || String(err), hours: [] };
+        }
+      }));
+      panel.innerHTML = debugSourceComparisonHtml(results);
+    }
+
     function graphX(hour) { return 78 + (clamp(Number(hour), 0, 24) / 24) * 600; }
     function graphLeftPct(hour) { return (graphX(hour) / 720) * 100; }
     function axisLabels(y = 236) { return [{ h: 0, label: '12am' }, { h: 3, label: '3am' }, { h: 6, label: '6am' }, { h: 9, label: '9am' }, { h: 12, label: '12pm' }, { h: 15, label: '3pm' }, { h: 18, label: '6pm' }, { h: 21, label: '9pm' }, { h: 24, label: '12am' }].map(t => `<text x="${graphX(t.h)}" y="${y}" text-anchor="middle" fill="rgba(210,227,236,0.95)" font-size="12" font-weight="900">${t.label}</text>`); }
@@ -622,7 +701,7 @@
         state.optionalFetchFailures = state.data.optionalFetchFailures;
         state.lastSuccessfulFetchTime = state.data.lastSuccessfulFetchTime;
         state.selectedDay = 0;
-        state.expandedDay = null;
+        state.expandedDay = DEBUG_MODE ? 0 : null;
         await loadTidesForDays(state.report.days);
         $('statusText').textContent = state.data.staleDataUsed ? 'Report updated · cached data' : 'Report updated';
         render();
@@ -643,7 +722,7 @@
     $('importTideBtn').addEventListener('click', () => $('tideFileInput').click());
     $('tideFileInput').addEventListener('change', async event => { const file = event.target.files?.[0]; if (!file) return; try { await importTideJsonFile(file); } catch (err) { console.error(err); $('statusText').textContent = 'Tide import failed'; alert(err.message || 'Tide import failed'); } });
     runTests();
-    loadReport();
+    loadReport().then(() => { if (DEBUG_MODE) renderDebugSourceComparison(); });
   </script>
 </body>
 </html>
