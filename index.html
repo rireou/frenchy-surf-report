@@ -1850,6 +1850,19 @@
       if (state.report) render();
     });
 
+    function scheduleAutoRefresh() {
+      if (state.autoRefreshTimer) return;
+      state.autoRefreshActive = document.visibilityState === 'visible';
+      state.autoRefreshTimer = setInterval(() => {
+        state.autoRefreshActive = document.visibilityState === 'visible';
+        if (state.autoRefreshActive) loadReport(true);
+      }, CONFIG.autoRefreshMs);
+    }
+    document.addEventListener('visibilitychange', () => {
+      state.autoRefreshActive = document.visibilityState === 'visible';
+      if (state.report) render();
+    });
+
     $('refreshBtn').addEventListener('click', () => loadReport(true));
     $('timeSelect').addEventListener('change', render);
     $('calibrationSelect').addEventListener('change', () => { if (!state.data) return; rebuildReportsFromState(); render(); });
