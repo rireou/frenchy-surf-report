@@ -357,7 +357,7 @@
     <section class="card hero-card" id="hero">
       <div>
         <div class="live-label"><span class="live-dot"></span>Live report</div>
-        <div class="live-main"><div><div class="size"><span id="mainSize">--</span><span class="size-unit">ft</span></div><div class="size-helper">Current Seaford size</div></div></div>
+        <div class="live-main"><div><div class="size"><span id="mainSize">--</span><span class="size-unit">ft</span></div><div class="size-helper">Current Seaford size</div><div class="size-helper" id="viewingTimeLabel">Viewing: Now</div></div></div>
         <div class="day-summary"><b id="dailyHeadline">Today’s read</b><p id="plainWhy">Fetching data...</p></div>
         <div class="quick-stats">
           <div class="quick-stat"><small>Best window</small><b id="bestWindowStat">--</b></div>
@@ -408,7 +408,7 @@
       tideApiEndpoint: ''
     };
 
-    const state = { selectedDay: 0, expandedDay: null, selectedWeatherDay: null, data: null, report: null, tides: {}, portNoarlungaTides: {}, dataWarnings: [], staleDataUsed: false, optionalFetchFailures: [], lastSuccessfulFetchTime: null, autoRefreshTimer: null, autoRefreshActive: false };
+    const state = { selectedDay: 0, expandedDay: null, selectedWeatherDay: null, data: null, report: null, tides: {}, portNoarlungaTides: {}, dataWarnings: [], staleDataUsed: false, optionalFetchFailures: [], lastSuccessfulFetchTime: null, autoRefreshTimer: null, autoRefreshActive: false, isLoadingReport: false };
     const DEBUG_MODE = new URLSearchParams(window.location.search).get('debug') === '1';
     const GULF_CHECK_POINTS = [
       { name: 'Seaford local cell', lat: -35.19, lon: 138.48 },
@@ -1580,6 +1580,13 @@
     function adelaideNowText() {
       return new Date().toLocaleString('en-AU', { hour: 'numeric', minute: '2-digit', day: '2-digit', month: 'short', timeZone: CONFIG.tz });
     }
+    function selectedTimeLabel(liveReport) {
+      const selected = $('timeSelect').value;
+      const selectedLabel = selected === 'now' ? 'Now' : hourLabel(Number(selected));
+      const actualLabel = liveReport?.time ? formatTime(liveReport.time) : 'unknown';
+      if (selected === 'now') return `Viewing: Now · using ${actualLabel} data`;
+      return selectedLabel === actualLabel ? `Viewing: ${selectedLabel}` : `Viewing: ${selectedLabel} · using ${actualLabel} data`;
+    }
     function renderFreshness(liveReport) {
       const row = $('freshnessRow');
       if (!row) return;
@@ -1621,7 +1628,7 @@
       row.innerHTML = parts.join('');
     }
 
-    function render() { if (!state.report) return; const days = state.report.days; const day = days[state.selectedDay] || days[0]; const liveReport = nearestCurrentHourReport(state.report.reports || []); const liveDay = days.find(d => d.date === liveReport?.time?.slice(0, 10)) || days.find(d => d.date === localIsoDate()) || days[0]; $('mainSize').textContent = liveSizeText(liveReport); const dailySummary = buildDailySummary(liveDay, liveReport); $('dailyHeadline').textContent = dailySummary.headline; $('plainWhy').textContent = dailySummary.text; $('bestWindowStat').textContent = dailySummary.bestWindow; $('windShiftStat').textContent = dailySummary.windShift; $('windMain').textContent = `${Math.round(liveReport.windSpeed)} km/h`; $('windSub').textContent = `${compassFromDeg(liveReport.windDir)} wind · ${Math.round(liveReport.windDir)}°`; $('sourceRow').innerHTML = state.data?.staleDataUsed ? '<span>Using recently cached data.</span>' : ''; renderFreshness(liveReport); $('tideTitle').textContent = `Tide · ${formatDay(day.date)}`; $('swellTrendTitle').textContent = `Swell trend · ${formatDay(day.date)}`; $('windTrendTitle').textContent = `Wind trend · ${formatDay(day.date)}`; renderDays(days); renderSwellDetail(day); renderTidePanel(day); renderSwellTrendPanel(day); renderWindTrendPanel(day); renderWeatherPanel(); }
+    function render() { if (!state.report) return; const days = state.report.days; const day = days[state.selectedDay] || days[0]; const liveReport = selectedReportForDay(day); const liveDay = day; $('mainSize').textContent = liveSizeText(liveReport); $('viewingTimeLabel').textContent = selectedTimeLabel(liveReport); const dailySummary = buildDailySummary(liveDay, liveReport); $('dailyHeadline').textContent = dailySummary.headline; $('plainWhy').textContent = dailySummary.text; $('bestWindowStat').textContent = dailySummary.bestWindow; $('windShiftStat').textContent = dailySummary.windShift; $('windMain').textContent = `${Math.round(liveReport.windSpeed)} km/h`; $('windSub').textContent = `${compassFromDeg(liveReport.windDir)} wind · ${Math.round(liveReport.windDir)}°`; $('sourceRow').innerHTML = state.data?.staleDataUsed ? '<span>Using recently cached data.</span>' : ''; renderFreshness(liveReport); $('tideTitle').textContent = `Tide · ${formatDay(day.date)}`; $('swellTrendTitle').textContent = `Swell trend · ${formatDay(day.date)}`; $('windTrendTitle').textContent = `Wind trend · ${formatDay(day.date)}`; renderDays(days); renderSwellDetail(day); renderTidePanel(day); renderSwellTrendPanel(day); renderWindTrendPanel(day); renderWeatherPanel(); }
     function renderDays(days) { $('days').innerHTML = days.map((day, i) => { const windReport = day.peak || day.best; const windLine = windReport ? `${compassFromDeg(windReport.windDir)} ${Math.round(windReport.windSpeed)}km/h` : ''; return `<div class="day-card ${i === state.selectedDay ? 'active' : ''}" data-day="${i}"><div class="day-name">${formatDay(day.date)}</div><div class="day-size">${day.sizeText}<span style="font-size:14px;color:var(--muted);letter-spacing:0;"> ft</span></div>${windLine ? `<div class="day-wind">${windLine}</div>` : ''}</div>`; }).join(''); document.querySelectorAll('.day-card').forEach(card => card.addEventListener('click', () => { const clicked = Number(card.dataset.day); if (state.selectedDay === clicked && state.expandedDay === clicked) { state.expandedDay = null; } else { state.selectedDay = clicked; state.expandedDay = clicked; } render(); })); }
     function fmtM(value) { const n = Number(value || 0); return n ? `${n.toFixed(1)}m` : '--'; }
     function fmtPeriod(value) { const n = Number(value || 0); return n ? `${n.toFixed(1)}s` : '--'; }
@@ -1739,8 +1746,19 @@
 
     function renderWindTrendPanel(day) { const reports = day.reports.map(r => ({ time: r.time, hour: reportHourValue(r), speed: Number(r.windSpeed || 0), speedLevel: windLevel(r.windSpeed), direction: r.windDir, quality: r.windQuality })).sort((a, b) => a.hour - b.hour); if (!reports.length) { $('windTrendPanel').innerHTML = `<div class="warning error"><b>No wind trend data.</b></div>`; return; } const minSpeed = 0, maxSpeed = 4; const path = makeWindTrendPath(reports.map(r => ({ ...r, speed: r.speedLevel })), minSpeed, maxSpeed), fillPath = `${path} L 696 260 L 78 260 Z`; const windGridLines = makeWindGridLines(minSpeed, maxSpeed); const markers = [0,3,6,9,12,15,18,21].map(hour => nearestHour(day.reports, hour)).filter(Boolean).map(r => ({ hour: reportHourValue(r), speed: Number(r.windSpeed || 0), direction: r.windDir, label: formatTime(r.time) })); const markerDots = markers.map(p => { const x = graphX(p.hour), y = windGraphY(windLevel(p.speed), minSpeed, maxSpeed), rotation = windArrowRotation(p.direction); return `<circle cx="${x}" cy="${y}" r="6" fill="#eafaff" stroke="#77d8ff" stroke-width="3" /><text x="${x}" y="${Math.max(24, y - 16)}" text-anchor="middle" class="wind-arrow-marker" style="transform: rotate(${rotation}deg);">↑</text>`; }).join(''); const now = new Date(), showNow = day.date === localIsoDate(), nowHour = now.getHours() + now.getMinutes() / 60, nowPct = graphLeftPct(nowHour); const cleanest = reports.slice().sort((a, b) => b.quality - a.quality || a.speed - b.speed)[0], lightest = reports.slice().sort((a, b) => a.speed - b.speed)[0], strongest = reports.slice().sort((a, b) => b.speed - a.speed)[0]; const cards = [`<div class="wind-trend-card"><small>Cleanest window</small><b>${formatTime(cleanest.time)}</b><small>${simpleWindText(cleanest.direction, cleanest.speed)}</small></div>`, `<div class="wind-trend-card"><small>Lightest wind</small><b>${formatTime(lightest.time)}</b><small>${simpleWindText(lightest.direction, lightest.speed)}</small></div>`, `<div class="wind-trend-card"><small>Strongest wind</small><b>${formatTime(strongest.time)}</b><small>${simpleWindText(strongest.direction, strongest.speed)}</small></div>`].join(''); $('windTrendPanel').innerHTML = `<div class="wind-graph">${showNow ? `<div class="wind-now-line" style="left:${nowPct}%"></div><div class="wind-now-label" style="left:${nowPct}%">Now</div>` : ''}<svg viewBox="0 0 720 300" preserveAspectRatio="none">${windGridLines}<path d="${fillPath}" fill="rgba(119,216,255,0.18)" /><path d="${path}" fill="none" stroke="#77d8ff" stroke-width="4" stroke-linecap="round" />${markerDots}${axisLabels(286).join('')}</svg></div><div class="wind-trend-cards">${cards}</div>`; }
 
+    function setReportLoadingState(isLoading, force = false) {
+      const refreshBtn = $('refreshBtn');
+      if (refreshBtn) {
+        refreshBtn.disabled = isLoading;
+        refreshBtn.textContent = isLoading ? 'Refreshing...' : 'Refresh report';
+      }
+      if (isLoading) $('statusText').textContent = force ? 'Refreshing...' : 'Loading report...';
+    }
+
     async function loadReport(force = false) {
-      $('statusText').textContent = 'Loading report...';
+      if (state.isLoadingReport) return;
+      state.isLoadingReport = true;
+      setReportLoadingState(true, force);
       try {
         const fetchOptions = force ? { cacheMs: 0, noStore: true } : {};
         await loadPortNoarlungaBaseTides();
@@ -1841,6 +1859,9 @@
         $('statusText').textContent = 'Data error';
         $('plainWhy').textContent = err.message || 'Could not load report.';
         $('hero').classList.add('error');
+      } finally {
+        state.isLoadingReport = false;
+        setReportLoadingState(false, force);
       }
     }
 
