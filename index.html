@@ -5,11 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Seaford Surf Report | Live Seaford SA Surf Forecast | Frenchy</title>
   <meta name="description" content="Live Seaford surf report with swell, wind, tide, incoming pulse and surf rating for Seaford, South Australia." />
-  <link rel="canonical" href="https://frenchy-surf-report.netlify.app/" />
+  <link rel="canonical" href="https://frenchyreview.netlify.app/" />
+  <link rel="stylesheet" href="./preview-ui.css" />
   <meta property="og:title" content="Seaford Surf Report | Live Seaford SA Surf Forecast | Frenchy" />
   <meta property="og:description" content="Live Seaford surf report with swell, wind, tide, incoming pulse and surf rating for Seaford, South Australia." />
   <meta property="og:type" content="website" />
-  <meta property="og:url" content="https://frenchy-surf-report.netlify.app/" />
+  <meta property="og:url" content="https://frenchyreview.netlify.app/" />
   <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -347,6 +348,7 @@
       <button id="copyBtn" class="public-hidden">Copy today summary</button>
       <button id="importTideBtn" class="public-hidden">Import tide JSON</button>
       <input id="tideFileInput" type="file" accept="application/json,.json" style="display:none" />
+      <div class="time-shortcuts" id="timeShortcuts" aria-label="Quick report times"></div>
     </div>
 
     <section class="sponsor-strip">
@@ -357,12 +359,21 @@
     <section class="card hero-card" id="hero">
       <div>
         <div class="live-label"><span class="live-dot"></span>Live report</div>
+        <div class="decision-top"><span class="decision-badge maybe" id="decisionBadge">LOADING</span><span class="quality-stars" id="qualityStars" aria-label="Surf quality">☆☆☆☆☆</span></div>
         <div class="live-main"><div><div class="size"><span id="mainSize">--</span><span class="size-unit">ft</span></div><div class="size-helper">Current Seaford size</div><div class="size-helper" id="viewingTimeLabel">Viewing: Now</div></div></div>
         <div class="day-summary"><b id="dailyHeadline">Today’s read</b><p id="plainWhy">Fetching data...</p></div>
         <div class="quick-stats">
           <div class="quick-stat"><small>Best window</small><b id="bestWindowStat">--</b></div>
           <div class="quick-stat"><small>Wind shift</small><b id="windShiftStat">--</b></div>
         </div>
+        <div class="decision-grid">
+          <div class="decision-item"><small>Quality</small><b id="qualityText">Calculating…</b></div>
+          <div class="decision-item"><small>Tide</small><b id="tideCall">Loading tide…</b></div>
+          <div class="decision-item"><small>Board call</small><b id="boardCall">Checking…</b></div>
+          <div class="decision-item"><small>Forecast confidence</small><b id="confidenceCall">Checking sources…</b></div>
+        </div>
+        <div class="beach-check"><b>Frenchy beach check</b> · No manual observation posted yet. The report is currently model-led.</div>
+        <div class="share-strip"><p>Share the report with your surf mate and help Frenchy Review improve faster.</p><button type="button" id="shareReportBtn">Share report</button></div>
         <div class="live-correction-box">
           <div><b>Live size check</b><small id="liveCorrectionStatus">Add what you see now to correct the live report.</small></div>
           <input id="liveActualSizeInput" type="number" min="0" max="6" step="0.25" placeholder="2" />
@@ -394,6 +405,7 @@
     <section class="sponsor-strip"><div><small>Advertising space</small><b>Local shops can support the daily report here</b><p>Perfect for coffee, board repairs, surf shops, physios, gyms or family-friendly local businesses around the Mid Coast.</p></div><a class="ghost-link" href="https://frenchysurfschool.square.site/" target="_blank" rel="noopener">Advertise here</a></section>
   </div>
 
+  <script src="./preview-ui.js" defer></script>
   <script>
     const CONFIG = {
       tz: 'Australia/Adelaide',
