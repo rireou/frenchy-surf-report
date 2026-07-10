@@ -1,2 +1,27 @@
 [functions]
   directory = "netlify/functions"
+
+[[redirects]]
+  from = "/middleton"
+  to = "/middleton.html"
+  status = 200
+
+[[redirects]]
+  from = "/wave-map"
+  to = "/wave-map.html"
+  status = 200
+
+[[headers]]
+  for = "/*.css"
+  [headers.values]
+    Cache-Control = "public, max-age=3600"
+
+[[headers]]
+  for = "/*.js"
+  [headers.values]
+    Cache-Control = "public, max-age=3600"
+
+[[headers]]
+  for = "/*.html"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
