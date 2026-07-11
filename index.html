@@ -319,7 +319,7 @@
       .swell-data.wind-read { white-space: normal; flex-wrap: wrap; }
     }
   </style>
-  <link rel="stylesheet" href="./preview-ui.css" />
+  <link rel="stylesheet" href="./frenchy-ui-v2.css" />
 </head>
 <body>
   <div class="wrap">
@@ -405,7 +405,7 @@
     <section class="sponsor-strip"><div><small>Advertising space</small><b>Local shops can support the daily report here</b><p>Perfect for coffee, board repairs, surf shops, physios, gyms or family-friendly local businesses around the Mid Coast.</p></div><a class="ghost-link" href="https://frenchysurfschool.square.site/" target="_blank" rel="noopener">Advertise here</a></section>
   </div>
 
-  <script src="./preview-ui.js" defer></script>
+  <script src="./frenchy-ui-v2.js" defer></script>
   <script>
     const CONFIG = {
       tz: 'Australia/Adelaide',
@@ -1640,7 +1640,7 @@
       row.innerHTML = parts.join('');
     }
 
-    function render() { if (!state.report) return; const days = state.report.days; const day = days[state.selectedDay] || days[0]; const liveReport = selectedReportForDay(day); const liveDay = day; $('mainSize').textContent = liveSizeText(liveReport); $('viewingTimeLabel').textContent = selectedTimeLabel(liveReport); const dailySummary = buildDailySummary(liveDay, liveReport); $('dailyHeadline').textContent = dailySummary.headline; $('plainWhy').textContent = dailySummary.text; $('bestWindowStat').textContent = dailySummary.bestWindow; $('windShiftStat').textContent = dailySummary.windShift; $('windMain').textContent = `${Math.round(liveReport.windSpeed)} km/h`; $('windSub').textContent = `${compassFromDeg(liveReport.windDir)} wind · ${Math.round(liveReport.windDir)}°`; $('sourceRow').innerHTML = state.data?.staleDataUsed ? '<span>Using recently cached data.</span>' : ''; renderFreshness(liveReport); $('tideTitle').textContent = `Tide · ${formatDay(day.date)}`; $('swellTrendTitle').textContent = `Swell trend · ${formatDay(day.date)}`; $('windTrendTitle').textContent = `Wind trend · ${formatDay(day.date)}`; renderDays(days); renderSwellDetail(day); renderTidePanel(day); renderSwellTrendPanel(day); renderWindTrendPanel(day); renderWeatherPanel(); }
+    function render() { if (!state.report) return; const days = state.report.days; const detailDay = days[state.selectedDay] || days[0]; const liveDay = days.find(d => d.date === localIsoDate()) || days[0]; const liveReport = selectedReportForDay(liveDay); $('mainSize').textContent = liveSizeText(liveReport); $('viewingTimeLabel').textContent = selectedTimeLabel(liveReport); const dailySummary = buildDailySummary(liveDay, liveReport); $('dailyHeadline').textContent = dailySummary.headline; $('plainWhy').textContent = dailySummary.text; $('bestWindowStat').textContent = dailySummary.bestWindow; $('windShiftStat').textContent = dailySummary.windShift; $('windMain').textContent = `${Math.round(liveReport.windSpeed)} km/h`; $('windSub').textContent = `${compassFromDeg(liveReport.windDir)} wind · ${Math.round(liveReport.windDir)}°`; $('sourceRow').innerHTML = state.data?.staleDataUsed ? '<span>Using recently cached data.</span>' : ''; renderFreshness(liveReport); $('tideTitle').textContent = `Tide · ${formatDay(detailDay.date)}`; $('swellTrendTitle').textContent = `Swell trend · ${formatDay(detailDay.date)}`; $('windTrendTitle').textContent = `Wind trend · ${formatDay(detailDay.date)}`; renderDays(days); renderSwellDetail(detailDay); renderTidePanel(detailDay); renderSwellTrendPanel(detailDay); renderWindTrendPanel(detailDay); renderWeatherPanel(); }
     function renderDays(days) { $('days').innerHTML = days.map((day, i) => { const windReport = day.peak || day.best; const windLine = windReport ? `${compassFromDeg(windReport.windDir)} ${Math.round(windReport.windSpeed)}km/h` : ''; return `<div class="day-card ${i === state.selectedDay ? 'active' : ''}" data-day="${i}"><div class="day-name">${formatDay(day.date)}</div><div class="day-size">${day.sizeText}<span style="font-size:14px;color:var(--muted);letter-spacing:0;"> ft</span></div>${windLine ? `<div class="day-wind">${windLine}</div>` : ''}</div>`; }).join(''); document.querySelectorAll('.day-card').forEach(card => card.addEventListener('click', () => { const clicked = Number(card.dataset.day); if (state.selectedDay === clicked && state.expandedDay === clicked) { state.expandedDay = null; } else { state.selectedDay = clicked; state.expandedDay = clicked; } render(); })); }
     function fmtM(value) { const n = Number(value || 0); return n ? `${n.toFixed(1)}m` : '--'; }
     function fmtPeriod(value) { const n = Number(value || 0); return n ? `${n.toFixed(1)}s` : '--'; }
@@ -1902,7 +1902,7 @@
     $('clearLiveCorrectionBtn').addEventListener('click', clearLiveCorrection);
     $('importTideBtn').addEventListener('click', () => $('tideFileInput').click());
     $('tideFileInput').addEventListener('change', async (event) => { const file = event.target.files?.[0]; if (!file) return; try { await importTideJsonFile(file); } catch (err) { console.error(err); $('statusText').textContent = 'Tide import failed'; alert(err.message || 'Tide import failed'); } });
-    runTests();
+    // Internal model tests run before deployment, not in every visitor's browser.
     scheduleAutoRefresh();
     loadReport();
   </script>

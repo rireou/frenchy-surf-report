@@ -182,7 +182,7 @@
       .swell-data.wind-read { white-space: normal; flex-wrap: wrap; }
     }
   </style>
-  <link rel="stylesheet" href="./preview-ui.css" />
+  <link rel="stylesheet" href="./frenchy-ui-v2.css" />
 </head>
 <body>
   <div class="wrap">
@@ -245,7 +245,7 @@
     <section class="footer-source"><div><small>Help improve this report</small><p>Found a free public source for Middleton wind, buoy, tide or surf data? Send it through and I’ll test if it can make the report sharper.</p></div><a class="ghost-link" href="https://frenchysurfschool.square.site/" target="_blank" rel="noopener">Send a source</a></section>
   </div>
 
-  <script src="./preview-ui.js" defer></script>
+  <script src="./frenchy-ui-v2.js" defer></script>
   <script>
     const CONFIG = {
       tz: 'Australia/Adelaide',
@@ -649,7 +649,7 @@
     $('copyBtn').addEventListener('click', copySummary);
     $('importTideBtn').addEventListener('click', () => $('tideFileInput').click());
     $('tideFileInput').addEventListener('change', async event => { const file = event.target.files?.[0]; if (!file) return; try { await importTideJsonFile(file); } catch (err) { console.error(err); $('statusText').textContent = 'Tide import failed'; alert(err.message || 'Tide import failed'); } });
-    runTests();
+    // Internal model tests run before deployment, not in every visitor's browser.
     loadReport();
   </script>
 </body>
