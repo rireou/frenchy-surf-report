@@ -1567,6 +1567,7 @@
     function buildDailySummary(day, report) {
       const daylight = day.reports.filter(r => isDaylightSurfTime(r.time));
       const nowMinute = adelaideMinutesNow();
+      const daylightFinished = day.date === localIsoDate() && nowMinute > surfDaylightBounds(day.date).end;
       const futureDaylight = day.date === localIsoDate() ? daylight.filter(r => timeToMinutesFromReport(r.time) >= nowMinute - 15) : daylight;
       const useful = futureDaylight.length ? futureDaylight : (daylight.length ? [daylight[daylight.length - 1]] : day.reports);
       const best = useful.slice().sort((a, b) => surfWindowScore(b) - surfWindowScore(a))[0] || report;
@@ -1583,7 +1584,7 @@
       const sizeDelta = Number(best.finalFt || 0) - Number(report.finalFt || 0);
       const nextTide = (tideForDate(day.date) || []).map(normaliseTidePoint).filter(p => clockToMinutesLocal(p.time) > bestMinute).sort((a,b) => clockToMinutesLocal(a.time)-clockToMinutesLocal(b.time))[0];
       const reason = windPickingUp ? 'Cleanest chance — go before the wind picks up.' : sizeDelta >= 0.4 ? 'Cleanest useful pulse while the swell builds.' : nextTide?.type === 'Low' ? 'Go before the tide drops further.' : sizeDelta <= -0.4 ? 'Best remaining window before the swell fades.' : 'Best mix of clean wind, tide and useful size.';
-      const bestWindow = `Today · ${formatTime(best.time)}–${formatTime(endHour)} · ${liveSizeText(best)} ft — ${reason}`;
+      const bestWindow = daylightFinished ? 'Today is finished · Check tomorrow in the 7-day outlook.' : `Today · ${formatTime(best.time)}–${formatTime(endHour)} · ${liveSizeText(best)} ft — ${reason}`;
       const windShift = shift ? `${formatTime(shift.time)} · ${compassFromDeg(shift.windDir)} ${Math.round(shift.windSpeed)}km/h` : 'No big shift';
       const text = shortSurfRead(liveReport, { ...day, best });
       return { headline: 'Surf plan', text, bestWindow, windShift, swellTrend: shortTrendLabel(liveReport, { ...day, best }) };
