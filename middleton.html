@@ -7,6 +7,7 @@
   <meta name="description" content="Middleton surf report with swell, wind, tide and daily South Coast outlook for Middleton, South Australia." />
   <link rel="canonical" href="https://frenchyreview.netlify.app/middleton" />
   <link rel="stylesheet" href="./preview-ui.css" />
+  <link rel="stylesheet" href="./observation.css?v=20260719.3" />
   <meta property="og:title" content="Middleton Surf Report | South Coast SA Surf Forecast | Frenchy" />
   <meta property="og:description" content="Middleton surf report with swell, wind, tide and daily South Coast outlook for Middleton, South Australia." />
   <meta property="og:type" content="website" />
@@ -184,6 +185,7 @@
     }
   </style>
   <link rel="stylesheet" href="./frenchy-ui-v3.css" />
+  <script src="./observation.js?v=20260719.3" defer></script>
 </head>
 <body>
   <div class="wrap">
@@ -644,6 +646,89 @@
         $('hero').classList.add('error');
       }
     }
+    const MIDDLETON_CALCULATION_VERSION = 'middleton-2026.07.19.1';
+    function shiftObservationDate(date, dayOffset) { const shifted = new Date(`${date}T12:00:00Z`); shifted.setUTCDate(shifted.getUTCDate() + dayOffset); return shifted.toISOString().slice(0, 10); }
+    function observationDurationLabel(minutes) { const value = Math.max(0, Math.round(Number(minutes) || 0)); if (value < 45) return `${value} min`; const hours = Math.round(value / 30) / 2; return `${Number.isInteger(hours) ? hours : hours.toFixed(1)} hr`; }
+    function middletonTideRangeDetails(rangeM) { const value = Number(rangeM); if (!Number.isFinite(value)) return { rangeClass: 'unknown', rangeLabel: 'Tide change unavailable' }; if (value < 0.35) return { rangeClass: 'small', rangeLabel: `Small ${value.toFixed(2)} m tide change` }; if (value < 0.65) return { rangeClass: 'medium', rangeLabel: `Medium ${value.toFixed(2)} m tide change` }; return { rangeClass: 'big', rangeLabel: `Big ${value.toFixed(2)} m tide change` }; }
+    function fullWindDirectionName(deg) { if (!Number.isFinite(Number(deg))) return 'unknown'; const names = ['north','north-north-east','north-east','east-north-east','east','east-south-east','south-east','south-south-east','south','south-south-west','south-west','west-south-west','west','west-north-west','north-west','north-north-west']; return names[Math.round((((Number(deg) % 360) + 360) % 360) / 22.5) % 16]; }
+    function observationWindStrength(speedKmh) { const speed = Number(speedKmh); if (!Number.isFinite(speed)) return 'unknown'; if (speed < 15) return 'light'; if (speed < 30) return 'moderate'; if (speed < 45) return 'strong'; return 'stormy'; }
+    function windObservationSnapshot(report) {
+      const speedKmh = Number(report?.windRaw?.wind_speed_10m ?? report?.windSpeed);
+      const directionDeg = Number(report?.windRaw?.wind_direction_10m ?? report?.windDir);
+      const strength = observationWindStrength(speedKmh);
+      const directionCompass = Number.isFinite(directionDeg) ? compassFromDeg(directionDeg) : 'unknown';
+      const directionName = fullWindDirectionName(directionDeg);
+      return { speedKmh, directionDeg, directionCompass, directionName, strength, label: Number.isFinite(speedKmh) ? `${strength[0].toUpperCase()}${strength.slice(1)} ${directionCompass} wind · ${Math.round(speedKmh)} km/h` : 'Wind unavailable' };
+    }
+    function currentTideObservationSnapshot(reportTime) {
+      const date = reportTime?.slice(0, 10) || localIsoDate();
+      const minute = reportTime ? timeToMinutesFromReport(reportTime) : adelaideMinutesNow();
+      const points = [-1, 0, 1].flatMap(dayOffset => { const pointDate = shiftObservationDate(date, dayOffset); return (tideForDate(pointDate) || []).map(normaliseTidePoint).filter(point => point.time && Number.isFinite(point.height)).map(point => ({ ...point, date: pointDate, minute: dayOffset * 1440 + clockToMinutesLocal(point.time) })); }).sort((a, b) => a.minute - b.minute);
+      if (!points.length) return { heightM: null, stage: 'unknown', movement: 'unknown', source: 'Victor Harbor tide table unavailable', points: [] };
+      const before = points.filter(point => point.minute <= minute).slice(-1)[0] || points[0];
+      const after = points.find(point => point.minute >= minute) || points[points.length - 1];
+      const span = Math.max(1, after.minute - before.minute);
+      const progress = clamp((minute - before.minute) / span, 0, 1);
+      const smooth = 0.5 - 0.5 * Math.cos(Math.PI * progress);
+      const heightM = before === after ? before.height : before.height + (after.height - before.height) * smooth;
+      const nearest = points.slice().sort((a, b) => Math.abs(a.minute - minute) - Math.abs(b.minute - minute))[0];
+      let stage = after.height > before.height ? 'rising' : after.height < before.height ? 'falling' : 'steady';
+      if (Math.abs(nearest.minute - minute) <= 25) stage = nearest.type === 'High' ? 'high tide' : nearest.type === 'Low' ? 'low tide' : stage;
+      const movement = stage === 'rising' ? 'pushing' : stage === 'falling' ? 'dropping' : stage === 'high tide' ? 'around high tide' : stage === 'low tide' ? 'around low tide' : 'steady';
+      const minutesToNext = Math.max(0, after.minute - minute);
+      const minutesSincePrevious = Math.max(0, minute - before.minute);
+      const positionLabel = movement.startsWith('around') ? `${movement[0].toUpperCase()}${movement.slice(1)}` : `${movement[0].toUpperCase()}${movement.slice(1)} · ${observationDurationLabel(minutesToNext)} before ${String(after.type || 'next tide').toLowerCase()}`;
+      const rangeM = before !== after ? Number(Math.abs(after.height - before.height).toFixed(2)) : null;
+      const range = middletonTideRangeDetails(rangeM);
+      return { heightM: Number(heightM.toFixed(2)), stage, movement, positionLabel, minutesToNext, minutesSincePrevious, cycleProgressPct: Number((progress * 100).toFixed(1)), rangeM, ...range, source: 'BOM Victor Harbor 2026 tide table', before: { date: before.date, time: before.time, type: before.type, heightM: before.height }, after: { date: after.date, time: after.time, type: after.type, heightM: after.height }, points: points.map(({ date: pointDate, time, type, height }) => ({ date: pointDate, time, type, heightM: height })) };
+    }
+    function currentWeatherObservationSnapshot(reportTime) {
+      const weather = state.data?.weather || {};
+      const times = weather.hourly?.time || [];
+      let index = times.indexOf(reportTime);
+      if (index < 0 && times.length) index = times.map((time, i) => ({ i, distance: Math.abs(new Date(time).getTime() - new Date(reportTime).getTime()) })).sort((a, b) => a.distance - b.distance)[0]?.i ?? -1;
+      const read = key => index >= 0 ? weather.hourly?.[key]?.[index] : weather.current?.[key];
+      return { forecastTime: index >= 0 ? times[index] : weather.current?.time || reportTime, temperatureC: Number(read('temperature_2m')), weatherCode: Number(read('weather_code')), precipitationMm: Number(weather.current?.precipitation ?? 0), precipitationProbabilityPct: Number(read('precipitation_probability')), windSpeedKmh: Number(read('wind_speed_10m')), windDirectionDeg: Number(read('wind_direction_10m')) };
+    }
+    function observationSnapshotAt(observedAt = new Date().toISOString()) {
+      if (!state.report?.reports?.length) return null;
+      const target = new Date(observedAt);
+      if (!Number.isFinite(target.getTime())) return null;
+      const parts = Object.fromEntries(new Intl.DateTimeFormat('en-AU', { timeZone: CONFIG.tz, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).formatToParts(target).filter(part => part.type !== 'literal').map(part => [part.type, part.value]));
+      const selectedLocalTime = `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}`;
+      const comparableTargetTime = new Date(selectedLocalTime).getTime();
+      const nearest = state.report.reports.map(report => ({ report, distanceMs: Math.abs(new Date(report.time).getTime() - comparableTargetTime) })).sort((a, b) => a.distanceMs - b.distanceMs)[0];
+      if (!nearest?.report || nearest.distanceMs > 90 * 60 * 1000) return null;
+      const report = nearest.report;
+      const selectedTime = target.toISOString();
+      const isNow = Math.abs(Date.now() - target.getTime()) < 2 * 60 * 1000;
+      return {
+        schemaVersion: 3,
+        calculationVersion: MIDDLETON_CALCULATION_VERSION,
+        location: 'Middleton',
+        calculatedAt: new Date().toISOString(),
+        observedAt: selectedTime,
+        forecastTime: report.time,
+        forecastDistanceMinutes: Math.round(nearest.distanceMs / 60000),
+        displayTime: `Forecast row ${formatTime(report.time)} · ${isNow ? 'observed now' : `observed ${formatTime(selectedLocalTime)}`}`,
+        predictedFt: Number(report.finalFt),
+        modelPredictedFt: Number(report.originalFinalFt ?? report.finalFt),
+        predictedText: liveSizeText(report),
+        calibration: $('calibrationSelect')?.value || 'normal',
+        activeDriver: report.activeDriver,
+        offshore: report.offshoreRaw,
+        local: report.localRaw,
+        wind: report.windRaw,
+        windContext: windObservationSnapshot(report),
+        tide: currentTideObservationSnapshot(selectedLocalTime),
+        weather: currentWeatherObservationSnapshot(selectedLocalTime),
+        dataContext: { dataSource: state.data?.dataSource, generatedAt: state.data?.lastSuccessfulFetchTime, staleDataUsed: state.data?.staleDataUsed, warnings: state.data?.dataWarnings || [] },
+        calculationResult: report
+      };
+    }
+    function currentObservationSnapshot() { return observationSnapshotAt(new Date().toISOString()); }
+    window.FrenchyObservation = { calculationVersion: MIDDLETON_CALCULATION_VERSION, location: 'Middleton', getCurrentSnapshot: currentObservationSnapshot, getSnapshotAt: observationSnapshotAt };
+
     function copySummary() { if (!state.report) return; const day = state.report.days[state.selectedDay], r = selectedReportForDay(day); navigator.clipboard?.writeText(`Middleton report ${formatDay(day.date)}: ${r.sizeText} ft. Wind ${compassFromDeg(r.windDir)} ${Math.round(r.windSpeed)} km/h.`); $('statusText').textContent = 'Summary copied'; }
     function runTests() { console.assert(MIDDLETON_TIDE_CACHE_KEY.includes('victor-harbor-bom-2026-v3-24h'), 'Middleton tide cache key should force corrected 24h Victor Harbor tide file to load'); console.assert(axisLabels().join('').includes('12am') && axisLabels().join('').includes('9pm'), 'Tide graph should show the full 24-hour scale'); console.assert(MIDDLETON_SIZE_OFFSET_FT === 0, 'Middleton calibration offset must be 0'); console.assert(CONFIG.local.lat === -35.529717 && CONFIG.local.lon === 138.7508, 'Middleton coordinates should be set'); console.assert(calibrationSizeAdjustFt(1.5, 'conservative') === -0.5, 'Real surfers wave size should be 0.5ft smaller than normal'); console.assert(calibrationSizeAdjustFt(1.5, 'generous') === 0.5 && calibrationSizeAdjustFt(3, 'generous') === 1, 'Frothing Grom Mode should be 0.5-1ft bigger than normal'); console.assert(Array.isArray(CONFIG.offshorePoints) && CONFIG.offshorePoints.length >= 6, 'Middleton should test multiple offshore Open-Meteo points'); console.assert(!buildHourReport.toString().includes('adjustedMiddleton'), 'Middleton model must not use adjusted swell helpers'); console.assert(!renderSwellDetail.toString().includes('Open-Meteo reference'), 'Public swell detail should hide Open-Meteo reference wording'); console.assert(!renderSwellDetail.toString().includes('adjusted Cape du Couedic reference'), 'Swell detail should not claim adjusted Cape du Couedic reference'); console.assert(sizeRange(southCoastSizeFt(3.7, 236, 14.8)) === '6-8', '3.7m @ 14.8s from 236° should show as 6-8ft'); console.assert(southCoastSizeFt(2.1, 229, 12.9) >= 3 && southCoastSizeFt(2.1, 229, 12.9) <= 4.5, '2.1m @ 12.9s from 229° should be around 3-4ft'); console.assert(sizeRange(southCoastSizeFt(1.5, 229, 11.4)).includes('2'), '1.5m @ 11.4s from 229° should be around 2ft'); console.assert(sizeRange(southCoastSizeFt(0.6, 236, 14.8)) === '1', '0.6m @ 14.8s from 236° should be around 1ft'); console.assert(sizeRange(southCoastSizeFt(1.3, 174, 8.8)) !== 'Flat', 'South swell must not get flattened at Middleton'); console.assert(southCoastSizeFt(2.2, 209, 14.8) >= 4, 'Solid SSW swell should show as a proper Middleton pulse'); const comboWed = combinedMiddletonSizeFt([{ heightM:1.3, directionDeg:174, periodS:8.8, kind:'Primary swell' }, { heightM:0.8, directionDeg:199, periodS:13.3, kind:'Secondary swell' }]); console.assert(comboWed.ft >= 1.7 && comboWed.ft <= 2.8, 'Combined S + SSW swell should land around 2ft to 2-3ft'); const sampleDay = groupByDay([{ time:'2026-06-02T06:00', finalFt:1, windQuality:1, windDir:270, windSpeed:20 }, { time:'2026-06-02T12:00', finalFt:7, windQuality:0.2, windDir:270, windSpeed:20 }, { time:'2026-06-02T18:00', finalFt:2, windQuality:1, windDir:270, windSpeed:20 }])[0]; console.assert(sampleDay.sizeText === '6-8', 'Day card should use peak 6/12/18 snapshot size, not average'); const compactDay = groupByDay([{ time:'2026-05-27T06:00', finalFt:1.35, windQuality:1, windDir:135, windSpeed:12 }, { time:'2026-05-27T12:00', finalFt:1.45, windQuality:1, windDir:135, windSpeed:12 }, { time:'2026-05-27T18:00', finalFt:1.5, windQuality:1, windDir:135, windSpeed:12 }])[0]; console.assert(['1-2', '1.5', '1.5-2', '2'].includes(compactDay.sizeText), 'Steady 1.35-1.5ft Middleton days should keep a compact public day card'); console.assert(isCleanWind(20) === true && isCleanWind(180) === false, 'North wind should be clean, south wind not clean'); console.assert(windQuality(10, 100) < windQuality(10, 180), 'East / South-East should score worse than south for Middleton'); console.assert(isBadMiddletonWind(100) === true, 'East / South-East should be marked as the worst wind for Middleton'); const fakeSelect = selectBestOffshoreForMiddleton([{ name:'Weak bad point', point:{ lat:0, lon:0 }, data:{ swell_wave_height:0.5, swell_wave_direction:120, swell_wave_period:8 } }, { name:'Big SW point', point:{ lat:0, lon:0 }, data:{ swell_wave_height:3.7, swell_wave_direction:236, swell_wave_period:14.8 } }], 'normal'); console.assert(fakeSelect.selected.pointSource.name === 'Big SW point', 'Multi-point selector should not ignore big SW groundswell'); console.assert(axisLabels().join('').includes('12am') && axisLabels().join('').includes('3am') && axisLabels().join('').includes('9pm'), 'Swell, wind and tide graphs should use the full 24-hour scale'); console.assert(!document.querySelector?.('.hero .subtitle'), 'Middleton hero subtitle should be removed'); console.assert(document.body?.textContent?.includes('Stop guessing. Catch more waves.'), 'Middleton promo headline should be updated'); console.assert(shortSurfRead({ finalFt: 2, windSpeed: 24, windDir: 100 }, { best: { time: '2026-06-12T12:00' } }).split(/[.!?]+/).filter(Boolean).length <= 2, 'Middleton live report summary should stay max two sentences'); console.assert(!render.toString().includes('swell' + 'TrendStat'), 'Middleton Removed stat box should not be rendered'); console.assert(buildDailySummary({ reports: [{ time:'2026-06-12T06:00', finalFt:2, windQuality:1, windDir:20, windSpeed:5 }, { time:'2026-06-12T07:00', finalFt:2, windQuality:1, windDir:25, windSpeed:24 }, { time:'2026-06-12T17:00', finalFt:2, windQuality:1, windDir:25, windSpeed:24 }] }, { time:'2026-06-12T06:00', finalFt:2, windQuality:1, windDir:20, windSpeed:5 }).windShift.includes('NNE'), 'Middleton Wind Shift should use short compass format'); console.assert(!renderDays.toString().includes('Biggest size ' + 'near') && !renderDays.toString().includes('Best daylight ' + 'pulse'), 'Middleton 7-day cards should not include extra timing lines'); console.assert(renderDays.toString().includes('day-wind') && renderDays.toString().includes('km/h'), 'Middleton 7-day cards should include a short wind line'); console.assert(!renderDays.toString().includes('North-north-east'), 'Middleton 7-day card wind direction should stay abbreviated'); console.assert(!renderSwellDetail.toString().includes('offshore ' + 'fallback') && !renderSwellDetail.toString().includes('checked as possible ' + 'real driver') && !renderSwellDetail.toString().includes('Clean simple ' + 'read'), 'Middleton snapshot rows should hide technical public wording'); const middleDaylightBest = groupByDay([{ time:'2026-06-12T05:00', finalFt:7, windQuality:1, windDir:270, windSpeed:8 }, { time:'2026-06-12T06:00', finalFt:2, windQuality:1, windDir:270, windSpeed:8 }, { time:'2026-06-12T17:00', finalFt:3, windQuality:1, windDir:270, windSpeed:8 }, { time:'2026-06-12T18:00', finalFt:8, windQuality:1, windDir:270, windSpeed:8 }])[0]; console.assert(isDaylightSurfTime(middleDaylightBest.best.time) && isDaylightSurfTime(middleDaylightBest.peak.time), 'Middleton Best Window should stay between 6 AM and 5:30 PM'); console.info('Middleton Surf Report tests passed'); }
 

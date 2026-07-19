@@ -7,6 +7,16 @@
   status = 200
 
 [[redirects]]
+  from = "/observe-seaford"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/observe-middleton"
+  to = "/middleton.html"
+  status = 200
+
+[[redirects]]
   from = "/middleton"
   to = "/middleton.html"
   status = 200
@@ -33,6 +43,12 @@
 
 [[headers]]
   for = "/observe"
+  [headers.values]
+    Cache-Control = "private, no-store"
+    X-Robots-Tag = "noindex, nofollow"
+
+[[headers]]
+  for = "/observe-*"
   [headers.values]
     Cache-Control = "private, no-store"
     X-Robots-Tag = "noindex, nofollow"

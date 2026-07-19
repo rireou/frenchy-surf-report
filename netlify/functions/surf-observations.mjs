@@ -3,11 +3,25 @@ import { getStore } from "@netlify/blobs";
 import { isObservationAdmin, verifySameOrigin } from "../lib/observation-auth.mjs";
 
 const STORE_NAME = "frenchy-surf-observations";
-const SCHEMA_VERSION = 1;
+const SCHEMA_VERSION = 3;
 const DUPLICATE_WINDOW_MS = 3 * 60 * 1000;
+const MAX_NEW_OBSERVATION_AGE_MS = 48 * 60 * 60 * 1000;
+const MAX_FUTURE_SKEW_MS = 5 * 60 * 1000;
 const jsonHeaders = { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" };
 const send = (status, body, extraHeaders = {}) => new Response(JSON.stringify(body), { status, headers: { ...jsonHeaders, ...extraHeaders } });
 const store = () => getStore({ name: STORE_NAME, consistency: "strong" });
+const LOCATIONS = { seaford: "Seaford", middleton: "Middleton" };
+
+function locationFromSlug(value) {
+  return LOCATIONS[String(value || "seaford").toLowerCase()] || LOCATIONS.seaford;
+}
+
+function validatedSnapshotLocation(snapshot) {
+  const requested = cleanText(snapshot?.location, 40).toLowerCase();
+  const match = Object.values(LOCATIONS).find(location => location.toLowerCase() === requested);
+  if (!match) throw new Error("Choose Seaford or Middleton before saving");
+  return match;
+}
 
 function finiteNumber(value, min, max) {
   const number = Number(value);
@@ -16,6 +30,25 @@ function finiteNumber(value, min, max) {
 
 function cleanText(value, max = 500) {
   return String(value || "").trim().slice(0, max);
+}
+
+function validateObservedAt(value, maxAgeMs = MAX_NEW_OBSERVATION_AGE_MS) {
+  const timestamp = new Date(value);
+  const time = timestamp.getTime();
+  if (!Number.isFinite(time)) throw new Error("Choose a valid observation time");
+  const age = Date.now() - time;
+  if (age < -MAX_FUTURE_SKEW_MS) throw new Error("The observation time cannot be in the future");
+  if (age > maxAgeMs) throw new Error("Choose an observation time from today or yesterday");
+  return timestamp.toISOString();
+}
+
+function validateSnapshotTime(snapshot, observedAt) {
+  const snapshotTime = new Date(snapshot?.observedAt).getTime();
+  if (!Number.isFinite(snapshotTime) || Math.abs(snapshotTime - new Date(observedAt).getTime()) > 2 * 60 * 1000) {
+    throw new Error("The forecast conditions do not match the chosen observation time. Choose the time again.");
+  }
+  const distance = Number(snapshot?.forecastDistanceMinutes);
+  if (Number.isFinite(distance) && distance > 90) throw new Error("No matching forecast is available for that observation time");
 }
 
 function cleanJson(value, depth = 0) {
@@ -35,10 +68,10 @@ function cleanJson(value, depth = 0) {
   return output;
 }
 
-async function listObservations() {
+async function listObservations(location = null) {
   const listing = await store().list({ prefix: "observations/" });
   const records = await Promise.all((listing.blobs || []).slice(0, 1000).map(entry => store().get(entry.key, { type: "json", consistency: "strong" })));
-  return records.filter(Boolean).sort((a, b) => String(b.observedAt).localeCompare(String(a.observedAt)));
+  return records.filter(record => record && (!location || record.location === location)).sort((a, b) => String(b.observedAt).localeCompare(String(a.observedAt)));
 }
 
 function milestoneProgress(count) {
@@ -56,14 +89,21 @@ function csvCell(value) {
 
 function csvExport(records) {
   const columns = [
-    ["id", record => record.id], ["observed_at_utc", record => record.observedAt], ["timezone", record => record.timezone],
+    ["id", record => record.id], ["observed_at_utc", record => record.observedAt], ["created_at_utc", record => record.createdAt], ["timezone", record => record.timezone],
     ["location", record => record.location], ["actual_ft", record => record.actualFt], ["predicted_ft", record => record.predictedFt],
     ["error_ft_actual_minus_predicted", record => record.errorFt], ["condition", record => record.condition], ["note", record => record.note],
     ["calculation_version", record => record.calculationVersion], ["forecast_time", record => record.snapshot?.forecastTime],
     ["swell_height_m", record => record.snapshot?.activeDriver?.heightM], ["swell_direction_deg", record => record.snapshot?.activeDriver?.directionDeg],
-    ["swell_period_s", record => record.snapshot?.activeDriver?.periodS], ["wind_speed_kmh", record => record.snapshot?.wind?.wind_speed_10m],
-    ["wind_direction_deg", record => record.snapshot?.wind?.wind_direction_10m], ["tide_height_m", record => record.snapshot?.tide?.heightM],
-    ["tide_stage", record => record.snapshot?.tide?.stage], ["weather_code", record => record.snapshot?.weather?.weatherCode],
+    ["swell_period_s", record => record.snapshot?.activeDriver?.periodS], ["wind_speed_kmh", record => record.snapshot?.windContext?.speedKmh ?? record.snapshot?.wind?.wind_speed_10m],
+    ["wind_direction_deg", record => record.snapshot?.windContext?.directionDeg ?? record.snapshot?.wind?.wind_direction_10m], ["wind_direction_compass", record => record.snapshot?.windContext?.directionCompass],
+    ["wind_direction_name", record => record.snapshot?.windContext?.directionName], ["wind_strength", record => record.snapshot?.windContext?.strength],
+    ["tide_height_m", record => record.snapshot?.tide?.heightM], ["tide_stage", record => record.snapshot?.tide?.stage],
+    ["tide_movement", record => record.snapshot?.tide?.movement], ["tide_position", record => record.snapshot?.tide?.positionLabel],
+    ["tide_minutes_to_next", record => record.snapshot?.tide?.minutesToNext], ["tide_minutes_since_previous", record => record.snapshot?.tide?.minutesSincePrevious],
+    ["tide_cycle_progress_pct", record => record.snapshot?.tide?.cycleProgressPct], ["next_tide_type", record => record.snapshot?.tide?.after?.type],
+    ["next_tide_time", record => record.snapshot?.tide?.after?.time], ["tide_range_m", record => record.snapshot?.tide?.rangeM],
+    ["tide_range_class", record => record.snapshot?.tide?.rangeClass], ["tide_range_label", record => record.snapshot?.tide?.rangeLabel],
+    ["weather_code", record => record.snapshot?.weather?.weatherCode],
     ["temperature_c", record => record.snapshot?.weather?.temperatureC], ["calculation_snapshot_json", record => record.snapshot]
   ];
   return [columns.map(([name]) => csvCell(name)).join(","), ...records.map(record => columns.map(([, getter]) => csvCell(getter(record))).join(","))].join("\r\n");
@@ -78,29 +118,45 @@ function validateCreate(input) {
   const clientToken = cleanText(input.clientToken, 100).replace(/[^a-zA-Z0-9_-]/g, "");
   if (clientToken.length < 8) throw new Error("Invalid save token. Refresh and try again.");
   const snapshot = cleanJson(input.snapshot);
+  const location = validatedSnapshotLocation(snapshot);
+  const observedAt = validateObservedAt(input.observedAt);
+  validateSnapshotTime(snapshot, observedAt);
   const calculationVersion = cleanText(snapshot?.calculationVersion || "unknown", 100);
-  return { actualFt, predictedFt, condition, note: cleanText(input.note, 300), clientToken, snapshot, calculationVersion };
+  return { actualFt, predictedFt, condition, note: cleanText(input.note, 300), clientToken, snapshot, calculationVersion, observedAt, location };
 }
 
-function validateUpdate(input) {
+function validateUpdate(input, current) {
   const actualFt = finiteNumber(input.actualFt, 0, 8);
   if (actualFt == null) throw new Error("Choose the actual wave size");
   const condition = ["clean", "average", "messy", ""].includes(input.condition) ? input.condition : "";
-  return { actualFt, condition, note: cleanText(input.note, 300) };
+  const result = { actualFt, condition, note: cleanText(input.note, 300) };
+  if (input.observedAt != null || input.snapshot != null) {
+    const observedAt = validateObservedAt(input.observedAt, 400 * 24 * 60 * 60 * 1000);
+    const snapshot = cleanJson(input.snapshot);
+    const location = validatedSnapshotLocation(snapshot);
+    if (location !== current.location) throw new Error("An observation cannot be moved to another location");
+    const predictedFt = finiteNumber(snapshot?.predictedFt, 0, 8);
+    if (predictedFt == null) throw new Error("The prediction for that time is unavailable");
+    validateSnapshotTime(snapshot, observedAt);
+    Object.assign(result, { observedAt, snapshot, predictedFt, calculationVersion: cleanText(snapshot?.calculationVersion || current.calculationVersion || "unknown", 100), schemaVersion: SCHEMA_VERSION, location });
+  }
+  return result;
 }
 
 export default async (request) => {
   if (!isObservationAdmin(request)) return send(401, { error: "Please log in to the observation page." });
   const url = new URL(request.url);
+  const requestedLocation = locationFromSlug(url.searchParams.get("spot"));
+  const requestedSlug = requestedLocation.toLowerCase();
 
   if (request.method === "GET") {
-    const records = await listObservations();
+    const records = await listObservations(requestedLocation);
     const format = url.searchParams.get("format");
     if (format === "csv") {
-      return new Response(csvExport(records), { status: 200, headers: { "Content-Type": "text/csv; charset=utf-8", "Content-Disposition": `attachment; filename="seaford-surf-observations-${new Date().toISOString().slice(0, 10)}.csv"`, "Cache-Control": "no-store" } });
+      return new Response(csvExport(records), { status: 200, headers: { "Content-Type": "text/csv; charset=utf-8", "Content-Disposition": `attachment; filename="${requestedSlug}-surf-observations-${new Date().toISOString().slice(0, 10)}.csv"`, "Cache-Control": "no-store" } });
     }
     if (format === "json") {
-      return new Response(JSON.stringify({ exportedAt: new Date().toISOString(), schemaVersion: SCHEMA_VERSION, observations: records }, null, 2), { status: 200, headers: { "Content-Type": "application/json; charset=utf-8", "Content-Disposition": `attachment; filename="seaford-surf-observations-${new Date().toISOString().slice(0, 10)}.json"`, "Cache-Control": "no-store" } });
+      return new Response(JSON.stringify({ exportedAt: new Date().toISOString(), schemaVersion: SCHEMA_VERSION, location: requestedLocation, observations: records }, null, 2), { status: 200, headers: { "Content-Type": "application/json; charset=utf-8", "Content-Disposition": `attachment; filename="${requestedSlug}-surf-observations-${new Date().toISOString().slice(0, 10)}.json"`, "Cache-Control": "no-store" } });
     }
     return send(200, { observations: records, progress: milestoneProgress(records.length) });
   }
@@ -114,16 +170,17 @@ export default async (request) => {
   if (request.method === "POST") {
     let validated;
     try { validated = validateCreate(input); } catch (error) { return send(400, { error: error.message }); }
+    if (validated.location !== requestedLocation) return send(400, { error: "The selected observation location does not match the forecast snapshot." });
 
-    const priorId = await store().get(`idempotency/${validated.clientToken}`, { type: "text", consistency: "strong" });
+    const priorId = await store().get(`idempotency/${requestedSlug}/${validated.clientToken}`, { type: "text", consistency: "strong" });
     if (priorId) {
       const prior = await store().get(`observations/${priorId}`, { type: "json", consistency: "strong" });
       if (prior) return send(200, { observation: prior, deduplicated: true });
     }
 
-    const existing = await listObservations();
+    const existing = await listObservations(requestedLocation);
     const duplicate = existing.find(record =>
-      Date.now() - new Date(record.observedAt).getTime() < DUPLICATE_WINDOW_MS &&
+      Math.abs(new Date(record.observedAt).getTime() - new Date(validated.observedAt).getTime()) < DUPLICATE_WINDOW_MS &&
       Number(record.actualFt) === validated.actualFt && Number(record.predictedFt) === validated.predictedFt
     );
     if (duplicate) return send(409, { error: "That observation was already saved a moment ago.", duplicate: true, observation: duplicate });
@@ -131,14 +188,14 @@ export default async (request) => {
     const now = new Date().toISOString();
     const id = randomUUID();
     const record = {
-      id, schemaVersion: SCHEMA_VERSION, revision: 1, observedAt: now, updatedAt: now,
-      timezone: "Australia/Adelaide", location: "Seaford", actualFt: validated.actualFt,
+      id, schemaVersion: SCHEMA_VERSION, revision: 1, observedAt: validated.observedAt, createdAt: now, updatedAt: now,
+      timezone: "Australia/Adelaide", location: validated.location, actualFt: validated.actualFt,
       predictedFt: validated.predictedFt, errorFt: Number((validated.actualFt - validated.predictedFt).toFixed(2)),
       condition: validated.condition, note: validated.note, calculationVersion: validated.calculationVersion,
       snapshot: validated.snapshot
     };
     await store().setJSON(`observations/${id}`, record);
-    await store().set(`idempotency/${validated.clientToken}`, id);
+    await store().set(`idempotency/${requestedSlug}/${validated.clientToken}`, id);
     return send(201, { observation: record });
   }
 
@@ -146,13 +203,14 @@ export default async (request) => {
   if (!id) return send(400, { error: "Observation ID is required" });
   const current = await store().get(`observations/${id}`, { type: "json", consistency: "strong" });
   if (!current) return send(404, { error: "Observation not found" });
+  if (current.location !== requestedLocation) return send(404, { error: "Observation not found for this location" });
 
   if (request.method === "PUT") {
     let validated;
-    try { validated = validateUpdate(input); } catch (error) { return send(400, { error: error.message }); }
+    try { validated = validateUpdate(input, current); } catch (error) { return send(400, { error: error.message }); }
     const updated = {
       ...current, ...validated, updatedAt: new Date().toISOString(), revision: Number(current.revision || 1) + 1,
-      errorFt: Number((validated.actualFt - Number(current.predictedFt)).toFixed(2))
+      errorFt: Number((validated.actualFt - Number(validated.predictedFt ?? current.predictedFt)).toFixed(2))
     };
     await store().setJSON(`observations/${id}`, updated);
     return send(200, { observation: updated });
