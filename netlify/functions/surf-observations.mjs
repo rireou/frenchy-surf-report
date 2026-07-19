@@ -3,8 +3,10 @@ import { getStore } from "@netlify/blobs";
 import { isObservationAdmin, verifySameOrigin } from "../lib/observation-auth.mjs";
 
 const STORE_NAME = "frenchy-surf-observations";
-const SCHEMA_VERSION = 1;
+const SCHEMA_VERSION = 2;
 const DUPLICATE_WINDOW_MS = 3 * 60 * 1000;
+const MAX_NEW_OBSERVATION_AGE_MS = 48 * 60 * 60 * 1000;
+const MAX_FUTURE_SKEW_MS = 5 * 60 * 1000;
 const jsonHeaders = { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" };
 const send = (status, body, extraHeaders = {}) => new Response(JSON.stringify(body), { status, headers: { ...jsonHeaders, ...extraHeaders } });
 const store = () => getStore({ name: STORE_NAME, consistency: "strong" });
@@ -16,6 +18,25 @@ function finiteNumber(value, min, max) {
 
 function cleanText(value, max = 500) {
   return String(value || "").trim().slice(0, max);
+}
+
+function validateObservedAt(value, maxAgeMs = MAX_NEW_OBSERVATION_AGE_MS) {
+  const timestamp = new Date(value);
+  const time = timestamp.getTime();
+  if (!Number.isFinite(time)) throw new Error("Choose a valid observation time");
+  const age = Date.now() - time;
+  if (age < -MAX_FUTURE_SKEW_MS) throw new Error("The observation time cannot be in the future");
+  if (age > maxAgeMs) throw new Error("Choose an observation time from today or yesterday");
+  return timestamp.toISOString();
+}
+
+function validateSnapshotTime(snapshot, observedAt) {
+  const snapshotTime = new Date(snapshot?.observedAt).getTime();
+  if (!Number.isFinite(snapshotTime) || Math.abs(snapshotTime - new Date(observedAt).getTime()) > 2 * 60 * 1000) {
+    throw new Error("The forecast conditions do not match the chosen observation time. Choose the time again.");
+  }
+  const distance = Number(snapshot?.forecastDistanceMinutes);
+  if (Number.isFinite(distance) && distance > 90) throw new Error("No matching forecast is available for that observation time");
 }
 
 function cleanJson(value, depth = 0) {
@@ -56,7 +77,7 @@ function csvCell(value) {
 
 function csvExport(records) {
   const columns = [
-    ["id", record => record.id], ["observed_at_utc", record => record.observedAt], ["timezone", record => record.timezone],
+    ["id", record => record.id], ["observed_at_utc", record => record.observedAt], ["created_at_utc", record => record.createdAt], ["timezone", record => record.timezone],
     ["location", record => record.location], ["actual_ft", record => record.actualFt], ["predicted_ft", record => record.predictedFt],
     ["error_ft_actual_minus_predicted", record => record.errorFt], ["condition", record => record.condition], ["note", record => record.note],
     ["calculation_version", record => record.calculationVersion], ["forecast_time", record => record.snapshot?.forecastTime],
@@ -78,15 +99,26 @@ function validateCreate(input) {
   const clientToken = cleanText(input.clientToken, 100).replace(/[^a-zA-Z0-9_-]/g, "");
   if (clientToken.length < 8) throw new Error("Invalid save token. Refresh and try again.");
   const snapshot = cleanJson(input.snapshot);
+  const observedAt = validateObservedAt(input.observedAt);
+  validateSnapshotTime(snapshot, observedAt);
   const calculationVersion = cleanText(snapshot?.calculationVersion || "unknown", 100);
-  return { actualFt, predictedFt, condition, note: cleanText(input.note, 300), clientToken, snapshot, calculationVersion };
+  return { actualFt, predictedFt, condition, note: cleanText(input.note, 300), clientToken, snapshot, calculationVersion, observedAt };
 }
 
-function validateUpdate(input) {
+function validateUpdate(input, current) {
   const actualFt = finiteNumber(input.actualFt, 0, 8);
   if (actualFt == null) throw new Error("Choose the actual wave size");
   const condition = ["clean", "average", "messy", ""].includes(input.condition) ? input.condition : "";
-  return { actualFt, condition, note: cleanText(input.note, 300) };
+  const result = { actualFt, condition, note: cleanText(input.note, 300) };
+  if (input.observedAt != null || input.snapshot != null) {
+    const observedAt = validateObservedAt(input.observedAt, 400 * 24 * 60 * 60 * 1000);
+    const snapshot = cleanJson(input.snapshot);
+    const predictedFt = finiteNumber(snapshot?.predictedFt, 0, 8);
+    if (predictedFt == null) throw new Error("The prediction for that time is unavailable");
+    validateSnapshotTime(snapshot, observedAt);
+    Object.assign(result, { observedAt, snapshot, predictedFt, calculationVersion: cleanText(snapshot?.calculationVersion || current.calculationVersion || "unknown", 100), schemaVersion: SCHEMA_VERSION });
+  }
+  return result;
 }
 
 export default async (request) => {
@@ -123,7 +155,7 @@ export default async (request) => {
 
     const existing = await listObservations();
     const duplicate = existing.find(record =>
-      Date.now() - new Date(record.observedAt).getTime() < DUPLICATE_WINDOW_MS &&
+      Math.abs(new Date(record.observedAt).getTime() - new Date(validated.observedAt).getTime()) < DUPLICATE_WINDOW_MS &&
       Number(record.actualFt) === validated.actualFt && Number(record.predictedFt) === validated.predictedFt
     );
     if (duplicate) return send(409, { error: "That observation was already saved a moment ago.", duplicate: true, observation: duplicate });
@@ -131,7 +163,7 @@ export default async (request) => {
     const now = new Date().toISOString();
     const id = randomUUID();
     const record = {
-      id, schemaVersion: SCHEMA_VERSION, revision: 1, observedAt: now, updatedAt: now,
+      id, schemaVersion: SCHEMA_VERSION, revision: 1, observedAt: validated.observedAt, createdAt: now, updatedAt: now,
       timezone: "Australia/Adelaide", location: "Seaford", actualFt: validated.actualFt,
       predictedFt: validated.predictedFt, errorFt: Number((validated.actualFt - validated.predictedFt).toFixed(2)),
       condition: validated.condition, note: validated.note, calculationVersion: validated.calculationVersion,
@@ -149,10 +181,10 @@ export default async (request) => {
 
   if (request.method === "PUT") {
     let validated;
-    try { validated = validateUpdate(input); } catch (error) { return send(400, { error: error.message }); }
+    try { validated = validateUpdate(input, current); } catch (error) { return send(400, { error: error.message }); }
     const updated = {
       ...current, ...validated, updatedAt: new Date().toISOString(), revision: Number(current.revision || 1) + 1,
-      errorFt: Number((validated.actualFt - Number(current.predictedFt)).toFixed(2))
+      errorFt: Number((validated.actualFt - Number(validated.predictedFt ?? current.predictedFt)).toFixed(2))
     };
     await store().setJSON(`observations/${id}`, updated);
     return send(200, { observation: updated });
