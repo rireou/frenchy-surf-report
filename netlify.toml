@@ -2,6 +2,11 @@
   directory = "netlify/functions"
 
 [[redirects]]
+  from = "/observe"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
   from = "/middleton"
   to = "/middleton.html"
   status = 200
@@ -25,3 +30,9 @@
   for = "/*.html"
   [headers.values]
     Cache-Control = "public, max-age=0, must-revalidate"
+
+[[headers]]
+  for = "/observe"
+  [headers.values]
+    Cache-Control = "private, no-store"
+    X-Robots-Tag = "noindex, nofollow"
