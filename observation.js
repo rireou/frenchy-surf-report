@@ -32,6 +32,7 @@
     <div class="obs-hidden" id="obsDashboard">
       <section class="obs-card obs-quick-card">
         <div class="obs-prediction"><div><span class="obs-eyebrow"><span class="obs-live-dot"></span>Current report</span><h1>Predicted <span id="obsPrediction">--</span> ft</h1></div><div class="obs-prediction-meta"><b id="obsForecastTime">Loading live conditions…</b><br><span id="obsConditions">Seaford</span></div></div>
+        <div class="obs-context-grid" id="obsCheckContext"><div class="obs-context-item"><small>Wind at check</small><b id="obsWindSummary">Loading wind…</b><span id="obsWindDetail">Direction and strength</span></div><div class="obs-context-item"><small>Tide position</small><b id="obsTideSummary">Loading tide…</b><span id="obsTideDetail">Height and next turn</span></div><div class="obs-context-item"><small>Tide change</small><b id="obsTideRange">Loading range…</b><span id="obsTideRangeDetail">Previous to next tide</span></div></div>
         <form id="obsForm">
           <fieldset class="obs-fieldset"><legend>Observation time <small>defaults to now</small></legend><div class="obs-chips obs-time-chips" id="obsTimes"><button class="obs-chip selected" type="button" data-time-offset="0"><strong>Now</strong><small>current time</small></button><button class="obs-chip" type="button" data-time-offset="30"><strong>30 min</strong><small>ago</small></button><button class="obs-chip" type="button" data-time-offset="60"><strong>1 hour</strong><small>ago</small></button><button class="obs-chip" type="button" data-time-offset="120"><strong>2 hours</strong><small>ago</small></button><button class="obs-chip" type="button" data-time-custom><strong>Choose</strong><small>date & time</small></button></div><div class="obs-other obs-time-custom obs-hidden" id="obsCustomTime"><input class="obs-input" id="obsDateTime" type="datetime-local" step="300"><button class="obs-primary" type="button" id="obsUseTime">Use time</button></div><div class="obs-selected-time" id="obsSelectedTime">Saving observation time: now</div></fieldset>
           <fieldset class="obs-fieldset"><legend>Quick correction <small>fastest option</small></legend><div class="obs-chips" id="obsCorrections">${correctionChoices.map(choice => `<button class="obs-chip" type="button" data-delta="${choice.delta}"><strong>${choice.label}</strong><small data-result>--</small></button>`).join("")}</div></fieldset>
@@ -107,7 +108,7 @@
     const input = JSON.parse(options.body || "{}");
     if (options.method === "POST") {
       const now = new Date().toISOString();
-      const record = { id: makeToken(), revision: 1, schemaVersion: 2, observedAt: input.observedAt, createdAt: now, updatedAt: now, timezone: "Australia/Adelaide", location: "Seaford", actualFt: input.actualFt, predictedFt: input.snapshot.predictedFt, errorFt: Number((input.actualFt - input.snapshot.predictedFt).toFixed(2)), condition: input.condition || "", note: input.note || "", calculationVersion: input.snapshot.calculationVersion, snapshot: input.snapshot };
+      const record = { id: makeToken(), revision: 1, schemaVersion: 3, observedAt: input.observedAt, createdAt: now, updatedAt: now, timezone: "Australia/Adelaide", location: "Seaford", actualFt: input.actualFt, predictedFt: input.snapshot.predictedFt, errorFt: Number((input.actualFt - input.snapshot.predictedFt).toFixed(2)), condition: input.condition || "", note: input.note || "", calculationVersion: input.snapshot.calculationVersion, snapshot: input.snapshot };
       records.unshift(record); saveDemoRecords(records); return { observation: record };
     }
     const id = new URL(path, location.href).searchParams.get("id");
@@ -127,7 +128,7 @@
         ? window.FrenchyObservation.getSnapshotAt(observedAt)
         : window.FrenchyObservation?.getCurrentSnapshot?.();
       if (snapshot?.predictedFt != null) return snapshot;
-      if (demoMode && attempt === 5) return { schemaVersion: 2, calculationVersion: "local-preview", location: "Seaford", calculatedAt: new Date().toISOString(), observedAt, forecastTime: toDateTimeInput(observedAt).slice(0, 13) + ":00", displayTime: `Local preview · observed ${dateTime(observedAt)}`, predictedFt: 1.5, modelPredictedFt: 1.5, predictedText: "1.5", calibration: "normal", activeDriver: { heightM: 2.1, directionDeg: 232, periodS: 11.4 }, offshore: {}, local: {}, wind: { wind_speed_10m: 9, wind_direction_10m: 70 }, tide: { heightM: 1.2, stage: "rising", source: "Preview" }, weather: { temperatureC: 16, weatherCode: 1 }, dataContext: { dataSource: "local-preview" }, calculationResult: {} };
+      if (demoMode && attempt === 5) return { schemaVersion: 3, calculationVersion: "local-preview", location: "Seaford", calculatedAt: new Date().toISOString(), observedAt, forecastTime: toDateTimeInput(observedAt).slice(0, 13) + ":00", displayTime: `Local preview · observed ${dateTime(observedAt)}`, predictedFt: 1.5, modelPredictedFt: 1.5, predictedText: "1.5", calibration: "normal", activeDriver: { heightM: 2.1, directionDeg: 232, periodS: 11.4 }, offshore: {}, local: {}, wind: { wind_speed_10m: 21, wind_direction_10m: 5 }, windContext: { speedKmh: 21, directionDeg: 5, directionCompass: "N", directionName: "north", strength: "moderate", label: "Moderate N wind · 21 km/h" }, tide: { heightM: 1.14, stage: "falling", movement: "dropping", positionLabel: "Dropping · 2 hr before low", minutesToNext: 120, minutesSincePrevious: 240, cycleProgressPct: 67, rangeM: 1.42, rangeClass: "big", rangeLabel: "Big 1.42 m tide change", source: "Preview", before: { time: "14:15", type: "High", heightM: 1.85 }, after: { time: "20:15", type: "Low", heightM: 0.43 } }, weather: { temperatureC: 16, weatherCode: 1 }, dataContext: { dataSource: "local-preview" }, calculationResult: {} };
       await new Promise(resolve => setTimeout(resolve, 250));
     }
     throw new Error("The live forecast did not finish loading. Tap View report, refresh it, then try again.");
@@ -156,6 +157,26 @@
     document.querySelectorAll("[data-condition]").forEach(button => button.classList.toggle("selected", button === sourceButton && state.condition === value));
   }
 
+  function capitalise(value) { const text = String(value || "unknown"); return text ? `${text[0].toUpperCase()}${text.slice(1)}` : "Unknown"; }
+  function clockLabel(value) { const [hourText, minute = "00"] = String(value || "").split(":"); const hour = Number(hourText); if (!Number.isFinite(hour)) return "unknown time"; const suffix = hour >= 12 ? "pm" : "am"; return `${hour % 12 || 12}:${minute} ${suffix}`; }
+  function windContextFor(snapshot) {
+    if (snapshot?.windContext?.label) return snapshot.windContext;
+    const speedKmh = Number(snapshot?.wind?.wind_speed_10m);
+    const directionDeg = Number(snapshot?.wind?.wind_direction_10m);
+    const directions = ["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"];
+    const directionCompass = Number.isFinite(directionDeg) ? directions[Math.round((((directionDeg % 360) + 360) % 360) / 22.5) % 16] : "unknown";
+    const strength = !Number.isFinite(speedKmh) ? "unknown" : speedKmh < 15 ? "light" : speedKmh < 30 ? "moderate" : speedKmh < 45 ? "strong" : "stormy";
+    return { speedKmh, directionDeg, directionCompass, strength, label: Number.isFinite(speedKmh) ? `${capitalise(strength)} ${directionCompass} wind · ${Math.round(speedKmh)} km/h` : "Wind unavailable" };
+  }
+  function tideContextFor(snapshot) {
+    const tide = snapshot?.tide || {};
+    const movement = tide.movement || (tide.stage === "rising" ? "pushing" : tide.stage === "falling" ? "dropping" : tide.stage || "unknown");
+    const positionLabel = tide.positionLabel || capitalise(movement);
+    const heightLabel = Number.isFinite(Number(tide.heightM)) ? `${Number(tide.heightM).toFixed(2)} m` : "height unavailable";
+    const rangeLabel = tide.rangeLabel || (Number.isFinite(Number(tide.rangeM)) ? `${Number(tide.rangeM).toFixed(2)} m tide change` : "Tide change unavailable");
+    return { ...tide, movement, positionLabel, heightLabel, rangeLabel };
+  }
+
   function renderSnapshot() {
     if (!state.snapshot) return;
     const prediction = Number(state.snapshot.predictedFt);
@@ -163,6 +184,14 @@
     $("obsForecastTime").textContent = state.snapshot.displayTime || "Current forecast";
     const swell = state.snapshot.activeDriver || {};
     $("obsConditions").textContent = `${swell.heightM?.toFixed?.(1) || "--"} m · ${Math.round(swell.directionDeg || 0)}° · ${swell.periodS?.toFixed?.(1) || "--"} s`;
+    const wind = windContextFor(state.snapshot);
+    const tide = tideContextFor(state.snapshot);
+    $("obsWindSummary").textContent = wind.label;
+    $("obsWindDetail").textContent = Number.isFinite(Number(wind.directionDeg)) ? `${capitalise(wind.directionName || wind.directionCompass)} · ${Math.round(wind.directionDeg)}°` : "Direction unavailable";
+    $("obsTideSummary").textContent = `${tide.positionLabel} · ${tide.heightLabel}`;
+    $("obsTideDetail").textContent = tide.after?.type ? `Next ${String(tide.after.type).toLowerCase()} ${clockLabel(tide.after.time)} · ${Math.round(tide.cycleProgressPct || 0)}% through this tide` : "Next tide unavailable";
+    $("obsTideRange").textContent = tide.rangeLabel;
+    $("obsTideRangeDetail").textContent = tide.before?.heightM != null && tide.after?.heightM != null ? `${Number(tide.before.heightM).toFixed(2)} m ${String(tide.before.type).toLowerCase()} → ${Number(tide.after.heightM).toFixed(2)} m ${String(tide.after.type).toLowerCase()}` : "Range unavailable";
     document.querySelectorAll("[data-delta]").forEach(button => {
       const result = clamp(roundQuarter(prediction + Number(button.dataset.delta)), 0, 8);
       button.querySelector("[data-result]").textContent = `${formatFt(result)} ft`;
@@ -242,7 +271,7 @@
   function mean(values) { return values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : 0; }
   function directionBand(value) { const degree = Number(value); if (!Number.isFinite(degree)) return "Unknown"; if (degree < 215) return "South edge <215°"; if (degree <= 225) return "215–225°"; if (degree <= 235) return "226–235°"; if (degree <= 245) return "236–245°"; if (degree <= 260) return "246–260°"; return "Outside Mid Coast band"; }
   function periodBand(value) { const period = Number(value); if (!Number.isFinite(period)) return "Unknown"; if (period < 9) return "Under 9 s"; if (period < 11) return "9–11 s"; if (period < 14) return "11–14 s"; return "14 s+"; }
-  function windBand(record) { const speed = Number(record.snapshot?.wind?.wind_speed_10m); const direction = Number(record.snapshot?.wind?.wind_direction_10m); if (!Number.isFinite(speed)) return "Unknown"; const strength = speed < 15 ? "Light" : speed < 30 ? "Moderate" : "Strong"; if (speed < 15 || !Number.isFinite(direction)) return strength; const sector = direction >= 315 || direction < 45 ? "N" : direction < 135 ? "E" : direction < 225 ? "S" : "W"; return `${strength} ${sector}`; }
+  function windBand(record) { const wind = windContextFor(record.snapshot); if (!Number.isFinite(Number(wind.speedKmh))) return "Unknown"; return `${capitalise(wind.strength)} ${wind.directionCompass || "unknown"}`; }
   function groupStats(records, label, getter) {
     const groups = new Map();
     records.forEach(record => { const key = getter(record) || "Unknown"; if (!groups.has(key)) groups.set(key, []); groups.get(key).push(record); });
@@ -268,12 +297,13 @@
     const withinHalf = errors.filter(error => Math.abs(error) <= 0.5).length / count * 100;
     const direction = groupStats(state.records, "swell direction", record => directionBand(record.snapshot?.activeDriver?.directionDeg));
     const period = groupStats(state.records, "swell period", record => periodBand(record.snapshot?.activeDriver?.periodS));
-    const tide = groupStats(state.records, "tide stage", record => record.snapshot?.tide?.stage || "Unknown");
+    const tide = groupStats(state.records, "tide movement", record => capitalise(tideContextFor(record.snapshot).movement));
+    const tideRange = groupStats(state.records, "tide range", record => capitalise(tideContextFor(record.snapshot).rangeClass));
     const wind = groupStats(state.records, "wind", windBand);
-    const allGroups = [...direction, ...period, ...tide, ...wind].filter(group => group.count >= 4 && Math.abs(group.bias) >= 0.3).sort((a, b) => Math.abs(b.bias) - Math.abs(a.bias));
+    const allGroups = [...direction, ...period, ...tide, ...tideRange, ...wind].filter(group => group.count >= 4 && Math.abs(group.bias) >= 0.3).sort((a, b) => Math.abs(b.bias) - Math.abs(a.bias));
     const suggestions = allGroups.slice(0, 4).map(group => `${group.bias > 0 ? "The report tends to underestimate" : "The report tends to overestimate"} by ${Math.abs(group.bias).toFixed(2)} ft during ${group.name.toLowerCase()} ${group.category} conditions (${group.count} observations). Test a ${group.bias > 0 ? "small increase" : "small reduction"} for this band against the full saved dataset before publishing.`);
     const milestone = count >= 100 ? 100 : count >= 60 ? 60 : 30;
-    container.innerHTML = `<span class="obs-eyebrow">${milestone}-observation report · ${count} total</span><div class="obs-analysis-summary"><div class="obs-metric"><small>Mean error</small><b>${mae.toFixed(2)} ft</b></div><div class="obs-metric"><small>Average bias</small><b>${bias >= 0 ? "+" : ""}${bias.toFixed(2)} ft</b></div><div class="obs-metric"><small>Exact ±0.25</small><b>${Math.round(exact)}%</b></div><div class="obs-metric"><small>Within ±0.5</small><b>${Math.round(withinHalf)}%</b></div></div><div class="obs-analysis-grid">${breakdownHtml("Swell direction", direction)}${breakdownHtml("Swell period", period)}${breakdownHtml("Tide stage", tide)}${breakdownHtml("Wind conditions", wind)}</div><h3 style="margin-top:18px">Suggested calibration checks</h3>${suggestions.length ? `<ul class="obs-suggestions">${suggestions.map(text => `<li>${escapeHtml(text)}</li>`).join("")}</ul>` : `<p>No condition group has a large enough repeated bias yet. Keep collecting a wider spread of conditions.</p>`}`;
+    container.innerHTML = `<span class="obs-eyebrow">${milestone}-observation report · ${count} total</span><div class="obs-analysis-summary"><div class="obs-metric"><small>Mean error</small><b>${mae.toFixed(2)} ft</b></div><div class="obs-metric"><small>Average bias</small><b>${bias >= 0 ? "+" : ""}${bias.toFixed(2)} ft</b></div><div class="obs-metric"><small>Exact ±0.25</small><b>${Math.round(exact)}%</b></div><div class="obs-metric"><small>Within ±0.5</small><b>${Math.round(withinHalf)}%</b></div></div><div class="obs-analysis-grid">${breakdownHtml("Swell direction", direction)}${breakdownHtml("Swell period", period)}${breakdownHtml("Tide movement", tide)}${breakdownHtml("Tide range", tideRange)}${breakdownHtml("Wind conditions", wind)}</div><h3 style="margin-top:18px">Suggested calibration checks</h3>${suggestions.length ? `<ul class="obs-suggestions">${suggestions.map(text => `<li>${escapeHtml(text)}</li>`).join("")}</ul>` : `<p>No condition group has a large enough repeated bias yet. Keep collecting a wider spread of conditions.</p>`}`;
   }
 
   function dateTime(value) { return new Intl.DateTimeFormat("en-AU", { timeZone: "Australia/Adelaide", day: "numeric", month: "short", hour: "numeric", minute: "2-digit" }).format(new Date(value)); }
@@ -284,7 +314,10 @@
       const errorClass = record.errorFt > 0.1 ? "under" : record.errorFt < -0.1 ? "over" : "";
       const errorText = Math.abs(record.errorFt) <= 0.1 ? "Correct" : `${record.errorFt > 0 ? "+" : ""}${Number(record.errorFt).toFixed(1)} ft`;
       const armed = state.deleteArmedId === record.id;
-      return `<article class="obs-record" data-record="${escapeHtml(record.id)}"><div class="obs-record-size ${errorClass}">${escapeHtml(errorText)}</div><div><b>Actual ${formatFt(record.actualFt)} ft · predicted ${formatFt(record.predictedFt)} ft</b><small>${escapeHtml(dateTime(record.observedAt))}${record.condition ? ` · ${escapeHtml(record.condition)}` : ""} · ${escapeHtml(record.calculationVersion)}</small></div><div class="obs-record-actions"><button type="button" data-edit="${escapeHtml(record.id)}">Edit</button><button type="button" data-delete="${escapeHtml(record.id)}" class="${armed ? "delete-armed" : ""}">${armed ? "Tap again to delete" : "Delete"}</button></div></article>`;
+      const wind = windContextFor(record.snapshot);
+      const tide = tideContextFor(record.snapshot);
+      const tideHeight = Number.isFinite(Number(tide.heightM)) ? `${Number(tide.heightM).toFixed(2)} m` : "height unavailable";
+      return `<article class="obs-record" data-record="${escapeHtml(record.id)}"><div class="obs-record-size ${errorClass}">${escapeHtml(errorText)}</div><div><b>Actual ${formatFt(record.actualFt)} ft · predicted ${formatFt(record.predictedFt)} ft</b><small>${escapeHtml(dateTime(record.observedAt))}${record.condition ? ` · ${escapeHtml(record.condition)}` : ""} · ${escapeHtml(record.calculationVersion)}</small><small class="obs-record-context">${escapeHtml(wind.label)} · ${escapeHtml(tide.positionLabel)} · ${escapeHtml(tideHeight)} · ${escapeHtml(tide.rangeLabel)}</small></div><div class="obs-record-actions"><button type="button" data-edit="${escapeHtml(record.id)}">Edit</button><button type="button" data-delete="${escapeHtml(record.id)}" class="${armed ? "delete-armed" : ""}">${armed ? "Tap again to delete" : "Delete"}</button></div></article>`;
     }).join("");
   }
 

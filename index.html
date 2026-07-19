@@ -1899,10 +1899,22 @@
     function copySummary() { if (!state.report) return; const day = state.report.days[state.selectedDay], r = selectedReportForDay(day); const text = `Seaford report ${formatDay(day.date)}: ${r.sizeText} ft, ${r.confidence.toLowerCase()} confidence. Wind ${compassFromDeg(r.windDir)} ${Math.round(r.windSpeed)} km/h. ${r.why}`; navigator.clipboard?.writeText(text); $('statusText').textContent = 'Summary copied'; }
 
     const SEAFORD_CALCULATION_VERSION = 'seaford-2026.07.19.1';
+    function shiftObservationDate(date, dayOffset) { const shifted = new Date(`${date}T12:00:00Z`); shifted.setUTCDate(shifted.getUTCDate() + dayOffset); return shifted.toISOString().slice(0, 10); }
+    function observationDurationLabel(minutes) { const value = Math.max(0, Math.round(Number(minutes) || 0)); if (value < 45) return `${value} min`; const hours = Math.round(value / 30) / 2; return `${Number.isInteger(hours) ? hours : hours.toFixed(1)} hr`; }
+    function tideRangeDetails(rangeM) { const value = Number(rangeM); if (!Number.isFinite(value)) return { rangeClass: 'unknown', rangeLabel: 'Tide change unavailable' }; if (value < 0.95) return { rangeClass: 'small', rangeLabel: `Small ${value.toFixed(2)} m tide change` }; if (value < 1.4) return { rangeClass: 'medium', rangeLabel: `Medium ${value.toFixed(2)} m tide change` }; return { rangeClass: 'big', rangeLabel: `Big ${value.toFixed(2)} m tide change` }; }
+    function fullWindDirectionName(deg) { if (!Number.isFinite(Number(deg))) return 'unknown'; const names = ['north','north-north-east','north-east','east-north-east','east','east-south-east','south-east','south-south-east','south','south-south-west','south-west','west-south-west','west','west-north-west','north-west','north-north-west']; return names[Math.round((((Number(deg) % 360) + 360) % 360) / 22.5) % 16]; }
+    function windObservationSnapshot(report) {
+      const speedKmh = Number(report?.windRaw?.wind_speed_10m ?? report?.windSpeed);
+      const directionDeg = Number(report?.windRaw?.wind_direction_10m ?? report?.windDir);
+      const strength = Number.isFinite(speedKmh) ? windStrengthLabel(speedKmh) : 'unknown';
+      const directionCompass = Number.isFinite(directionDeg) ? compassFromDeg(directionDeg) : 'unknown';
+      const directionName = fullWindDirectionName(directionDeg);
+      return { speedKmh, directionDeg, directionCompass, directionName, strength, label: Number.isFinite(speedKmh) ? `${strength[0].toUpperCase()}${strength.slice(1)} ${directionCompass} wind · ${Math.round(speedKmh)} km/h` : 'Wind unavailable' };
+    }
     function currentTideObservationSnapshot(reportTime) {
       const date = reportTime?.slice(0, 10) || localIsoDate();
       const minute = reportTime ? timeToMinutesFromReport(reportTime) : adelaideMinutesNow();
-      const points = (tideForDate(date) || []).map(normaliseTidePoint).filter(point => point.time && Number.isFinite(point.height)).map(point => ({ ...point, minute: clockToMinutesLocal(point.time) })).sort((a, b) => a.minute - b.minute);
+      const points = [-1, 0, 1].flatMap(dayOffset => { const pointDate = shiftObservationDate(date, dayOffset); return (tideForDate(pointDate) || []).map(normaliseTidePoint).filter(point => point.time && Number.isFinite(point.height)).map(point => ({ ...point, date: pointDate, minute: dayOffset * 1440 + clockToMinutesLocal(point.time) })); }).sort((a, b) => a.minute - b.minute);
       if (!points.length) return { heightM: null, stage: 'unknown', source: TIDE_SOURCE_BY_DATE[date] || 'unavailable', points: [] };
       const before = points.filter(point => point.minute <= minute).slice(-1)[0] || points[0];
       const after = points.find(point => point.minute >= minute) || points[points.length - 1];
@@ -1917,7 +1929,13 @@
       const nearest = points.slice().sort((a, b) => Math.abs(a.minute - minute) - Math.abs(b.minute - minute))[0];
       let stage = after.height > before.height ? 'rising' : after.height < before.height ? 'falling' : 'steady';
       if (Math.abs(nearest.minute - minute) <= 25) stage = nearest.type === 'High' ? 'high tide' : nearest.type === 'Low' ? 'low tide' : stage;
-      return { heightM: Number(heightM.toFixed(2)), stage, source: TIDE_SOURCE_BY_DATE[date] || 'Port Noarlunga tide table', before: { time: before.time, type: before.type, heightM: before.height }, after: { time: after.time, type: after.type, heightM: after.height }, points: points.map(({ time, type, height }) => ({ time, type, heightM: height })) };
+      const movement = stage === 'rising' ? 'pushing' : stage === 'falling' ? 'dropping' : stage === 'high tide' ? 'around high tide' : stage === 'low tide' ? 'around low tide' : 'steady';
+      const minutesToNext = Math.max(0, after.minute - minute);
+      const minutesSincePrevious = Math.max(0, minute - before.minute);
+      const positionLabel = movement.startsWith('around') ? `${movement[0].toUpperCase()}${movement.slice(1)}` : `${movement[0].toUpperCase()}${movement.slice(1)} · ${observationDurationLabel(minutesToNext)} before ${String(after.type || 'next tide').toLowerCase()}`;
+      const rangeM = before !== after ? Number(Math.abs(after.height - before.height).toFixed(2)) : null;
+      const range = tideRangeDetails(rangeM);
+      return { heightM: Number(heightM.toFixed(2)), stage, movement, positionLabel, minutesToNext, minutesSincePrevious, cycleProgressPct: Number((progress * 100).toFixed(1)), rangeM, ...range, source: TIDE_SOURCE_BY_DATE[date] || 'Port Noarlunga tide table', before: { date: before.date, time: before.time, type: before.type, heightM: before.height }, after: { date: after.date, time: after.time, type: after.type, heightM: after.height }, points: points.map(({ date: pointDate, time, type, height }) => ({ date: pointDate, time, type, heightM: height })) };
     }
 
     function currentWeatherObservationSnapshot(reportTime) {
@@ -1945,8 +1963,10 @@
       const report = nearest.report;
       const selectedTime = target.toISOString();
       const isNow = Math.abs(Date.now() - target.getTime()) < 2 * 60 * 1000;
+      const windContext = windObservationSnapshot(report);
+      const tide = currentTideObservationSnapshot(selectedLocalTime);
       return {
-        schemaVersion: 2,
+        schemaVersion: 3,
         calculationVersion: SEAFORD_CALCULATION_VERSION,
         location: 'Seaford',
         calculatedAt: new Date().toISOString(),
@@ -1962,7 +1982,8 @@
         offshore: report.offshoreRaw,
         local: report.localRaw,
         wind: report.windRaw,
-        tide: currentTideObservationSnapshot(selectedLocalTime),
+        windContext,
+        tide,
         weather: currentWeatherObservationSnapshot(selectedLocalTime),
         dataContext: { dataSource: state.data?.dataSource, generatedAt: state.data?.lastSuccessfulFetchTime, latestDataSource: state.data?.latestDataSource, staleDataUsed: state.data?.staleDataUsed, warnings: state.data?.dataWarnings || [] },
         calculationResult: report
