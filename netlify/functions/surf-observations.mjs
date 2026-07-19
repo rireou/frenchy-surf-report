@@ -10,6 +10,18 @@ const MAX_FUTURE_SKEW_MS = 5 * 60 * 1000;
 const jsonHeaders = { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" };
 const send = (status, body, extraHeaders = {}) => new Response(JSON.stringify(body), { status, headers: { ...jsonHeaders, ...extraHeaders } });
 const store = () => getStore({ name: STORE_NAME, consistency: "strong" });
+const LOCATIONS = { seaford: "Seaford", middleton: "Middleton" };
+
+function locationFromSlug(value) {
+  return LOCATIONS[String(value || "seaford").toLowerCase()] || LOCATIONS.seaford;
+}
+
+function validatedSnapshotLocation(snapshot) {
+  const requested = cleanText(snapshot?.location, 40).toLowerCase();
+  const match = Object.values(LOCATIONS).find(location => location.toLowerCase() === requested);
+  if (!match) throw new Error("Choose Seaford or Middleton before saving");
+  return match;
+}
 
 function finiteNumber(value, min, max) {
   const number = Number(value);
@@ -56,10 +68,10 @@ function cleanJson(value, depth = 0) {
   return output;
 }
 
-async function listObservations() {
+async function listObservations(location = null) {
   const listing = await store().list({ prefix: "observations/" });
   const records = await Promise.all((listing.blobs || []).slice(0, 1000).map(entry => store().get(entry.key, { type: "json", consistency: "strong" })));
-  return records.filter(Boolean).sort((a, b) => String(b.observedAt).localeCompare(String(a.observedAt)));
+  return records.filter(record => record && (!location || record.location === location)).sort((a, b) => String(b.observedAt).localeCompare(String(a.observedAt)));
 }
 
 function milestoneProgress(count) {
@@ -106,10 +118,11 @@ function validateCreate(input) {
   const clientToken = cleanText(input.clientToken, 100).replace(/[^a-zA-Z0-9_-]/g, "");
   if (clientToken.length < 8) throw new Error("Invalid save token. Refresh and try again.");
   const snapshot = cleanJson(input.snapshot);
+  const location = validatedSnapshotLocation(snapshot);
   const observedAt = validateObservedAt(input.observedAt);
   validateSnapshotTime(snapshot, observedAt);
   const calculationVersion = cleanText(snapshot?.calculationVersion || "unknown", 100);
-  return { actualFt, predictedFt, condition, note: cleanText(input.note, 300), clientToken, snapshot, calculationVersion, observedAt };
+  return { actualFt, predictedFt, condition, note: cleanText(input.note, 300), clientToken, snapshot, calculationVersion, observedAt, location };
 }
 
 function validateUpdate(input, current) {
@@ -120,10 +133,12 @@ function validateUpdate(input, current) {
   if (input.observedAt != null || input.snapshot != null) {
     const observedAt = validateObservedAt(input.observedAt, 400 * 24 * 60 * 60 * 1000);
     const snapshot = cleanJson(input.snapshot);
+    const location = validatedSnapshotLocation(snapshot);
+    if (location !== current.location) throw new Error("An observation cannot be moved to another location");
     const predictedFt = finiteNumber(snapshot?.predictedFt, 0, 8);
     if (predictedFt == null) throw new Error("The prediction for that time is unavailable");
     validateSnapshotTime(snapshot, observedAt);
-    Object.assign(result, { observedAt, snapshot, predictedFt, calculationVersion: cleanText(snapshot?.calculationVersion || current.calculationVersion || "unknown", 100), schemaVersion: SCHEMA_VERSION });
+    Object.assign(result, { observedAt, snapshot, predictedFt, calculationVersion: cleanText(snapshot?.calculationVersion || current.calculationVersion || "unknown", 100), schemaVersion: SCHEMA_VERSION, location });
   }
   return result;
 }
@@ -131,15 +146,17 @@ function validateUpdate(input, current) {
 export default async (request) => {
   if (!isObservationAdmin(request)) return send(401, { error: "Please log in to the observation page." });
   const url = new URL(request.url);
+  const requestedLocation = locationFromSlug(url.searchParams.get("spot"));
+  const requestedSlug = requestedLocation.toLowerCase();
 
   if (request.method === "GET") {
-    const records = await listObservations();
+    const records = await listObservations(requestedLocation);
     const format = url.searchParams.get("format");
     if (format === "csv") {
-      return new Response(csvExport(records), { status: 200, headers: { "Content-Type": "text/csv; charset=utf-8", "Content-Disposition": `attachment; filename="seaford-surf-observations-${new Date().toISOString().slice(0, 10)}.csv"`, "Cache-Control": "no-store" } });
+      return new Response(csvExport(records), { status: 200, headers: { "Content-Type": "text/csv; charset=utf-8", "Content-Disposition": `attachment; filename="${requestedSlug}-surf-observations-${new Date().toISOString().slice(0, 10)}.csv"`, "Cache-Control": "no-store" } });
     }
     if (format === "json") {
-      return new Response(JSON.stringify({ exportedAt: new Date().toISOString(), schemaVersion: SCHEMA_VERSION, observations: records }, null, 2), { status: 200, headers: { "Content-Type": "application/json; charset=utf-8", "Content-Disposition": `attachment; filename="seaford-surf-observations-${new Date().toISOString().slice(0, 10)}.json"`, "Cache-Control": "no-store" } });
+      return new Response(JSON.stringify({ exportedAt: new Date().toISOString(), schemaVersion: SCHEMA_VERSION, location: requestedLocation, observations: records }, null, 2), { status: 200, headers: { "Content-Type": "application/json; charset=utf-8", "Content-Disposition": `attachment; filename="${requestedSlug}-surf-observations-${new Date().toISOString().slice(0, 10)}.json"`, "Cache-Control": "no-store" } });
     }
     return send(200, { observations: records, progress: milestoneProgress(records.length) });
   }
@@ -153,14 +170,15 @@ export default async (request) => {
   if (request.method === "POST") {
     let validated;
     try { validated = validateCreate(input); } catch (error) { return send(400, { error: error.message }); }
+    if (validated.location !== requestedLocation) return send(400, { error: "The selected observation location does not match the forecast snapshot." });
 
-    const priorId = await store().get(`idempotency/${validated.clientToken}`, { type: "text", consistency: "strong" });
+    const priorId = await store().get(`idempotency/${requestedSlug}/${validated.clientToken}`, { type: "text", consistency: "strong" });
     if (priorId) {
       const prior = await store().get(`observations/${priorId}`, { type: "json", consistency: "strong" });
       if (prior) return send(200, { observation: prior, deduplicated: true });
     }
 
-    const existing = await listObservations();
+    const existing = await listObservations(requestedLocation);
     const duplicate = existing.find(record =>
       Math.abs(new Date(record.observedAt).getTime() - new Date(validated.observedAt).getTime()) < DUPLICATE_WINDOW_MS &&
       Number(record.actualFt) === validated.actualFt && Number(record.predictedFt) === validated.predictedFt
@@ -171,13 +189,13 @@ export default async (request) => {
     const id = randomUUID();
     const record = {
       id, schemaVersion: SCHEMA_VERSION, revision: 1, observedAt: validated.observedAt, createdAt: now, updatedAt: now,
-      timezone: "Australia/Adelaide", location: "Seaford", actualFt: validated.actualFt,
+      timezone: "Australia/Adelaide", location: validated.location, actualFt: validated.actualFt,
       predictedFt: validated.predictedFt, errorFt: Number((validated.actualFt - validated.predictedFt).toFixed(2)),
       condition: validated.condition, note: validated.note, calculationVersion: validated.calculationVersion,
       snapshot: validated.snapshot
     };
     await store().setJSON(`observations/${id}`, record);
-    await store().set(`idempotency/${validated.clientToken}`, id);
+    await store().set(`idempotency/${requestedSlug}/${validated.clientToken}`, id);
     return send(201, { observation: record });
   }
 
@@ -185,6 +203,7 @@ export default async (request) => {
   if (!id) return send(400, { error: "Observation ID is required" });
   const current = await store().get(`observations/${id}`, { type: "json", consistency: "strong" });
   if (!current) return send(404, { error: "Observation not found" });
+  if (current.location !== requestedLocation) return send(404, { error: "Observation not found for this location" });
 
   if (request.method === "PUT") {
     let validated;

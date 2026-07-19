@@ -1,9 +1,16 @@
 (() => {
-  const observationMode = location.pathname.replace(/\/+$/, "") === "/observe" || new URLSearchParams(location.search).get("observe") === "1";
+  const cleanPath = location.pathname.replace(/\/+$/, "").toLowerCase();
+  const search = new URLSearchParams(location.search);
+  const observationMode = cleanPath === "/observe" || cleanPath.startsWith("/observe-") || search.get("observe") === "1";
   if (!observationMode) return;
 
   const demoMode = ["localhost", "127.0.0.1"].includes(location.hostname);
-  const API = "/api/observations";
+  const spotSlug = cleanPath.includes("middleton") || search.get("spot") === "middleton" ? "middleton" : "seaford";
+  const spot = spotSlug === "middleton"
+    ? { slug: "middleton", name: "Middleton", reportHref: "/middleton", observationHref: "/observe-middleton", otherName: "Seaford", otherHref: "/observe-seaford" }
+    : { slug: "seaford", name: "Seaford", reportHref: "/", observationHref: "/observe-seaford", otherName: "Middleton", otherHref: "/observe-middleton" };
+  const API = `/api/observations?spot=${encodeURIComponent(spot.slug)}`;
+  const apiRecordUrl = id => `${API}&id=${encodeURIComponent(id)}`;
   const AUTH_API = "/api/observations/auth";
   const correctionChoices = [
     { label: "Correct", delta: 0 }, { label: "+0.5 ft", delta: 0.5 }, { label: "+1 ft", delta: 1 },
@@ -14,14 +21,14 @@
   const state = { authenticated: false, configured: true, snapshot: null, actualFt: null, condition: "", records: [], editingId: null, clientToken: makeToken(), saved: false, deleteArmedId: null, timeOffsetMinutes: 0, customObservedAt: null };
 
   document.body.classList.add("observation-mode");
-  document.title = "Seaford Surf Observation | Frenchy";
+  document.title = `${spot.name} Surf Observation | Frenchy`;
   const root = document.createElement("main");
   root.className = "observation-root";
   root.id = "observationRoot";
   root.innerHTML = `
     <header class="obs-header">
-      <div class="obs-brand"><div class="obs-logo">≈</div><div><small>Frenchy Review</small><b>Seaford observation</b></div></div>
-      <div class="obs-header-actions"><a class="obs-link" href="/">View report</a><button class="obs-ghost obs-hidden" id="obsLogout" type="button">Log out</button></div>
+      <div class="obs-brand"><div class="obs-logo">≈</div><div><small>Frenchy Review</small><b>${spot.name} observation</b></div></div>
+      <div class="obs-header-actions"><nav class="obs-location-switch" aria-label="Observation location"><a class="active" href="${spot.observationHref}" aria-current="page">${spot.name}</a><a href="${spot.otherHref}">${spot.otherName}</a></nav><a class="obs-link" href="${spot.reportHref}">View report</a><button class="obs-ghost obs-hidden" id="obsLogout" type="button">Log out</button></div>
     </header>
     <section class="obs-card obs-login" id="obsLogin">
       <span class="obs-eyebrow">Private access · one time only</span><h1>Ready for your beach check.</h1>
@@ -31,7 +38,7 @@
     </section>
     <div class="obs-hidden" id="obsDashboard">
       <section class="obs-card obs-quick-card">
-        <div class="obs-prediction"><div><span class="obs-eyebrow"><span class="obs-live-dot"></span>Current report</span><h1>Predicted <span id="obsPrediction">--</span> ft</h1></div><div class="obs-prediction-meta"><b id="obsForecastTime">Loading live conditions…</b><br><span id="obsConditions">Seaford</span></div></div>
+        <div class="obs-prediction"><div><span class="obs-eyebrow"><span class="obs-live-dot"></span>${spot.name} report</span><h1>Predicted <span id="obsPrediction">--</span> ft</h1></div><div class="obs-prediction-meta"><b id="obsForecastTime">Loading live conditions…</b><br><span id="obsConditions">${spot.name}</span></div></div>
         <div class="obs-context-grid" id="obsCheckContext"><div class="obs-context-item"><small>Wind at check</small><b id="obsWindSummary">Loading wind…</b><span id="obsWindDetail">Direction and strength</span></div><div class="obs-context-item"><small>Tide position</small><b id="obsTideSummary">Loading tide…</b><span id="obsTideDetail">Height and next turn</span></div><div class="obs-context-item"><small>Tide change</small><b id="obsTideRange">Loading range…</b><span id="obsTideRangeDetail">Previous to next tide</span></div></div>
         <form id="obsForm">
           <fieldset class="obs-fieldset"><legend>Observation time <small>defaults to now</small></legend><div class="obs-chips obs-time-chips" id="obsTimes"><button class="obs-chip selected" type="button" data-time-offset="0"><strong>Now</strong><small>current time</small></button><button class="obs-chip" type="button" data-time-offset="30"><strong>30 min</strong><small>ago</small></button><button class="obs-chip" type="button" data-time-offset="60"><strong>1 hour</strong><small>ago</small></button><button class="obs-chip" type="button" data-time-offset="120"><strong>2 hours</strong><small>ago</small></button><button class="obs-chip" type="button" data-time-custom><strong>Choose</strong><small>date & time</small></button></div><div class="obs-other obs-time-custom obs-hidden" id="obsCustomTime"><input class="obs-input" id="obsDateTime" type="datetime-local" step="300"><button class="obs-primary" type="button" id="obsUseTime">Use time</button></div><div class="obs-selected-time" id="obsSelectedTime">Saving observation time: now</div></fieldset>
@@ -44,7 +51,7 @@
       </section>
       <section class="obs-card"><div class="obs-progress"><div class="obs-count" id="obsCount">0</div><div><h2 id="obsProgressTitle">First target: 30</h2><p id="obsProgressText">Collect a range of real conditions for a useful comparison.</p><div class="obs-progress-bar"><div class="obs-progress-fill" id="obsProgressFill" style="width:0%"></div></div><div class="obs-milestones"><span data-milestone="30">30</span><span data-milestone="60">60</span><span data-milestone="100">100</span></div></div></div></section>
       <section class="obs-card"><div class="obs-section-head"><div><h2>Accuracy report</h2><p>Uses actual minus predicted size. Positive means the report underestimated.</p></div></div><div id="obsAnalysis"></div></section>
-      <section class="obs-card"><div class="obs-section-head"><div><h2>Observation history</h2><p>Edit mistakes, delete incorrect entries, or export everything.</p></div><div class="obs-export"><a class="obs-link" id="obsCsv" href="${API}?format=csv">CSV</a><a class="obs-link" id="obsJson" href="${API}?format=json">JSON</a></div></div><div class="obs-history" id="obsHistory"></div></section>
+      <section class="obs-card"><div class="obs-section-head"><div><h2>${spot.name} observation history</h2><p>Edit mistakes, delete incorrect entries, or export this location.</p></div><div class="obs-export"><a class="obs-link" id="obsCsv" href="${API}&format=csv">CSV</a><a class="obs-link" id="obsJson" href="${API}&format=json">JSON</a></div></div><div class="obs-history" id="obsHistory"></div></section>
     </div>`;
   document.body.appendChild(root);
 
@@ -87,11 +94,11 @@
   }
 
   function demoRecords() {
-    try { return JSON.parse(localStorage.getItem("frenchy-demo-observations") || "[]"); } catch { return []; }
+    try { return JSON.parse(localStorage.getItem(`frenchy-demo-observations-${spot.slug}`) || "[]"); } catch { return []; }
   }
 
   function saveDemoRecords(records) {
-    localStorage.setItem("frenchy-demo-observations", JSON.stringify(records));
+    localStorage.setItem(`frenchy-demo-observations-${spot.slug}`, JSON.stringify(records));
   }
 
   async function request(path, options = {}) {
@@ -108,7 +115,7 @@
     const input = JSON.parse(options.body || "{}");
     if (options.method === "POST") {
       const now = new Date().toISOString();
-      const record = { id: makeToken(), revision: 1, schemaVersion: 3, observedAt: input.observedAt, createdAt: now, updatedAt: now, timezone: "Australia/Adelaide", location: "Seaford", actualFt: input.actualFt, predictedFt: input.snapshot.predictedFt, errorFt: Number((input.actualFt - input.snapshot.predictedFt).toFixed(2)), condition: input.condition || "", note: input.note || "", calculationVersion: input.snapshot.calculationVersion, snapshot: input.snapshot };
+      const record = { id: makeToken(), revision: 1, schemaVersion: 3, observedAt: input.observedAt, createdAt: now, updatedAt: now, timezone: "Australia/Adelaide", location: spot.name, actualFt: input.actualFt, predictedFt: input.snapshot.predictedFt, errorFt: Number((input.actualFt - input.snapshot.predictedFt).toFixed(2)), condition: input.condition || "", note: input.note || "", calculationVersion: input.snapshot.calculationVersion, snapshot: input.snapshot };
       records.unshift(record); saveDemoRecords(records); return { observation: record };
     }
     const id = new URL(path, location.href).searchParams.get("id");
@@ -127,8 +134,8 @@
       const snapshot = window.FrenchyObservation?.getSnapshotAt
         ? window.FrenchyObservation.getSnapshotAt(observedAt)
         : window.FrenchyObservation?.getCurrentSnapshot?.();
-      if (snapshot?.predictedFt != null) return snapshot;
-      if (demoMode && attempt === 5) return { schemaVersion: 3, calculationVersion: "local-preview", location: "Seaford", calculatedAt: new Date().toISOString(), observedAt, forecastTime: toDateTimeInput(observedAt).slice(0, 13) + ":00", displayTime: `Local preview · observed ${dateTime(observedAt)}`, predictedFt: 1.5, modelPredictedFt: 1.5, predictedText: "1.5", calibration: "normal", activeDriver: { heightM: 2.1, directionDeg: 232, periodS: 11.4 }, offshore: {}, local: {}, wind: { wind_speed_10m: 21, wind_direction_10m: 5 }, windContext: { speedKmh: 21, directionDeg: 5, directionCompass: "N", directionName: "north", strength: "moderate", label: "Moderate N wind · 21 km/h" }, tide: { heightM: 1.14, stage: "falling", movement: "dropping", positionLabel: "Dropping · 2 hr before low", minutesToNext: 120, minutesSincePrevious: 240, cycleProgressPct: 67, rangeM: 1.42, rangeClass: "big", rangeLabel: "Big 1.42 m tide change", source: "Preview", before: { time: "14:15", type: "High", heightM: 1.85 }, after: { time: "20:15", type: "Low", heightM: 0.43 } }, weather: { temperatureC: 16, weatherCode: 1 }, dataContext: { dataSource: "local-preview" }, calculationResult: {} };
+      if (snapshot?.predictedFt != null && snapshot.location === spot.name) return snapshot;
+      if (demoMode && attempt === 5) return { schemaVersion: 3, calculationVersion: "local-preview", location: spot.name, calculatedAt: new Date().toISOString(), observedAt, forecastTime: toDateTimeInput(observedAt).slice(0, 13) + ":00", displayTime: `Local preview · observed ${dateTime(observedAt)}`, predictedFt: spot.slug === "middleton" ? 3 : 1.5, modelPredictedFt: spot.slug === "middleton" ? 3 : 1.5, predictedText: spot.slug === "middleton" ? "3" : "1.5", calibration: "normal", activeDriver: { heightM: 2.1, directionDeg: 232, periodS: 11.4 }, offshore: {}, local: {}, wind: { wind_speed_10m: 21, wind_direction_10m: 5 }, windContext: { speedKmh: 21, directionDeg: 5, directionCompass: "N", directionName: "north", strength: "moderate", label: "Moderate N wind · 21 km/h" }, tide: { heightM: 1.14, stage: "falling", movement: "dropping", positionLabel: "Dropping · 2 hr before low", minutesToNext: 120, minutesSincePrevious: 240, cycleProgressPct: 67, rangeM: 1.42, rangeClass: "big", rangeLabel: "Big 1.42 m tide change", source: "Preview", before: { time: "14:15", type: "High", heightM: 1.85 }, after: { time: "20:15", type: "Low", heightM: 0.43 } }, weather: { temperatureC: 16, weatherCode: 1 }, dataContext: { dataSource: "local-preview" }, calculationResult: {} };
       await new Promise(resolve => setTimeout(resolve, 250));
     }
     throw new Error("The live forecast did not finish loading. Tap View report, refresh it, then try again.");
@@ -264,12 +271,12 @@
       $("obsProgressText").textContent = `${progress.remaining} more to reach the next confidence milestone.`;
     } else {
       $("obsProgressTitle").textContent = "100-observation calibration set reached";
-      $("obsProgressText").textContent = "This is a strong base for testing Seaford formula changes.";
+      $("obsProgressText").textContent = `This is a strong base for testing ${spot.name} formula changes.`;
     }
   }
 
   function mean(values) { return values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : 0; }
-  function directionBand(value) { const degree = Number(value); if (!Number.isFinite(degree)) return "Unknown"; if (degree < 215) return "South edge <215°"; if (degree <= 225) return "215–225°"; if (degree <= 235) return "226–235°"; if (degree <= 245) return "236–245°"; if (degree <= 260) return "246–260°"; return "Outside Mid Coast band"; }
+  function directionBand(value) { const degree = Number(value); if (!Number.isFinite(degree)) return "Unknown"; if (spot.slug === "middleton") { if (degree < 160) return "East edge <160°"; if (degree <= 185) return "160–185° S"; if (degree <= 210) return "186–210° SSW"; if (degree <= 230) return "211–230° SW"; if (degree <= 245) return "231–245° WSW"; return "Outside South Coast band"; } if (degree < 215) return "South edge <215°"; if (degree <= 225) return "215–225°"; if (degree <= 235) return "226–235°"; if (degree <= 245) return "236–245°"; if (degree <= 260) return "246–260°"; return "Outside Mid Coast band"; }
   function periodBand(value) { const period = Number(value); if (!Number.isFinite(period)) return "Unknown"; if (period < 9) return "Under 9 s"; if (period < 11) return "9–11 s"; if (period < 14) return "11–14 s"; return "14 s+"; }
   function windBand(record) { const wind = windContextFor(record.snapshot); if (!Number.isFinite(Number(wind.speedKmh))) return "Unknown"; return `${capitalise(wind.strength)} ${wind.directionCompass || "unknown"}`; }
   function groupStats(records, label, getter) {
@@ -354,7 +361,7 @@
       return;
     }
     try {
-      await request(`${API}?id=${encodeURIComponent(id)}`, { method: "DELETE" });
+      await request(apiRecordUrl(id), { method: "DELETE" });
       state.records = state.records.filter(record => record.id !== id); state.deleteArmedId = null;
       renderProgress(); renderAnalysis(); renderHistory();
     } catch (error) { setMessage("obsSaveMessage", error.message, "error"); }
@@ -366,7 +373,7 @@
     const button = $("obsSave"); button.disabled = true; button.textContent = state.editingId ? "Saving changes…" : "Saving observation…";
     try {
       if (state.editingId) {
-        const result = await request(`${API}?id=${encodeURIComponent(state.editingId)}`, { method: "PUT", body: JSON.stringify({ actualFt: state.actualFt, condition: state.condition, observedAt: state.snapshot.observedAt || selectedObservedAt(), snapshot: state.snapshot }) });
+        const result = await request(apiRecordUrl(state.editingId), { method: "PUT", body: JSON.stringify({ actualFt: state.actualFt, condition: state.condition, observedAt: state.snapshot.observedAt || selectedObservedAt(), snapshot: state.snapshot }) });
         state.records = state.records.map(record => record.id === state.editingId ? result.observation : record);
         setMessage("obsSaveMessage", "Observation updated.", "success"); cancelEdit();
       } else {
@@ -425,7 +432,7 @@
 
   function downloadDemo(format) {
     const content = format === "json" ? JSON.stringify({ observations: state.records }, null, 2) : "id,observed_at,actual_ft,predicted_ft,error_ft\n" + state.records.map(record => [record.id, record.observedAt, record.actualFt, record.predictedFt, record.errorFt].join(",")).join("\n");
-    const link = document.createElement("a"); link.href = URL.createObjectURL(new Blob([content], { type: format === "json" ? "application/json" : "text/csv" })); link.download = `seaford-observations.${format}`; link.click(); setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+    const link = document.createElement("a"); link.href = URL.createObjectURL(new Blob([content], { type: format === "json" ? "application/json" : "text/csv" })); link.download = `${spot.slug}-observations.${format}`; link.click(); setTimeout(() => URL.revokeObjectURL(link.href), 1000);
   }
 
   async function init() {
