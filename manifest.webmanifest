@@ -1,0 +1,13 @@
+{
+  "name": "Seaford Surf Observation",
+  "short_name": "Surf Check",
+  "description": "Fast private Seaford wave observation logger",
+  "start_url": "/observe",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#061b24",
+  "theme_color": "#061b24",
+  "icons": [
+    { "src": "/surf-icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
