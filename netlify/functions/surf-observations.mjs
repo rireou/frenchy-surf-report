@@ -7,6 +7,7 @@ const SCHEMA_VERSION = 3;
 const DUPLICATE_WINDOW_MS = 3 * 60 * 1000;
 const MAX_NEW_OBSERVATION_AGE_MS = 48 * 60 * 60 * 1000;
 const MAX_FUTURE_SKEW_MS = 5 * 60 * 1000;
+const DAILY_OBSERVATION_LIMIT = 3;
 const jsonHeaders = { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" };
 const send = (status, body, extraHeaders = {}) => new Response(JSON.stringify(body), { status, headers: { ...jsonHeaders, ...extraHeaders } });
 const store = () => getStore({ name: STORE_NAME, consistency: "strong" });
@@ -79,6 +80,28 @@ function milestoneProgress(count) {
   const reached = milestones.filter(value => count >= value);
   const next = milestones.find(value => count < value) || null;
   return { count, reached, next, remaining: next == null ? 0 : next - count };
+}
+
+function adelaideDateKey(value) {
+  const parts = new Intl.DateTimeFormat("en-AU", {
+    timeZone: "Australia/Adelaide", year: "numeric", month: "2-digit", day: "2-digit"
+  }).formatToParts(new Date(value));
+  const part = type => parts.find(item => item.type === type)?.value || "";
+  return `${part("year")}-${part("month")}-${part("day")}`;
+}
+
+function collectionProgress(records) {
+  const todayKey = adelaideDateKey(new Date());
+  const todayCount = records.filter(record => adelaideDateKey(record.observedAt) === todayKey).length;
+  const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
+  const last30DaysCount = records.filter(record => new Date(record.observedAt).getTime() >= thirtyDaysAgo).length;
+  return {
+    dailyLimit: DAILY_OBSERVATION_LIMIT,
+    todayCount,
+    todayRemaining: Math.max(0, DAILY_OBSERVATION_LIMIT - todayCount),
+    last30DaysCount,
+    thirtyDayCapacity: DAILY_OBSERVATION_LIMIT * 30
+  };
 }
 
 function csvCell(value) {
@@ -158,7 +181,7 @@ export default async (request) => {
     if (format === "json") {
       return new Response(JSON.stringify({ exportedAt: new Date().toISOString(), schemaVersion: SCHEMA_VERSION, location: requestedLocation, observations: records }, null, 2), { status: 200, headers: { "Content-Type": "application/json; charset=utf-8", "Content-Disposition": `attachment; filename="${requestedSlug}-surf-observations-${new Date().toISOString().slice(0, 10)}.json"`, "Cache-Control": "no-store" } });
     }
-    return send(200, { observations: records, progress: milestoneProgress(records.length) });
+    return send(200, { observations: records, progress: milestoneProgress(records.length), collection: collectionProgress(records) });
   }
 
   try { verifySameOrigin(request); } catch { return send(403, { error: "Forbidden" }); }
@@ -184,6 +207,11 @@ export default async (request) => {
       Number(record.actualFt) === validated.actualFt && Number(record.predictedFt) === validated.predictedFt
     );
     if (duplicate) return send(409, { error: "That observation was already saved a moment ago.", duplicate: true, observation: duplicate });
+    const observedDate = adelaideDateKey(validated.observedAt);
+    const dayCount = existing.filter(record => adelaideDateKey(record.observedAt) === observedDate).length;
+    if (dayCount >= DAILY_OBSERVATION_LIMIT) {
+      return send(409, { error: `Three ${requestedLocation} observations are already saved for that day. Edit one if a correction is needed.`, dailyLimit: true });
+    }
 
     const now = new Date().toISOString();
     const id = randomUUID();
@@ -208,6 +236,11 @@ export default async (request) => {
   if (request.method === "PUT") {
     let validated;
     try { validated = validateUpdate(input, current); } catch (error) { return send(400, { error: error.message }); }
+    if (validated.observedAt && adelaideDateKey(validated.observedAt) !== adelaideDateKey(current.observedAt)) {
+      const existing = await listObservations(requestedLocation);
+      const targetDayCount = existing.filter(record => record.id !== id && adelaideDateKey(record.observedAt) === adelaideDateKey(validated.observedAt)).length;
+      if (targetDayCount >= DAILY_OBSERVATION_LIMIT) return send(409, { error: `Three ${requestedLocation} observations are already saved for that day.`, dailyLimit: true });
+    }
     const updated = {
       ...current, ...validated, updatedAt: new Date().toISOString(), revision: Number(current.revision || 1) + 1,
       errorFt: Number((validated.actualFt - Number(validated.predictedFt ?? current.predictedFt)).toFixed(2))

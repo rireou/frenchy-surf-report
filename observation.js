@@ -49,7 +49,7 @@
           <div class="obs-message" id="obsSaveMessage"></div><p class="obs-help">The chosen date and time, location, forecast inputs, wind, tide, weather and calculation version are saved automatically.</p>
         </form>
       </section>
-      <section class="obs-card"><div class="obs-progress"><div class="obs-count" id="obsCount">0</div><div><h2 id="obsProgressTitle">First target: 30</h2><p id="obsProgressText">Collect a range of real conditions for a useful comparison.</p><div class="obs-progress-bar"><div class="obs-progress-fill" id="obsProgressFill" style="width:0%"></div></div><div class="obs-milestones"><span data-milestone="30">30</span><span data-milestone="60">60</span><span data-milestone="100">100</span></div></div></div></section>
+      <section class="obs-card"><div class="obs-progress"><div class="obs-count" id="obsCount">0</div><div><h2 id="obsProgressTitle">First target: 30</h2><p id="obsProgressText">Collect a range of real conditions for a useful comparison.</p><div class="obs-progress-bar"><div class="obs-progress-fill" id="obsProgressFill" style="width:0%"></div></div><div class="obs-milestones"><span data-milestone="30">30</span><span data-milestone="60">60</span><span data-milestone="100">100</span></div></div></div><div class="obs-collection"><div><small>Today</small><b id="obsTodayCount">0 / 3</b><span>up to three checks each day</span></div><div><small>Last 30 days</small><b id="obsThirtyDayCount">0 / 90</b><span>all existing data stays saved</span></div></div></section>
       <section class="obs-card"><div class="obs-section-head"><div><h2>Accuracy report</h2><p>Uses actual minus predicted size. Positive means the report underestimated.</p></div></div><div id="obsAnalysis"></div></section>
       <section class="obs-card"><div class="obs-section-head"><div><h2>${spot.name} observation history</h2><p>Edit mistakes, delete incorrect entries, or export this location.</p></div><div class="obs-export"><a class="obs-link" id="obsCsv" href="${API}&format=csv">CSV</a><a class="obs-link" id="obsJson" href="${API}&format=json">JSON</a></div></div><div class="obs-history" id="obsHistory"></div></section>
     </div>`;
@@ -101,6 +101,21 @@
     localStorage.setItem(`frenchy-demo-observations-${spot.slug}`, JSON.stringify(records));
   }
 
+  function adelaideDateKey(value) {
+    const parts = new Intl.DateTimeFormat("en-AU", { timeZone: "Australia/Adelaide", year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(new Date(value));
+    const part = type => parts.find(item => item.type === type)?.value || "";
+    return `${part("year")}-${part("month")}-${part("day")}`;
+  }
+
+  function collectionFor(records) {
+    const todayKey = adelaideDateKey(new Date());
+    const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
+    return {
+      todayCount: records.filter(record => adelaideDateKey(record.observedAt) === todayKey).length,
+      last30DaysCount: records.filter(record => new Date(record.observedAt).getTime() >= thirtyDaysAgo).length
+    };
+  }
+
   async function request(path, options = {}) {
     if (!demoMode) {
       const response = await fetch(path, { credentials: "same-origin", ...options, headers: { "Content-Type": "application/json", ...(options.headers || {}) } });
@@ -111,9 +126,11 @@
     if (path === AUTH_API && (!options.method || options.method === "GET")) return { authenticated: true, configured: true };
     if (path === AUTH_API) return { authenticated: options.method !== "DELETE", configured: true };
     let records = demoRecords();
-    if (!options.method || options.method === "GET") return { observations: records, progress: progressFor(records.length) };
+    if (!options.method || options.method === "GET") return { observations: records, progress: progressFor(records.length), collection: collectionFor(records) };
     const input = JSON.parse(options.body || "{}");
     if (options.method === "POST") {
+      const sameDay = records.filter(record => adelaideDateKey(record.observedAt) === adelaideDateKey(input.observedAt));
+      if (sameDay.length >= 3) { const error = new Error(`Three ${spot.name} observations are already saved for that day. Edit one if a correction is needed.`); error.status = 409; error.result = { dailyLimit: true }; throw error; }
       const now = new Date().toISOString();
       const record = { id: makeToken(), revision: 1, schemaVersion: 3, observedAt: input.observedAt, createdAt: now, updatedAt: now, timezone: "Australia/Adelaide", location: spot.name, actualFt: input.actualFt, predictedFt: input.snapshot.predictedFt, errorFt: Number((input.actualFt - input.snapshot.predictedFt).toFixed(2)), condition: input.condition || "", note: input.note || "", calculationVersion: input.snapshot.calculationVersion, snapshot: input.snapshot };
       records.unshift(record); saveDemoRecords(records); return { observation: record };
@@ -266,6 +283,9 @@
     const percentage = progress.next == null ? 100 : ((progress.count - previous) / (base - previous)) * 100;
     $("obsProgressFill").style.width = `${clamp(percentage, 0, 100)}%`;
     document.querySelectorAll("[data-milestone]").forEach(element => element.classList.toggle("reached", progress.count >= Number(element.dataset.milestone)));
+    const collection = collectionFor(state.records);
+    $("obsTodayCount").textContent = `${collection.todayCount} / 3`;
+    $("obsThirtyDayCount").textContent = `${collection.last30DaysCount} / 90`;
     if (progress.next) {
       $("obsProgressTitle").textContent = `Next accuracy report: ${progress.next} observations`;
       $("obsProgressText").textContent = `${progress.remaining} more to reach the next confidence milestone.`;
