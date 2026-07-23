@@ -1,29 +1,81 @@
 [functions]
   directory = "netlify/functions"
+  node_bundler = "esbuild"
+  included_files = ["index.html", "middleton.html", "port_noarlunga_2026_tides.json", "victor_harbor_2026_tides.json"]
+
+[[redirects]]
+  from = "/api/surf-reports/index.json"
+  to = "/.netlify/functions/surf-report?format=json&location=index"
+  status = 200
+
+[[redirects]]
+  from = "/api/surf-reports/:location.json"
+  to = "/.netlify/functions/surf-report?format=json&location=:location"
+  status = 200
+
+[[redirects]]
+  from = "/surf-reports"
+  to = "/.netlify/functions/surf-report?location=index"
+  status = 200
+
+[[redirects]]
+  from = "/surf-report-data"
+  to = "/surf-report-data.html"
+  status = 200
+
+[[redirects]]
+  from = "/surf-report/seaford"
+  to = "/"
+  status = 301
+
+[[redirects]]
+  from = "/surf-report/middleton"
+  to = "/middleton.html"
+  status = 301
+
+[[redirects]]
+  from = "/surf-report/:location"
+  to = "/.netlify/functions/surf-report?location=:location"
+  status = 200
 
 [[redirects]]
   from = "/observe"
-  to = "/index.html"
+  to = "/.netlify/functions/surf-report?location=seaford"
   status = 200
 
 [[redirects]]
   from = "/observe-seaford"
-  to = "/index.html"
+  to = "/.netlify/functions/surf-report?location=seaford"
   status = 200
 
 [[redirects]]
   from = "/observe-middleton"
-  to = "/middleton.html"
+  to = "/.netlify/functions/surf-report?location=middleton"
   status = 200
 
 [[redirects]]
   from = "/middleton"
-  to = "/middleton.html"
+  to = "/.netlify/functions/surf-report?location=middleton"
   status = 200
+
+[[redirects]]
+  from = "/middleton.html"
+  to = "/.netlify/functions/surf-report?location=middleton"
+  status = 200
+
+[[redirects]]
+  from = "/index.html"
+  to = "/"
+  status = 301
 
 [[redirects]]
   from = "/wave-map"
   to = "/wave-map.html"
+  status = 200
+
+[[redirects]]
+  from = "/"
+  to = "/.netlify/functions/surf-report?location=seaford"
   status = 200
 
 [[headers]]

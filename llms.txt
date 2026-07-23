@@ -1,0 +1,23 @@
+# Frenchy Surf Reports
+
+Frenchy Review publishes current surf reports for Seaford and Middleton in South Australia.
+
+Canonical HTML:
+- https://frenchyreview.netlify.app/
+- https://frenchyreview.netlify.app/middleton.html
+- https://frenchyreview.netlify.app/surf-reports
+- https://frenchyreview.netlify.app/surf-report/mid-coast
+- https://frenchyreview.netlify.app/surf-report/south-port
+- https://frenchyreview.netlify.app/surf-report/moana
+
+JSON:
+- https://frenchyreview.netlify.app/api/surf-reports/index.json
+- https://frenchyreview.netlify.app/api/surf-reports/seaford.json
+- https://frenchyreview.netlify.app/api/surf-reports/middleton.json
+
+Freshness and methodology:
+- https://frenchyreview.netlify.app/surf-report-data
+
+Seaford and Middleton have spot-specific calculations. Mid Coast, South Port and Moana use the regional Mid Coast report calibrated at Seaford and must not be described as separately calibrated spot forecasts.
+
+Every report includes issued_at, valid_until and status. Treat expired or unavailable reports accordingly.

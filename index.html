@@ -343,6 +343,7 @@
       </div>
       <div class="top-actions">
         <a class="ghost-link" href="./middleton.html">Middleton report</a>
+        <a class="ghost-link" href="/surf-reports">All reports</a>
         <a class="ghost-link" href="./wave-map.html">Wave map</a>
         <a class="cta-link" href="https://cozy-gumption-81ef8c.netlify.app/coaching.html">Progress faster</a>
         <div class="status-pill"><span class="dot"></span><span id="statusText">Loading report...</span></div>
@@ -415,7 +416,7 @@
 
     <section class="card panel" style="margin-top:16px;">
       <div class="section-head"><h2>Seaford surf report for Adelaide's Mid Coast</h2><span class="section-tag">Local guide</span></div>
-      <p class="subtitle">This Seaford forecast combines local wave size, swell direction and period, wind, Port Noarlunga tide timing and Frenchy's beach checks. Compare it with the <a class="ghost-link" href="./middleton.html">Middleton surf report</a> for South Coast conditions, or explore <a class="ghost-link" href="https://cozy-gumption-81ef8c.netlify.app/coaching.html">surf coaching in Seaford</a>.</p>
+      <p class="subtitle">This Seaford forecast combines local wave size, swell direction and period, wind, Port Noarlunga tide timing and Frenchy's beach checks. Compare it with the <a class="ghost-link" href="./middleton.html">Middleton surf report</a> for South Coast conditions, browse the <a class="ghost-link" href="/surf-reports">Mid Coast surf reports</a>, or explore <a class="ghost-link" href="https://cozy-gumption-81ef8c.netlify.app/coaching.html">surf coaching in Seaford</a>.</p>
     </section>
 
     <section class="sponsor-strip"><div><small>Advertising space</small><b>Local shops can support the daily report here</b><p>Perfect for coffee, board repairs, surf shops, physios, gyms or family-friendly local businesses around the Mid Coast.</p></div><a class="ghost-link" href="https://frenchysurfschool.square.site/" target="_blank" rel="noopener">Advertise here</a></section>
@@ -1671,12 +1672,12 @@
       row.innerHTML = parts.join('');
     }
 
-    function render() { if (!state.report) return; const days = state.report.days; const detailDay = days[state.selectedDay] || days[0]; const liveDay = days.find(d => d.date === localIsoDate()) || days[0]; const liveReport = selectedReportForDay(liveDay); $('mainSize').textContent = liveSizeText(liveReport); $('viewingTimeLabel').textContent = selectedTimeLabel(liveReport); const dailySummary = buildDailySummary(liveDay, liveReport); $('dailyHeadline').textContent = dailySummary.headline; $('plainWhy').textContent = dailySummary.text; $('bestWindowStat').textContent = dailySummary.bestWindow; $('windShiftStat').textContent = dailySummary.windShift; $('windMain').textContent = `${Math.round(liveReport.windSpeed)} km/h`; $('windSub').textContent = `${compassFromDeg(liveReport.windDir)} wind · ${Math.round(liveReport.windDir)}°`; $('tideCall').textContent = nextTideCall(liveReport); $('sourceRow').innerHTML = state.data?.staleDataUsed ? '<span>Using recently cached data.</span>' : ''; renderFreshness(liveReport); $('tideTitle').textContent = `Tide · ${formatDay(detailDay.date)}`; $('swellTrendTitle').textContent = `Swell trend · ${formatDay(detailDay.date)}`; $('windTrendTitle').textContent = `Wind trend · ${formatDay(detailDay.date)}`; renderDays(days); renderSwellDetail(detailDay); renderTidePanel(detailDay); renderSwellTrendPanel(detailDay); renderWindTrendPanel(detailDay); renderWeatherPanel(); }
+    function render() { if (!state.report) return; const days = state.report.days; const detailDay = days[state.selectedDay] || days[0]; const liveDay = days.find(d => d.date === localIsoDate()) || days[0]; const liveReport = selectedReportForDay(liveDay); $('mainSize').textContent = liveSizeText(liveReport); $('viewingTimeLabel').textContent = selectedTimeLabel(liveReport); const dailySummary = buildDailySummary(liveDay, liveReport); $('dailyHeadline').textContent = dailySummary.headline; $('plainWhy').textContent = dailySummary.text; $('bestWindowStat').textContent = dailySummary.bestWindow; $('windShiftStat').textContent = dailySummary.windShift; $('windMain').textContent = `${Math.round(liveReport.windSpeed)} km/h`; $('windSub').textContent = `${compassFromDeg(liveReport.windDir)} wind · ${Math.round(liveReport.windDir)}°`; $('tideCall').textContent = nextTideCall(liveReport); $('sourceRow').innerHTML = state.data?.staleDataUsed ? '<span>Using recently cached data.</span>' : ''; renderFreshness(liveReport); $('tideTitle').textContent = `Tide · ${formatDay(detailDay.date)}`; $('swellTrendTitle').textContent = `Swell trend · ${formatDay(detailDay.date)}`; $('windTrendTitle').textContent = `Wind trend · ${formatDay(detailDay.date)}`; renderDays(days); renderSwellDetail(detailDay); renderTidePanel(detailDay); renderSwellTrendPanel(detailDay); renderWindTrendPanel(detailDay); renderWeatherPanel(); renderLiveCorrectionBox(liveDay, liveReport); applyCanonicalFreshness(); }
     function renderDays(days) { $('days').innerHTML = days.map((day, i) => { const windReport = day.peak || day.best; const windLine = windReport ? `${compassFromDeg(windReport.windDir)} ${Math.round(windReport.windSpeed)}km/h` : ''; const cleanSize = String(day.sizeText || '').replace(/\s*ft$/i, ''); return `<div class="day-card ${i === state.selectedDay ? 'active' : ''}" data-day="${i}"><div class="day-name">${formatDay(day.date)}</div><div class="day-size">${cleanSize}<span style="font-size:14px;color:var(--muted);letter-spacing:0;"> ft</span></div>${windLine ? `<div class="day-wind">${windLine}</div>` : ''}</div>`; }).join(''); document.querySelectorAll('.day-card').forEach(card => card.addEventListener('click', () => { const clicked = Number(card.dataset.day); if (state.selectedDay === clicked && state.expandedDay === clicked) { state.expandedDay = null; } else { state.selectedDay = clicked; state.expandedDay = clicked; } render(); })); }
     function fmtM(value) { const n = Number(value || 0); return n ? `${n.toFixed(1)}m` : '--'; }
     function fmtPeriod(value) { const n = Number(value || 0); return n ? `${n.toFixed(1)}s` : '--'; }
     function fmtDirection(value) { const n = Number(value || 0); return n ? `${Math.round(n)}° ${compassFromDeg(n)}` : '--'; }
-    function renderLiveCorrectionBox(day, report) { const input = $('liveActualSizeInput'), status = $('liveCorrectionStatus'); if (!input || !status) return; const corrections = getSizeCorrections(); const existing = corrections[liveCorrectionKey(day.date)]; if (existing) { input.value = existing.actualFt; const sign = existing.deltaFt >= 0 ? '+' : ''; status.textContent = `Live saved: actual ${existing.actualFt} ft · correction ${sign}${Number(existing.deltaFt).toFixed(2)} ft`; applyOneCorrection(report, existing); $('mainSize').textContent = liveSizeText(report); } else { input.value = ''; status.textContent = `Model live: ${(report.originalFinalFt ?? report.finalFt).toFixed(2)} ft. Add what you see now.`; } }
+    function renderLiveCorrectionBox(day, report) { const input = $('liveActualSizeInput'), status = $('liveCorrectionStatus'); if (!input || !status) return; const corrections = getSizeCorrections(); const existing = corrections[liveCorrectionKey(day.date)]; if (existing) { input.value = existing.actualFt; const sign = existing.deltaFt >= 0 ? '+' : ''; status.textContent = `Saved local check: actual ${existing.actualFt} ft · difference ${sign}${Number(existing.deltaFt).toFixed(2)} ft. The public report remains the canonical model value.`; } else { input.value = ''; status.textContent = `Model live: ${(report.originalFinalFt ?? report.finalFt).toFixed(2)} ft. Add what you see now.`; } }
     function saveLiveCorrection() { if (!state.report) return; const day = state.report.days.find(d => d.date === localIsoDate()) || state.report.days[0], report = selectedReportForDay(day), actual = Number($('liveActualSizeInput').value); if (!Number.isFinite(actual) || actual < 0 || actual > 6) { alert('Add a real size between 0 and 6 ft.'); return; } const base = report.originalFinalFt ?? report.finalFt, corrections = getSizeCorrections(); corrections[liveCorrectionKey(day.date)] = { actualFt: actual, baseFt: Number(base.toFixed(2)), deltaFt: Number((actual - base).toFixed(2)), savedAt: new Date().toISOString() }; setSizeCorrections(corrections); $('statusText').textContent = 'Live size correction saved'; render(); }
     function clearLiveCorrection() { if (!state.report) return; const day = state.report.days.find(d => d.date === localIsoDate()) || state.report.days[0], corrections = getSizeCorrections(); delete corrections[liveCorrectionKey(day.date)]; setSizeCorrections(corrections); $('statusText').textContent = 'Live size correction cleared'; render(); }
     function renderManualRealityDebug(day) {
@@ -1798,11 +1799,58 @@
       if (isLoading) $('statusText').textContent = force ? 'Refreshing...' : 'Loading report...';
     }
 
+    function applyCanonicalFreshness() {
+      const report = window.__FRENCHY_CANONICAL_REPORT__;
+      if (!report) return;
+      $('statusText').textContent = report.status === 'current' ? 'Current report' : report.status === 'expired' ? 'Report expired' : 'Report unavailable';
+      const regional = report.spot?.calibration_scope === 'regional-mid-coast';
+      $('sourceRow').innerHTML = regional
+        ? `<span><b>Regional report:</b> ${report.spot.name} uses the Seaford-calibrated Mid Coast model. It is not a spot-specific estimate.</span>`
+        : '<span>Calculated by Frenchy Review from current marine, wind and tide inputs.</span>';
+      $('freshnessRow').innerHTML = `<span>Issued ${report.issued_at}</span><span>Valid until ${report.valid_until}</span><span class="${report.status === 'current' ? '' : 'freshness-warning'}">Status: ${report.status}</span>`;
+    }
+
+    function applyServerHydration(hydration) {
+      if (!hydration?.report?.reports?.length || !hydration?.data) return false;
+      state.data = hydration.data;
+      state.report = hydration.report;
+      state.portNoarlungaTides = hydration.tides || state.portNoarlungaTides;
+      state.dataWarnings = hydration.data.dataWarnings || [];
+      state.staleDataUsed = Boolean(hydration.data.staleDataUsed);
+      state.optionalFetchFailures = hydration.data.optionalFetchFailures || [];
+      state.lastSuccessfulFetchTime = hydration.data.lastSuccessfulFetchTime || hydration.generatedAt;
+      state.selectedDay = 0;
+      state.expandedDay = null;
+      return true;
+    }
+
+    async function hydrateCanonicalReport(force = false) {
+      let hydration = !force ? window.__FRENCHY_SSR_STATE__ : null;
+      if (force) {
+        const slug = window.__FRENCHY_CANONICAL_REPORT__?.spot?.id || 'seaford';
+        const response = await fetch(`/api/surf-reports/${encodeURIComponent(slug)}.json?full=1&refresh=1`, { cache: 'no-store' });
+        if (!response.ok) throw new Error(`Canonical report refresh failed: ${response.status}`);
+        const payload = await response.json();
+        hydration = payload.hydration;
+        window.__FRENCHY_CANONICAL_REPORT__ = payload.canonical;
+        window.__FRENCHY_SSR_STATE__ = hydration;
+      }
+      if (!applyServerHydration(hydration)) return false;
+      render();
+      applyCanonicalFreshness();
+      return true;
+    }
+
     async function loadReport(force = false) {
       if (state.isLoadingReport) return;
       state.isLoadingReport = true;
       setReportLoadingState(true, force);
       try {
+        if (window.__FRENCHY_CANONICAL_REQUIRED__) {
+          const hydrated = await hydrateCanonicalReport(force);
+          if (!hydrated) throw new Error('The canonical server report is unavailable.');
+          return;
+        }
         const fetchOptions = force ? { cacheMs: 0, noStore: true } : {};
         await loadPortNoarlungaBaseTides();
         let source = null;
@@ -1997,7 +2045,7 @@
         windContext,
         tide,
         weather: currentWeatherObservationSnapshot(selectedLocalTime),
-        dataContext: { dataSource: state.data?.dataSource, generatedAt: state.data?.lastSuccessfulFetchTime, latestDataSource: state.data?.latestDataSource, staleDataUsed: state.data?.staleDataUsed, warnings: state.data?.dataWarnings || [] },
+        dataContext: { dataSource: state.data?.dataSource, generatedAt: state.data?.lastSuccessfulFetchTime, latestDataSource: state.data?.latestDataSource, staleDataUsed: state.data?.staleDataUsed, warnings: state.data?.dataWarnings || [], canonicalIssuedAt: window.__FRENCHY_CANONICAL_REPORT__?.issued_at || null, canonicalValidUntil: window.__FRENCHY_CANONICAL_REPORT__?.valid_until || null, canonicalStatus: window.__FRENCHY_CANONICAL_REPORT__?.status || null, canonicalUrl: window.__FRENCHY_CANONICAL_REPORT__?.canonical_url || null },
         calculationResult: report
       };
     }

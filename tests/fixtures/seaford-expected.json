@@ -1,0 +1,130 @@
+{
+  "calculation_version": "seaford-2026.07.19.1",
+  "wave": {
+    "value_ft": 2.5,
+    "model_value_ft": 2.5,
+    "display": "2-2.5",
+    "min_ft": 2,
+    "max_ft": 2.5,
+    "confidence": "low"
+  },
+  "swell": {
+    "height_m": 2.8,
+    "direction_deg": 231,
+    "period_s": 9.3,
+    "direction_compass": "SW",
+    "driver": "Primary swell",
+    "source": "Offshore swell"
+  },
+  "wind": {
+    "speed_kmh": 11,
+    "direction_deg": 70,
+    "direction_compass": "ENE",
+    "strength": "light",
+    "label": "Light ENE wind · 11 km/h"
+  },
+  "tide": {
+    "heightM": 0.71,
+    "stage": "rising",
+    "movement": "pushing",
+    "positionLabel": "Pushing · 4.5 hr before high",
+    "rangeM": 1.23,
+    "rangeLabel": "Medium 1.23 m tide change"
+  },
+  "summary": {
+    "headline": "Surf plan",
+    "text": "Clean early but easing. Good for longboards and shortboards.",
+    "best_window": "Today · 12 PM–1 PM · 2-2.5 ft — Best mix of clean wind, tide and useful size.",
+    "wind_shift": "12 PM · ENE 11km/h",
+    "tide_call": "High tide · 4:42 pm · 1.78m"
+  },
+  "reports": [
+    {
+      "time": "2026-06-12T06:00",
+      "finalFt": 2,
+      "originalFinalFt": 2,
+      "sizeText": "2",
+      "confidence": "Low",
+      "driver": {
+        "kind": "Primary swell",
+        "heightM": 2.1,
+        "directionDeg": 229,
+        "periodS": 10.2
+      },
+      "windSpeed": 8,
+      "windDir": 45,
+      "tideDrag": {
+        "penaltyFt": 0,
+        "capFt": null,
+        "phase": "open",
+        "note": "Outside low-tide slowdown window."
+      },
+      "tidePush": {
+        "boostFt": 0,
+        "phase": "open",
+        "note": "No high-tide direction boost."
+      }
+    },
+    {
+      "time": "2026-06-12T12:00",
+      "finalFt": 2.5,
+      "originalFinalFt": 2.5,
+      "sizeText": "2-2.5",
+      "confidence": "Low",
+      "driver": {
+        "kind": "Primary swell",
+        "heightM": 2.8,
+        "directionDeg": 231,
+        "periodS": 9.3
+      },
+      "windSpeed": 11,
+      "windDir": 70,
+      "tideDrag": {
+        "penaltyFt": 0.07388333333333334,
+        "capFt": null,
+        "phase": "early push",
+        "note": "Low-tide gate: swell under 235°. Around low tide, less water near the Gulf entrance can slow and shrink the Seaford pulse. Penalty 0.1 ft near low at 10:35 am. Confirmed energy reduces the low-tide penalty, so the report can still show 2ft+ when the swell is actually getting in."
+      },
+      "tidePush": {
+        "boostFt": 0,
+        "phase": "open",
+        "note": "No high-tide direction boost."
+      }
+    },
+    {
+      "time": "2026-06-12T18:00",
+      "finalFt": 1.58532,
+      "originalFinalFt": 1.58532,
+      "sizeText": "1.5",
+      "confidence": "Low",
+      "driver": {
+        "kind": "Primary swell",
+        "heightM": 2.2,
+        "directionDeg": 244,
+        "periodS": 12
+      },
+      "windSpeed": 18,
+      "windDir": 210,
+      "tideDrag": {
+        "penaltyFt": 0,
+        "capFt": null,
+        "phase": "open",
+        "note": "Outside low-tide slowdown window."
+      },
+      "tidePush": {
+        "boostFt": 0,
+        "phase": "open",
+        "note": "No high-tide direction boost."
+      }
+    }
+  ],
+  "days": [
+    {
+      "date": "2026-06-12",
+      "avgFt": 2.5,
+      "sizeText": "2-2.5",
+      "peakTime": "2026-06-12T12:00",
+      "bestTime": "2026-06-12T12:00"
+    }
+  ]
+}

@@ -1,0 +1,103 @@
+{
+  "calculation_version": "middleton-2026.07.19.1",
+  "wave": {
+    "value_ft": 7.809256704,
+    "model_value_ft": 7.809256704,
+    "display": "8",
+    "min_ft": 8,
+    "max_ft": 8,
+    "confidence": "medium"
+  },
+  "swell": {
+    "height_m": 3.7,
+    "direction_deg": 236,
+    "period_s": 14.8,
+    "direction_compass": "SW",
+    "driver": "Primary swell",
+    "source": "Open-Meteo reference · selected offshore point · Cape du Couedic buoy area"
+  },
+  "wind": {
+    "speed_kmh": 24,
+    "direction_deg": 100,
+    "direction_compass": "E",
+    "strength": "moderate",
+    "label": "Moderate E wind · 24 km/h"
+  },
+  "tide": {
+    "heightM": 0.56,
+    "stage": "rising",
+    "movement": "pushing",
+    "positionLabel": "Pushing · 4.5 hr before high",
+    "rangeM": 0.88,
+    "rangeLabel": "Big 0.88 m tide change"
+  },
+  "summary": {
+    "headline": "Surf plan",
+    "text": "Clean-ish but surfable. Shortboard-friendly size — watch your board in the wind.",
+    "best_window": "Today · 12 PM–1 PM · 8 ft — Best mix of clean wind, tide and useful size.",
+    "wind_shift": "No big shift",
+    "tide_call": "Small high tide · 4:20 pm · 1.24m"
+  },
+  "reports": [
+    {
+      "time": "2026-06-12T06:00",
+      "finalFt": 4.1324337600000005,
+      "originalFinalFt": 4.1324337600000005,
+      "sizeText": "3-4",
+      "confidence": "High",
+      "driver": {
+        "kind": "Primary swell",
+        "heightM": 2.1,
+        "directionDeg": 229,
+        "periodS": 12.9
+      },
+      "windSpeed": 5,
+      "windDir": 20,
+      "tideDrag": null,
+      "tidePush": null
+    },
+    {
+      "time": "2026-06-12T12:00",
+      "finalFt": 7.809256704,
+      "originalFinalFt": 7.809256704,
+      "sizeText": "6-8",
+      "confidence": "Medium",
+      "driver": {
+        "kind": "Primary swell",
+        "heightM": 3.7,
+        "directionDeg": 236,
+        "periodS": 14.8
+      },
+      "windSpeed": 24,
+      "windDir": 100,
+      "tideDrag": null,
+      "tidePush": null
+    },
+    {
+      "time": "2026-06-12T18:00",
+      "finalFt": 3.026,
+      "originalFinalFt": 3.026,
+      "sizeText": "2-3",
+      "confidence": "High",
+      "driver": {
+        "kind": "Primary swell",
+        "heightM": 1.7,
+        "directionDeg": 190,
+        "periodS": 10
+      },
+      "windSpeed": 16,
+      "windDir": 180,
+      "tideDrag": null,
+      "tidePush": null
+    }
+  ],
+  "days": [
+    {
+      "date": "2026-06-12",
+      "avgFt": 7.809256704,
+      "sizeText": "6-8",
+      "peakTime": "2026-06-12T12:00",
+      "bestTime": "2026-06-12T12:00"
+    }
+  ]
+}

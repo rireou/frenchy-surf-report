@@ -204,6 +204,7 @@
       </div>
       <div class="top-actions">
         <a class="ghost-link" href="./index.html">Seaford report</a>
+        <a class="ghost-link" href="/surf-reports">All reports</a>
         <a class="ghost-link" href="./wave-map.html">Wave map</a>
         <a class="cta-link" href="https://cozy-gumption-81ef8c.netlify.app/coaching.html">Progress faster</a>
         <div class="status-pill"><span class="dot"></span><span id="statusText">Loading report...</span></div>
@@ -553,7 +554,7 @@
     function findWindShift(day, fromReport) { const startHour = Number((fromReport || day.reports[0]).time.slice(11, 13)); const start = fromReport || nearestHour(day.reports, 6) || day.reports[0]; const startEffect = windEffect(start.windDir, start.windSpeed); const future = daylightReports(day.reports).filter(r => Number(r.time.slice(11, 13)) > startHour); return future.find(r => windEffect(r.windDir, r.windSpeed).label !== startEffect.label || Math.abs(Number(r.windSpeed || 0) - Number(start.windSpeed || 0)) >= 8 || Number(r.windSpeed || 0) >= 22) || null; }
     function buildDailySummary(day, report) { const daylight = daylightReports(day.reports), nowMinute = adelaideMinutesNow(), daylightFinished = day.date === localIsoDate() && nowMinute > surfDaylightBounds(day.date).end; const futureDaylight = day.date === localIsoDate() ? daylight.filter(r => timeToMinutesFromReport(r.time) >= nowMinute - 15) : daylight; const useful = futureDaylight.length ? futureDaylight : (daylight.length ? [daylight[daylight.length - 1]] : day.reports); const best = useful.slice().sort((a, b) => surfWindowScore(b) - surfWindowScore(a))[0] || report; const morning = nearestHour(day.reports, 7) || report, evening = nearestHour(day.reports, surfDaylightBounds(day.date).end / 60) || report, shift = findWindShift(day, report); const delta = evening.finalFt - morning.finalFt; const swellTrend = delta > 0.25 ? 'building' : delta < -0.25 ? 'fading' : 'holding steady'; const liveReport = { ...report, trendLabel: swellTrend }; const bestMinute = timeToMinutesFromReport(best.time), endMinute = Math.min(bestMinute + 60, surfDaylightBounds(day.date).end), endTime = `${day.date}T${String(Math.floor(endMinute / 60)).padStart(2,'0')}:${String(endMinute % 60).padStart(2,'0')}`; const later = useful.filter(r => timeToMinutesFromReport(r.time) > bestMinute), windPickingUp = later.some(r => Number(r.windSpeed || 0) >= Number(best.windSpeed || 0) + 5), sizeDelta = Number(best.finalFt || 0) - Number(report.finalFt || 0); const nextTide = (tideForDate(day.date) || []).map(normaliseTidePoint).filter(p => clockToMinutesLocal(p.time) > bestMinute).sort((a,b) => clockToMinutesLocal(a.time)-clockToMinutesLocal(b.time))[0]; const reason = windPickingUp ? 'Cleanest chance — go before the wind picks up.' : sizeDelta >= 0.4 ? 'Cleanest useful pulse while the swell builds.' : nextTide?.type === 'Low' ? 'Go before the tide drops further.' : sizeDelta <= -0.4 ? 'Best remaining window before the swell fades.' : 'Best mix of clean wind, tide and useful size.'; const bestWindow = daylightFinished ? 'Today is finished · Check tomorrow in the 7-day outlook.' : `Today · ${formatTime(best.time)}–${formatTime(endTime)} · ${liveSizeText(best)} ft — ${reason}`; const windShift = shift ? `${formatTime(shift.time)} · ${compassFromDeg(shift.windDir)} ${Math.round(shift.windSpeed)}km/h` : 'No big shift'; const staleText = state.data?.staleDataUsed ? ' Using recently cached data.' : ''; const text = `${shortSurfRead(liveReport, { ...day, best })}${staleText}`; return { headline: 'Surf plan', text, bestWindow, windShift, swellTrend }; }
 
-    function render() { if (!state.report) return; const days = state.report.days; const day = days[state.selectedDay] || days[0]; const liveDay = days.find(d => d.date === localIsoDate()) || days[0]; const liveReport = selectedReportForDay(liveDay); $('mainSize').textContent = liveSizeText(liveReport); const dailySummary = buildDailySummary(liveDay, liveReport); $('dailyHeadline').textContent = dailySummary.headline; $('plainWhy').textContent = dailySummary.text; $('bestWindowStat').textContent = dailySummary.bestWindow; $('windShiftStat').textContent = dailySummary.windShift; $('windMain').textContent = `${Math.round(liveReport.windSpeed)} km/h`; $('windSub').textContent = `${compassFromDeg(liveReport.windDir)} wind · ${Math.round(liveReport.windDir)}°`; $('tideCall').textContent = nextTideCall(liveReport); $('tideTitle').textContent = `Tide · ${formatDay(day.date)}`; $('swellTrendTitle').textContent = `Swell trend · ${formatDay(day.date)}`; $('windTrendTitle').textContent = `Wind trend · ${formatDay(day.date)}`; renderDays(days); renderSwellDetail(day); renderTidePanel(day); renderSwellTrendPanel(day); renderWindTrendPanel(day); renderWeatherPanel(); }
+    function render() { if (!state.report) return; const days = state.report.days; const day = days[state.selectedDay] || days[0]; const liveDay = days.find(d => d.date === localIsoDate()) || days[0]; const liveReport = selectedReportForDay(liveDay); $('mainSize').textContent = liveSizeText(liveReport); const dailySummary = buildDailySummary(liveDay, liveReport); $('dailyHeadline').textContent = dailySummary.headline; $('plainWhy').textContent = dailySummary.text; $('bestWindowStat').textContent = dailySummary.bestWindow; $('windShiftStat').textContent = dailySummary.windShift; $('windMain').textContent = `${Math.round(liveReport.windSpeed)} km/h`; $('windSub').textContent = `${compassFromDeg(liveReport.windDir)} wind · ${Math.round(liveReport.windDir)}°`; $('tideCall').textContent = nextTideCall(liveReport); $('tideTitle').textContent = `Tide · ${formatDay(day.date)}`; $('swellTrendTitle').textContent = `Swell trend · ${formatDay(day.date)}`; $('windTrendTitle').textContent = `Wind trend · ${formatDay(day.date)}`; renderDays(days); renderSwellDetail(day); renderTidePanel(day); renderSwellTrendPanel(day); renderWindTrendPanel(day); renderWeatherPanel(); applyCanonicalFreshness(); }
     function renderDays(days) { $('days').innerHTML = days.map((day, i) => { const windReport = day.peak || day.best; const windLine = windReport ? `${compassFromDeg(windReport.windDir)} ${Math.round(windReport.windSpeed)}km/h` : ''; const cleanSize = String(day.sizeText || '').replace(/\s*ft$/i, ''); return `<div class="day-card ${i === state.selectedDay ? 'active' : ''}" data-day="${i}"><div class="day-name">${formatDay(day.date)}</div><div class="day-size">${cleanSize}<span style="font-size:14px;color:var(--muted);letter-spacing:0;"> ft</span></div>${windLine ? `<div class="day-wind">${windLine}</div>` : ''}</div>`; }).join(''); document.querySelectorAll('.day-card').forEach(card => card.addEventListener('click', () => { const clicked = Number(card.dataset.day); if (state.selectedDay === clicked && state.expandedDay === clicked) state.expandedDay = null; else { state.selectedDay = clicked; state.expandedDay = clicked; } render(); })); }
     function fmtM(value) { const n = Number(value || 0); return n ? `${n.toFixed(1)}m` : '--'; }
     function fmtPeriod(value) { const n = Number(value || 0); return n ? `${n.toFixed(1)}s` : '--'; }
@@ -592,9 +593,55 @@
     function renderWeatherHours(date) { return `<div class="weather-hours">${weatherHourlyForDate(date).map(h => `<div class="weather-hour"><small>${h.hour === 6 ? '6 AM' : h.hour === 12 ? '12 PM' : '6 PM'}</small><div class="weather-icon">${weatherEmoji(h.code, h.wind, h.rain)}</div><b>${Math.round(h.temp)}°C</b><p>${weatherSummaryText(h.code, h.rain)}</p></div>`).join('')}</div>`; }
     function renderWeatherPanel() { const wind = state.data?.weather; if (!wind?.current || !wind?.daily) { $('weatherPanel').innerHTML = `<div class="warning error"><b>No weather data loaded.</b></div>`; return; } const currentTemp = Number(wind.current.temperature_2m || 0), currentCode = wind.current.weather_code, currentRain = Number(wind.current.precipitation || 0), daily = wind.daily, todayRain = Number(daily.precipitation_probability_max?.[0] ?? 0), todayMax = Number(daily.temperature_2m_max?.[0] ?? currentTemp), todayMin = Number(daily.temperature_2m_min?.[0] ?? currentTemp); const days = (daily.time || []).slice(0, 7).map((date, i) => `<div class="weather-day ${state.selectedWeatherDay === i ? 'active' : ''}" data-weather-day="${i}"><small>${formatDay(date)}</small><div class="weather-icon">${weatherEmoji(daily.weather_code?.[i], daily.wind_speed_10m_max?.[i], daily.precipitation_probability_max?.[i])}</div><b>${Math.round(daily.temperature_2m_min?.[i] ?? 0)}° / ${Math.round(daily.temperature_2m_max?.[i] ?? 0)}°</b><p>${weatherSummaryText(daily.weather_code?.[i], daily.precipitation_probability_max?.[i])}</p></div>`).join(''); const selectedIndex = state.selectedWeatherDay === null ? 0 : state.selectedWeatherDay, selectedWeatherDate = daily.time?.[selectedIndex], selectedWeatherTitle = state.selectedWeatherDay === null ? 'Today’s beach mood' : `Weather detail · ${formatDay(selectedWeatherDate)}`, selectedWeatherHours = state.selectedWeatherDay === null ? '' : renderWeatherHours(selectedWeatherDate), selectedRain = Number(daily.precipitation_probability_max?.[selectedIndex] ?? todayRain), selectedMax = Number(daily.temperature_2m_max?.[selectedIndex] ?? todayMax), selectedMin = Number(daily.temperature_2m_min?.[selectedIndex] ?? todayMin), selectedCode = daily.weather_code?.[selectedIndex] ?? daily.weather_code?.[0], selectedLabel = state.selectedWeatherDay === null ? 'Today' : formatDay(selectedWeatherDate); $('weatherPanel').innerHTML = `<div class="weather-current"><div class="weather-now"><small class="label">Now in Middleton</small><div class="weather-icon">${weatherEmoji(currentCode, wind.current.wind_speed_10m, todayRain)}</div><div class="weather-temp">${Math.round(currentTemp)}<span>°C</span></div><div class="wind-sub">${weatherSummaryText(currentCode, todayRain)}${currentRain > 0 ? ` · ${currentRain.toFixed(1)} mm now` : ''}</div></div><div class="weather-summary"><span class="weather-summary-title">${selectedWeatherTitle}</span><b>${weatherPositiveLine(selectedMin, selectedMax, selectedRain, selectedCode, selectedLabel)}</b>${selectedWeatherHours}</div></div><div class="weather-days">${days}</div>`; document.querySelectorAll('.weather-day').forEach(card => card.addEventListener('click', () => { const clicked = Number(card.dataset.weatherDay); state.selectedWeatherDay = state.selectedWeatherDay === clicked ? null : clicked; renderWeatherPanel(); })); }
 
+    function applyCanonicalFreshness() {
+      const report = window.__FRENCHY_CANONICAL_REPORT__;
+      if (!report) return;
+      $('statusText').textContent = report.status === 'current' ? 'Current report' : report.status === 'expired' ? 'Report expired' : 'Report unavailable';
+      const regional = report.spot?.calibration_scope === 'regional-mid-coast';
+      $('sourceRow').innerHTML = regional
+        ? `<span><b>Regional report:</b> ${report.spot.name} uses the Seaford-calibrated Mid Coast model. It is not a spot-specific estimate.</span>`
+        : `<span>Issued ${report.issued_at} · valid until ${report.valid_until} · status: ${report.status}</span>`;
+    }
+
+    function applyServerHydration(hydration) {
+      if (!hydration?.report?.reports?.length || !hydration?.data) return false;
+      state.data = hydration.data;
+      state.report = hydration.report;
+      state.yearlyTides = hydration.tides || state.yearlyTides;
+      state.dataWarnings = hydration.data.dataWarnings || [];
+      state.staleDataUsed = Boolean(hydration.data.staleDataUsed);
+      state.optionalFetchFailures = hydration.data.optionalFetchFailures || [];
+      state.lastSuccessfulFetchTime = hydration.data.lastSuccessfulFetchTime || hydration.generatedAt;
+      state.selectedDay = 0;
+      state.expandedDay = null;
+      return true;
+    }
+
+    async function hydrateCanonicalReport(force = false) {
+      let hydration = !force ? window.__FRENCHY_SSR_STATE__ : null;
+      if (force) {
+        const slug = window.__FRENCHY_CANONICAL_REPORT__?.spot?.id || 'middleton';
+        const response = await fetch(`/api/surf-reports/${encodeURIComponent(slug)}.json?full=1&refresh=1`, { cache: 'no-store' });
+        if (!response.ok) throw new Error(`Canonical report refresh failed: ${response.status}`);
+        const payload = await response.json();
+        hydration = payload.hydration;
+        window.__FRENCHY_CANONICAL_REPORT__ = payload.canonical;
+        window.__FRENCHY_SSR_STATE__ = hydration;
+      }
+      if (!applyServerHydration(hydration)) return false;
+      render();
+      applyCanonicalFreshness();
+      return true;
+    }
+
     async function loadReport(force = false) {
       $('statusText').textContent = 'Loading report...';
       try {
+        if (window.__FRENCHY_CANONICAL_REQUIRED__) {
+          const hydrated = await hydrateCanonicalReport(force);
+          if (!hydrated) throw new Error('The canonical server report is unavailable.');
+          return;
+        }
         const fetchOptions = force ? { cacheMs: 0 } : {};
         await loadYearlyTides();
         let source = null;
@@ -734,7 +781,7 @@
         windContext: windObservationSnapshot(report),
         tide: currentTideObservationSnapshot(selectedLocalTime),
         weather: currentWeatherObservationSnapshot(selectedLocalTime),
-        dataContext: { dataSource: state.data?.dataSource, generatedAt: state.data?.lastSuccessfulFetchTime, staleDataUsed: state.data?.staleDataUsed, warnings: state.data?.dataWarnings || [] },
+        dataContext: { dataSource: state.data?.dataSource, generatedAt: state.data?.lastSuccessfulFetchTime, staleDataUsed: state.data?.staleDataUsed, warnings: state.data?.dataWarnings || [], canonicalIssuedAt: window.__FRENCHY_CANONICAL_REPORT__?.issued_at || null, canonicalValidUntil: window.__FRENCHY_CANONICAL_REPORT__?.valid_until || null, canonicalStatus: window.__FRENCHY_CANONICAL_REPORT__?.status || null, canonicalUrl: window.__FRENCHY_CANONICAL_REPORT__?.canonical_url || null },
         calculationResult: report
       };
     }

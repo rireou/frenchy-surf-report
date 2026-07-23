@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Surf Report Data and Freshness | Frenchy Surf School</title>
+  <meta name="description" content="How Frenchy Review creates current Seaford and Middleton surf reports, publishes crawlable HTML and JSON, and marks expired or unavailable data." />
+  <link rel="canonical" href="https://frenchyreview.netlify.app/surf-report-data" />
+  <style>
+    body{margin:0;background:#061b24;color:#eefaff;font:16px/1.6 system-ui,sans-serif}.wrap{max-width:900px;margin:auto;padding:28px}a{color:#77d8ff}.card{background:#0b2b38;border:1px solid #1d5367;border-radius:20px;padding:24px;margin:18px 0}code{color:#a8f3d3}.note{color:#b9d8e4}li{margin:.55rem 0}
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <h1>Frenchy Surf Report data and freshness</h1>
+    <p>Frenchy Review publishes current surf conditions in crawlable HTML, JSON and JSON-LD from one calculation result.</p>
+
+    <section class="card">
+      <h2>How current HTML is produced</h2>
+      <p>A Netlify Function runs when a surf-report page is requested. It fetches the current marine, wind and weather inputs, loads the trusted 2026 tide table, and executes the same Seaford or Middleton calculation used by the visible interface.</p>
+      <p>The function writes the calculated wave, swell, wind, tide, timestamps and status into the initial HTML response before it reaches the browser. JavaScript is not required to read the current summary.</p>
+      <p>The response may be cached by Netlify for five minutes. Every report contains <code>issued_at</code> and <code>valid_until</code>. Data older than its validity window is marked <code>expired</code>; if no verified result is available, it is marked <code>unavailable</code>. An old build-time value is never labelled current.</p>
+    </section>
+
+    <section class="card">
+      <h2>Calibrated and regional reports</h2>
+      <ul>
+        <li><strong>Seaford:</strong> spot-specific Frenchy calculation.</li>
+        <li><strong>Middleton:</strong> spot-specific Frenchy calculation.</li>
+        <li><strong>Adelaide Mid Coast, South Port and Moana:</strong> clearly labelled regional Mid Coast pages using the Seaford-calibrated report. They do not claim a separate spot calibration.</li>
+      </ul>
+    </section>
+
+    <section class="card">
+      <h2>Machine-readable data</h2>
+      <ul>
+        <li><a href="/api/surf-reports/index.json">All report endpoints</a></li>
+        <li><a href="/api/surf-reports/seaford.json">Seaford JSON</a></li>
+        <li><a href="/api/surf-reports/middleton.json">Middleton JSON</a></li>
+        <li><a href="/api/surf-reports/mid-coast.json">Adelaide Mid Coast regional JSON</a></li>
+        <li><a href="/api/surf-reports/south-port.json">South Port regional JSON</a></li>
+        <li><a href="/api/surf-reports/moana.json">Moana regional JSON</a></li>
+      </ul>
+      <p class="note">JSON-LD embedded in each HTML page is built from the same canonical report object as these endpoints and the visible page.</p>
+    </section>
+
+    <p><a href="/surf-reports">View all surf reports</a> · <a href="https://www.frenchysurfschool.com.au/">Frenchy Surf School</a></p>
+  </main>
+</body>
+</html>
