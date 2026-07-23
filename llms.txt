@@ -8,7 +8,6 @@ Canonical HTML:
 - https://frenchyreview.netlify.app/surf-reports
 - https://frenchyreview.netlify.app/surf-report/mid-coast
 - https://frenchyreview.netlify.app/surf-report/south-port
-- https://frenchyreview.netlify.app/surf-report/moana
 
 JSON:
 - https://frenchyreview.netlify.app/api/surf-reports/index.json
@@ -18,6 +17,6 @@ JSON:
 Freshness and methodology:
 - https://frenchyreview.netlify.app/surf-report-data
 
-Seaford and Middleton have spot-specific calculations. Mid Coast, South Port and Moana use the regional Mid Coast report calibrated at Seaford and must not be described as separately calibrated spot forecasts.
+Seaford and Middleton have spot-specific calculations. Mid Coast and South Port use the regional Mid Coast report calibrated at Seaford and must not be described as separately calibrated spot forecasts.
 
 Every report includes issued_at, valid_until and status. Treat expired or unavailable reports accordingly.

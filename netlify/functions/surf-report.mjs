@@ -1,9 +1,6 @@
-import { readFileSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { getSurfReport } from '../lib/report-source.mjs';
+import { readProjectText } from '../lib/project-files.mjs';
 
-const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const SITE = 'https://frenchyreview.netlify.app';
 const SCHOOL = 'https://www.frenchysurfschool.com.au/';
 const HTML_HEADERS = {
@@ -41,12 +38,6 @@ const LOCATION_MAP = {
     engine: 'seaford',
     name: 'South Port',
     slug: 'south-port',
-    scope: 'regional-mid-coast'
-  },
-  moana: {
-    engine: 'seaford',
-    name: 'Moana',
-    slug: 'moana',
     scope: 'regional-mid-coast'
   }
 };
@@ -221,7 +212,7 @@ async function loadLocation(config, force = false) {
 function renderReportHtml(config, result) {
   const report = result.canonical;
   const fileName = config.engine === 'middleton' ? 'middleton.html' : 'index.html';
-  let html = readFileSync(resolve(ROOT, fileName), 'utf8');
+  let html = readProjectText(fileName);
   const regional = config.scope !== 'spot-specific';
   const display = report.wave?.display || 'Unavailable';
   const description = report.status === 'unavailable'
@@ -316,7 +307,7 @@ function renderIndexHtml(results) {
     hasPart: data.reports.map(item => ({ '@type': 'WebPage', url: item.canonical_url, name: `${item.spot.name} Surf Report` }))
   })}</script>
 </head>
-<body><main class="wrap"><header><h1>Frenchy Surf Reports</h1><p>Current, timestamped surf conditions for Seaford, the Adelaide Mid Coast and Middleton.</p><p class="note">South Port and Moana use the regional Mid Coast report and are never presented as separately calibrated spot forecasts.</p></header><section class="grid">${cards}</section><p><a href="${SITE}/surf-report-data">How the data and freshness work</a> · <a href="${SCHOOL}">Frenchy Surf School</a></p></main></body>
+<body><main class="wrap"><header><h1>Frenchy Surf Reports</h1><p>Current, timestamped surf conditions for Seaford, the Adelaide Mid Coast and Middleton.</p><p class="note">South Port uses the regional Mid Coast report and is never presented as a separately calibrated spot forecast.</p></header><section class="grid">${cards}</section><p><a href="${SITE}/surf-report-data">How the data and freshness work</a> · <a href="${SCHOOL}">Frenchy Surf School</a></p></main></body>
 </html>`;
 }
 
@@ -325,7 +316,6 @@ async function loadIndex(force = false) {
     LOCATION_MAP.seaford,
     LOCATION_MAP['mid-coast'],
     LOCATION_MAP['south-port'],
-    LOCATION_MAP.moana,
     LOCATION_MAP.middleton
   ];
   return Promise.all(configs.map(config => loadLocation(config, force)));

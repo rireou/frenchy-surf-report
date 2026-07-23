@@ -1,9 +1,6 @@
-import { readFileSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
 import vm from 'node:vm';
+import { readProjectText } from './project-files.mjs';
 
-const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const TIMEZONE = 'Australia/Adelaide';
 
 const ENGINE_EXPORTS = {
@@ -86,7 +83,7 @@ function createDomStubs() {
 
 function extractLegacyScript(location) {
   const fileName = location === 'middleton' ? 'middleton.html' : 'index.html';
-  const html = readFileSync(resolve(ROOT, fileName), 'utf8');
+  const html = readProjectText(fileName);
   const scripts = [...html.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/gi)];
   if (!scripts.length) throw new Error(`No inline script found in ${fileName}`);
   let source = scripts.at(-1)[1];

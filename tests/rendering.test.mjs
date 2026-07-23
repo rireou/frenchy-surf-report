@@ -34,16 +34,16 @@ test('HTML, JSON-LD and hydration use the same Seaford model value', () => {
   assert.equal(selected.finalFt, result.canonical.wave.value_ft);
 });
 
-test('regional pages explicitly reuse Seaford and never claim spot-specific calibration', () => {
+test('South Port explicitly reuses Seaford and never claims spot-specific calibration', () => {
   const base = fixtureResult('seaford');
   const regional = {
     ...base,
-    canonical: __test.regionalise(base.canonical, __test.LOCATION_MAP.moana)
+    canonical: __test.regionalise(base.canonical, __test.LOCATION_MAP['south-port'])
   };
-  const html = __test.renderReportHtml(__test.LOCATION_MAP.moana, regional);
+  const html = __test.renderReportHtml(__test.LOCATION_MAP['south-port'], regional);
   assert.equal(regional.canonical.wave.value_ft, base.canonical.wave.value_ft);
   assert.equal(regional.canonical.spot.calibration_scope, 'regional-mid-coast');
-  assert.match(regional.canonical.summary.text, /not a separate spot-specific Moana calibration/i);
+  assert.match(regional.canonical.summary.text, /not a separate spot-specific South Port calibration/i);
   assert.match(html, /not a spot-specific estimate/i);
 });
 

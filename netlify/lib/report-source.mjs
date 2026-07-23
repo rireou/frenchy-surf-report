@@ -1,13 +1,10 @@
-import { createRequire } from 'node:module';
-import { readFileSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import seafordSource from '../functions/seaford-data.js';
+import middletonSource from '../functions/middleton-data.js';
 import { buildReportFromSource } from './report-runtime.mjs';
+import { readProjectJson } from './project-files.mjs';
 
-const require = createRequire(import.meta.url);
-const { handler: seafordSourceHandler } = require('../functions/seaford-data.js');
-const { handler: middletonSourceHandler } = require('../functions/middleton-data.js');
-const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
+const { handler: seafordSourceHandler } = seafordSource;
+const { handler: middletonSourceHandler } = middletonSource;
 const SOURCE_CACHE_MS = 4 * 60 * 1000;
 const STALE_LIMIT_MS = 60 * 60 * 1000;
 const cache = new Map();
@@ -16,7 +13,7 @@ function tideData(location) {
   const fileName = location === 'middleton'
     ? 'victor_harbor_2026_tides.json'
     : 'port_noarlunga_2026_tides.json';
-  return JSON.parse(readFileSync(resolve(ROOT, fileName), 'utf8'));
+  return readProjectJson(fileName);
 }
 
 async function freshSource(location) {

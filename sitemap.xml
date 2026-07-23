@@ -31,12 +31,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://frenchyreview.netlify.app/surf-report/moana</loc>
-    <lastmod>2026-07-23</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://frenchyreview.netlify.app/surf-report-data</loc>
     <lastmod>2026-07-23</lastmod>
     <changefreq>monthly</changefreq>

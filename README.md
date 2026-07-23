@@ -33,7 +33,6 @@ The Seaford and Middleton calculation formulas remain in `index.html` and `middl
 - `/surf-reports` — report discovery page
 - `/surf-report/mid-coast` — regional Mid Coast report
 - `/surf-report/south-port` — regional Mid Coast values, clearly not spot-calibrated
-- `/surf-report/moana` — regional Mid Coast values, clearly not spot-calibrated
 - `/surf-report-data` — freshness and methodology
 - `/api/surf-reports/index.json` — JSON discovery
 - `/api/surf-reports/:location.json` — canonical report JSON
