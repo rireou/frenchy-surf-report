@@ -1,0 +1,106 @@
+{
+  "now": "2026-06-12T02:30:00.000Z",
+  "source": {
+    "ok": true,
+    "generatedAt": "2026-06-12T02:20:00.000Z",
+    "offshore": {
+      "hourly": {
+        "time": ["2026-06-12T06:00", "2026-06-12T12:00", "2026-06-12T18:00"],
+        "wave_height": [2.1, 2.8, 2.2],
+        "wave_direction": [229, 231, 244],
+        "wave_period": [10.2, 9.3, 12],
+        "wind_wave_height": [0.2, 0.2, 0.3],
+        "wind_wave_direction": [245, 250, 260],
+        "wind_wave_period": [4, 4, 5],
+        "swell_wave_height": [2.1, 2.8, 2.2],
+        "swell_wave_direction": [229, 231, 244],
+        "swell_wave_period": [10.2, 9.3, 12],
+        "secondary_swell_wave_height": [0.5, 0.7, 0.6],
+        "secondary_swell_wave_direction": [238, 240, 242],
+        "secondary_swell_wave_period": [13, 14, 13]
+      }
+    },
+    "local": {
+      "hourly": {
+        "time": ["2026-06-12T06:00", "2026-06-12T12:00", "2026-06-12T18:00"],
+        "wave_height": [0.42, 0.62, 0.55],
+        "wave_direction": [232, 234, 242],
+        "wave_period": [7, 8, 8],
+        "wind_wave_height": [0.18, 0.22, 0.28],
+        "wind_wave_direction": [80, 70, 250],
+        "wind_wave_period": [3, 3, 4],
+        "swell_wave_height": [0.36, 0.55, 0.48],
+        "swell_wave_direction": [232, 234, 242],
+        "swell_wave_period": [7, 8, 8],
+        "secondary_swell_wave_height": [0.1, 0.12, 0.1],
+        "secondary_swell_wave_direction": [240, 240, 240],
+        "secondary_swell_wave_period": [10, 10, 10]
+      }
+    },
+    "wind": {
+      "hourly": {
+        "time": ["2026-06-12T06:00", "2026-06-12T12:00", "2026-06-12T18:00"],
+        "wind_speed_10m": [8, 11, 18],
+        "wind_direction_10m": [45, 70, 210]
+      }
+    },
+    "weather": {
+      "current": {
+        "time": "2026-06-12T12:00",
+        "temperature_2m": 16,
+        "weather_code": 2,
+        "precipitation": 0,
+        "wind_speed_10m": 11,
+        "wind_direction_10m": 70
+      },
+      "hourly": {
+        "time": ["2026-06-12T06:00", "2026-06-12T12:00", "2026-06-12T18:00"],
+        "temperature_2m": [11, 16, 13],
+        "weather_code": [1, 2, 3],
+        "precipitation_probability": [5, 15, 25],
+        "wind_speed_10m": [8, 11, 18],
+        "wind_direction_10m": [45, 70, 210]
+      },
+      "daily": {
+        "time": ["2026-06-12"],
+        "temperature_2m_max": [17],
+        "temperature_2m_min": [10],
+        "weather_code": [2],
+        "precipitation_probability_max": [25],
+        "wind_speed_10m_max": [18]
+      }
+    },
+    "gulfChecks": [
+      {
+        "point": {"name": "Seaford local cell", "lat": -35.19, "lon": 138.48},
+        "failed": false,
+        "data": {
+          "hourly": {
+            "time": ["2026-06-12T06:00", "2026-06-12T12:00", "2026-06-12T18:00"],
+            "wave_height": [0.4, 0.62, 0.54],
+            "wave_direction": [232, 234, 242],
+            "wave_period": [7, 8, 8],
+            "wind_wave_height": [0.18, 0.22, 0.28],
+            "wind_wave_direction": [80, 70, 250],
+            "wind_wave_period": [3, 3, 4],
+            "swell_wave_height": [0.34, 0.56, 0.48],
+            "swell_wave_direction": [232, 234, 242],
+            "swell_wave_period": [7, 8, 8],
+            "secondary_swell_wave_height": [0.1, 0.1, 0.1],
+            "secondary_swell_wave_direction": [240, 240, 240],
+            "secondary_swell_wave_period": [10, 10, 10]
+          }
+        }
+      }
+    ],
+    "warnings": []
+  },
+  "tides": {
+    "2026-06-12": [
+      {"time": "04:10", "height": 1.55, "type": "High"},
+      {"time": "10:35", "height": 0.55, "type": "Low"},
+      {"time": "16:42", "height": 1.78, "type": "High"},
+      {"time": "23:05", "height": 0.42, "type": "Low"}
+    ]
+  }
+}
