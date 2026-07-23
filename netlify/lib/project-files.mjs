@@ -1,14 +1,10 @@
 import { existsSync, readFileSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
-
-const SOURCE_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
+import { resolve } from 'node:path';
 
 function candidateRoots() {
   return [
     process.env.LAMBDA_TASK_ROOT,
-    process.cwd(),
-    SOURCE_ROOT
+    process.cwd()
   ].filter(Boolean);
 }
 
