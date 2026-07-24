@@ -1,5 +1,6 @@
 import { getSurfReport } from '../lib/report-source.mjs';
 import { readProjectText } from '../lib/project-files.mjs';
+import { buildObservationSnapshot } from '../lib/report-runtime.mjs';
 
 const SITE = 'https://frenchyreview.netlify.app';
 const SCHOOL = 'https://www.frenchysurfschool.com.au/';
@@ -354,10 +355,16 @@ export async function handler(event) {
   }
   const result = await loadLocation(config, force);
   if (format === 'json') {
+    const observation = query.at && result.hydration
+      ? buildObservationSnapshot(config.engine, result, query.at)
+      : null;
     const body = query.full === '1'
-      ? { canonical: result.canonical, hydration: result.hydration }
+      ? { canonical: result.canonical, hydration: result.hydration, ...(query.at ? { observation } : {}) }
       : result.canonical;
-    return { statusCode: 200, headers: JSON_HEADERS, body: JSON.stringify(body) };
+    const headers = query.at
+      ? { ...JSON_HEADERS, 'Cache-Control': 'private, no-store' }
+      : JSON_HEADERS;
+    return { statusCode: 200, headers, body: JSON.stringify(body) };
   }
   return { statusCode: 200, headers: htmlHeaders, body: renderReportHtml(config, result) };
 }

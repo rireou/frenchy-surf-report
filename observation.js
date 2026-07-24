@@ -18,7 +18,7 @@
   ];
   const sizeChoices = [0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 6];
   const conditions = [{ value: "clean", label: "✨ Clean" }, { value: "average", label: "〰 Average" }, { value: "messy", label: "💨 Messy" }];
-  const state = { authenticated: false, configured: true, snapshot: null, actualFt: null, condition: "", records: [], editingId: null, clientToken: makeToken(), saved: false, deleteArmedId: null, timeOffsetMinutes: 0, customObservedAt: null };
+  const state = { authenticated: false, configured: true, snapshot: null, actualFt: null, condition: "", records: [], editingId: null, clientToken: makeToken(), saved: false, deleteArmedId: null, timeOffsetMinutes: 0, customObservedAt: null, snapshotRequestId: 0 };
 
   document.body.classList.add("observation-mode");
   document.title = `${spot.name} Surf Observation | Frenchy`;
@@ -38,10 +38,10 @@
     </section>
     <div class="obs-hidden" id="obsDashboard">
       <section class="obs-card obs-quick-card">
-        <div class="obs-prediction"><div><span class="obs-eyebrow"><span class="obs-live-dot"></span>${spot.name} report</span><h1>Predicted <span id="obsPrediction">--</span> ft</h1></div><div class="obs-prediction-meta"><b id="obsForecastTime">Loading live conditions…</b><br><span id="obsConditions">${spot.name}</span></div></div>
+        <div class="obs-prediction"><div><span class="obs-eyebrow"><span class="obs-live-dot"></span>${spot.name} report for selected time</span><h1>Predicted <span id="obsPrediction">--</span> ft</h1></div><div class="obs-prediction-meta"><b id="obsForecastTime">Loading selected time...</b><br><span id="obsConditions">${spot.name}</span></div></div>
         <div class="obs-context-grid" id="obsCheckContext"><div class="obs-context-item"><small>Wind at check</small><b id="obsWindSummary">Loading wind…</b><span id="obsWindDetail">Direction and strength</span></div><div class="obs-context-item"><small>Tide position</small><b id="obsTideSummary">Loading tide…</b><span id="obsTideDetail">Height and next turn</span></div><div class="obs-context-item"><small>Tide change</small><b id="obsTideRange">Loading range…</b><span id="obsTideRangeDetail">Previous to next tide</span></div></div>
         <form id="obsForm">
-          <fieldset class="obs-fieldset"><legend>Observation time <small>defaults to now</small></legend><div class="obs-chips obs-time-chips" id="obsTimes"><button class="obs-chip selected" type="button" data-time-offset="0"><strong>Now</strong><small>current time</small></button><button class="obs-chip" type="button" data-time-offset="30"><strong>30 min</strong><small>ago</small></button><button class="obs-chip" type="button" data-time-offset="60"><strong>1 hour</strong><small>ago</small></button><button class="obs-chip" type="button" data-time-offset="120"><strong>2 hours</strong><small>ago</small></button><button class="obs-chip" type="button" data-time-custom><strong>Choose</strong><small>date & time</small></button></div><div class="obs-other obs-time-custom obs-hidden" id="obsCustomTime"><input class="obs-input" id="obsDateTime" type="datetime-local" step="300"><button class="obs-primary" type="button" id="obsUseTime">Use time</button></div><div class="obs-selected-time" id="obsSelectedTime">Saving observation time: now</div></fieldset>
+          <fieldset class="obs-fieldset"><legend>1. Choose observation time <small>defaults to now</small></legend><div class="obs-chips obs-time-chips" id="obsTimes"><button class="obs-chip selected" type="button" data-time-offset="0"><strong>Now</strong><small>current time</small></button><button class="obs-chip" type="button" data-time-offset="30"><strong>30 min</strong><small>ago</small></button><button class="obs-chip" type="button" data-time-offset="60"><strong>1 hour</strong><small>ago</small></button><button class="obs-chip" type="button" data-time-offset="120"><strong>2 hours</strong><small>ago</small></button><button class="obs-chip" type="button" data-time-custom><strong>Choose</strong><small>date & time</small></button></div><div class="obs-other obs-time-custom obs-hidden" id="obsCustomTime"><input class="obs-input" id="obsDateTime" type="datetime-local" step="300"><button class="obs-primary" type="button" id="obsUseTime">Use this time</button></div><div class="obs-selected-time-card loading" id="obsSelectedTimeCard" aria-live="polite"><span>Selected observation time</span><strong id="obsSelectedTimePrimary">Now</strong><p id="obsSelectedTime">This observation will be saved at the current time.</p><div class="obs-time-match" id="obsTimeMatch">Loading wave, wind and tide for this time...</div></div></fieldset>
           <fieldset class="obs-fieldset"><legend>Quick correction <small>fastest option</small></legend><div class="obs-chips" id="obsCorrections">${correctionChoices.map(choice => `<button class="obs-chip" type="button" data-delta="${choice.delta}"><strong>${choice.label}</strong><small data-result>--</small></button>`).join("")}</div></fieldset>
           <fieldset class="obs-fieldset"><legend>Or tap the actual size</legend><div class="obs-chips obs-size-chips" id="obsSizes">${sizeChoices.map(size => `<button class="obs-chip" type="button" data-size="${size}"><strong>${size}</strong><small>ft</small></button>`).join("")}<button class="obs-chip" type="button" data-size="other"><strong>Other</strong><small>type size</small></button></div><div class="obs-other obs-hidden" id="obsOther"><input class="obs-input" id="obsOtherSize" type="number" min="0" max="8" step="0.25" inputmode="decimal" placeholder="Actual size in feet"><button class="obs-primary" type="button" id="obsUseOther">Use</button></div></fieldset>
           <fieldset class="obs-fieldset"><legend>Wave quality <small>optional</small></legend><div class="obs-chips obs-condition-chips" id="obsQuality">${conditions.map(item => `<button class="obs-chip" type="button" data-condition="${item.value}"><strong>${item.label}</strong></button>`).join("")}</div></fieldset>
@@ -72,10 +72,19 @@
     return new Date(Date.now() - Number(state.timeOffsetMinutes || 0) * 60000).toISOString();
   }
 
+  function observationTimeLabel(value) {
+    const date = new Date(value);
+    const time = new Intl.DateTimeFormat("en-AU", { timeZone: "Australia/Adelaide", hour: "numeric", minute: "2-digit" }).format(date);
+    const selectedDay = adelaideDateKey(date);
+    const today = adelaideDateKey(new Date());
+    return `${selectedDay === today ? "Today" : new Intl.DateTimeFormat("en-AU", { timeZone: "Australia/Adelaide", day: "numeric", month: "short" }).format(date)} · ${time}`;
+  }
+
   function renderSelectedTime() {
     const observedAt = selectedObservedAt();
-    const suffix = state.timeOffsetMinutes === 0 ? "now" : dateTime(observedAt);
-    $("obsSelectedTime").textContent = `Saving observation time: ${suffix}`;
+    const label = observationTimeLabel(observedAt);
+    $("obsSelectedTimePrimary").textContent = state.timeOffsetMinutes === 0 ? `Now · ${label}` : label;
+    $("obsSelectedTime").textContent = `This observation will be saved for ${label}.`;
     $("obsDateTime").max = toDateTimeInput(new Date());
     $("obsDateTime").min = `${toDateTimeInput(new Date()).slice(0, 10)}T00:00`;
     document.querySelectorAll("[data-time-offset]").forEach(button => button.classList.toggle("selected", state.timeOffsetMinutes === Number(button.dataset.timeOffset)));
@@ -146,7 +155,26 @@
     return { count, next, remaining: next == null ? 0 : next - count, reached: [30, 60, 100].filter(value => count >= value) };
   }
 
+  async function fetchServerSnapshot(observedAt) {
+    const url = `/api/surf-reports/${encodeURIComponent(spot.slug)}.json?full=1&at=${encodeURIComponent(observedAt)}`;
+    const response = await fetch(url, { credentials: "same-origin", cache: "no-store" });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(payload.error || `${spot.name} forecast request failed`);
+    if (!payload.observation?.predictedFt && payload.observation?.predictedFt !== 0) {
+      throw new Error(`No ${spot.name} forecast row matches the selected time`);
+    }
+    return payload.observation;
+  }
+
   async function waitForSnapshot(observedAt = selectedObservedAt()) {
+    let serverError = null;
+    if (!demoMode) {
+      try {
+        return await fetchServerSnapshot(observedAt);
+      } catch (error) {
+        serverError = error;
+      }
+    }
     for (let attempt = 0; attempt < 80; attempt += 1) {
       const snapshot = window.FrenchyObservation?.getSnapshotAt
         ? window.FrenchyObservation.getSnapshotAt(observedAt)
@@ -155,7 +183,7 @@
       if (demoMode && attempt === 5) return { schemaVersion: 3, calculationVersion: "local-preview", location: spot.name, calculatedAt: new Date().toISOString(), observedAt, forecastTime: toDateTimeInput(observedAt).slice(0, 13) + ":00", displayTime: `Local preview · observed ${dateTime(observedAt)}`, predictedFt: spot.slug === "middleton" ? 3 : 1.5, modelPredictedFt: spot.slug === "middleton" ? 3 : 1.5, predictedText: spot.slug === "middleton" ? "3" : "1.5", calibration: "normal", activeDriver: { heightM: 2.1, directionDeg: 232, periodS: 11.4 }, offshore: {}, local: {}, wind: { wind_speed_10m: 21, wind_direction_10m: 5 }, windContext: { speedKmh: 21, directionDeg: 5, directionCompass: "N", directionName: "north", strength: "moderate", label: "Moderate N wind · 21 km/h" }, tide: { heightM: 1.14, stage: "falling", movement: "dropping", positionLabel: "Dropping · 2 hr before low", minutesToNext: 120, minutesSincePrevious: 240, cycleProgressPct: 67, rangeM: 1.42, rangeClass: "big", rangeLabel: "Big 1.42 m tide change", source: "Preview", before: { time: "14:15", type: "High", heightM: 1.85 }, after: { time: "20:15", type: "Low", heightM: 0.43 } }, weather: { temperatureC: 16, weatherCode: 1 }, dataContext: { dataSource: "local-preview" }, calculationResult: {} };
       await new Promise(resolve => setTimeout(resolve, 250));
     }
-    throw new Error("The live forecast did not finish loading. Tap View report, refresh it, then try again.");
+    throw new Error(serverError?.message || `The ${spot.name} forecast did not finish loading. Refresh this page and try again.`);
   }
 
   function showAuthenticated(authenticated) {
@@ -204,8 +232,10 @@
   function renderSnapshot() {
     if (!state.snapshot) return;
     const prediction = Number(state.snapshot.predictedFt);
+    const selectedLabel = observationTimeLabel(state.snapshot.observedAt || selectedObservedAt());
+    const forecastClock = String(state.snapshot.forecastTime || "").slice(11, 16);
     $("obsPrediction").textContent = formatFt(prediction);
-    $("obsForecastTime").textContent = state.snapshot.displayTime || "Current forecast";
+    $("obsForecastTime").textContent = `${selectedLabel} selected${forecastClock ? ` · forecast row ${clockLabel(forecastClock)}` : ""}`;
     const swell = state.snapshot.activeDriver || {};
     $("obsConditions").textContent = `${swell.heightM?.toFixed?.(1) || "--"} m · ${Math.round(swell.directionDeg || 0)}° · ${swell.periodS?.toFixed?.(1) || "--"} s`;
     const wind = windContextFor(state.snapshot);
@@ -216,6 +246,9 @@
     $("obsTideDetail").textContent = tide.after?.type ? `Next ${String(tide.after.type).toLowerCase()} ${clockLabel(tide.after.time)} · ${Math.round(tide.cycleProgressPct || 0)}% through this tide` : "Next tide unavailable";
     $("obsTideRange").textContent = tide.rangeLabel;
     $("obsTideRangeDetail").textContent = tide.before?.heightM != null && tide.after?.heightM != null ? `${Number(tide.before.heightM).toFixed(2)} m ${String(tide.before.type).toLowerCase()} → ${Number(tide.after.heightM).toFixed(2)} m ${String(tide.after.type).toLowerCase()}` : "Range unavailable";
+    $("obsSelectedTimeCard").classList.remove("loading", "error");
+    $("obsSelectedTimeCard").classList.add("ready");
+    $("obsTimeMatch").textContent = `✓ Matched ${spot.name} data: ${formatFt(prediction)} ft · ${wind.label} · ${tide.positionLabel}`;
     document.querySelectorAll("[data-delta]").forEach(button => {
       const result = clamp(roundQuarter(prediction + Number(button.dataset.delta)), 0, 8);
       button.querySelector("[data-result]").textContent = `${formatFt(result)} ft`;
@@ -223,20 +256,38 @@
     selectActual(prediction, document.querySelector('[data-delta="0"]'));
   }
 
-  async function refreshSnapshotForTime() {
+  async function refreshSnapshotForTime(revealSelection = false) {
     const observedAt = selectedObservedAt();
+    const requestId = ++state.snapshotRequestId;
     state.saved = false;
     state.clientToken = makeToken();
+    state.snapshot = null;
+    state.actualFt = null;
     renderSelectedTime();
-    setMessage("obsSaveMessage", "Matching the report to that time…");
+    if (revealSelection) $("obsSelectedTimeCard").scrollIntoView?.({ behavior: "smooth", block: "center" });
+    $("obsSelectedTimeCard").classList.remove("ready", "error");
+    $("obsSelectedTimeCard").classList.add("loading");
+    $("obsTimeMatch").textContent = `Loading wave, wind and tide for ${observationTimeLabel(observedAt)}...`;
+    $("obsPrediction").textContent = "--";
+    $("obsForecastTime").textContent = `Loading ${spot.name} data for ${observationTimeLabel(observedAt)}...`;
+    $("obsSave").disabled = true;
+    $("obsSave").textContent = "Loading selected time...";
+    document.querySelectorAll("[data-delta],[data-size]").forEach(button => button.classList.remove("selected"));
+    setMessage("obsSaveMessage", "Matching the report to the selected observation time...");
     try {
-      state.snapshot = await waitForSnapshot(observedAt);
+      const snapshot = await waitForSnapshot(observedAt);
+      if (requestId !== state.snapshotRequestId) return;
+      state.snapshot = snapshot;
       renderSnapshot();
       setMessage("obsSaveMessage");
     } catch (error) {
+      if (requestId !== state.snapshotRequestId) return;
       state.snapshot = null;
       $("obsSave").disabled = true;
       $("obsSave").textContent = "Prediction unavailable";
+      $("obsSelectedTimeCard").classList.remove("loading", "ready");
+      $("obsSelectedTimeCard").classList.add("error");
+      $("obsTimeMatch").textContent = `Could not load ${spot.name} data for ${observationTimeLabel(observedAt)}.`;
       setMessage("obsSaveMessage", error.message, "error");
     }
   }
@@ -245,7 +296,7 @@
     state.timeOffsetMinutes = Number(minutes);
     state.customObservedAt = null;
     $("obsCustomTime").classList.add("obs-hidden");
-    refreshSnapshotForTime();
+    refreshSnapshotForTime(true);
   }
 
   function showCustomTime() {
@@ -266,7 +317,7 @@
     state.timeOffsetMinutes = null;
     state.customObservedAt = selected.toISOString();
     $("obsCustomTime").classList.add("obs-hidden");
-    refreshSnapshotForTime();
+    refreshSnapshotForTime(true);
   }
 
   async function loadRecords() {
@@ -426,8 +477,7 @@
   }
 
   async function loadLiveSnapshot() {
-    renderSelectedTime();
-    try { state.snapshot = await waitForSnapshot(); renderSnapshot(); } catch (error) { setMessage("obsSaveMessage", error.message, "error"); $("obsSave").textContent = "Prediction unavailable"; }
+    await refreshSnapshotForTime();
   }
 
   function bindEvents() {
