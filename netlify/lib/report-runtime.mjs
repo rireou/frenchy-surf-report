@@ -204,6 +204,21 @@ function selectCurrentReport(reports, now) {
   })).sort((a, b) => a.distance - b.distance)[0]?.report || null;
 }
 
+function selectReportForObservation(reports, observedAt) {
+  const targetDate = observedAt instanceof Date ? observedAt : new Date(observedAt);
+  if (!Number.isFinite(targetDate.getTime())) return null;
+  const parts = adelaideLocalParts(targetDate);
+  const localTime = `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}`;
+  const target = new Date(localTime).getTime();
+  const sameDay = reports.filter(report => report.time.startsWith(localTime.slice(0, 10)));
+  const pool = sameDay.length ? sameDay : reports;
+  const nearest = pool.map(report => ({
+    report,
+    distanceMs: Math.abs(new Date(report.time).getTime() - target)
+  })).sort((a, b) => a.distanceMs - b.distanceMs)[0];
+  return nearest ? { ...nearest, localTime } : null;
+}
+
 function localOffsetFor(dateString) {
   const date = new Date(`${dateString.slice(0, 10)}T12:00:00Z`);
   const part = new Intl.DateTimeFormat('en-AU', {
@@ -337,6 +352,57 @@ export function buildReportFromSource(location, source, tideData, options = {}) 
       report,
       tides: normalisedTides
     }
+  };
+}
+
+export function buildObservationSnapshot(location, result, observedAt) {
+  if (!result?.hydration?.report?.reports?.length) return null;
+  const selectedAt = new Date(observedAt);
+  if (!Number.isFinite(selectedAt.getTime())) return null;
+  const engine = createLegacyEngine(location);
+  const hydration = result.hydration;
+  engine.state.data = hydration.data;
+  engine.state.report = hydration.report;
+  if (location === 'seaford') engine.state.portNoarlungaTides = hydration.tides || {};
+  else engine.state.yearlyTides = hydration.tides || {};
+  const nearest = selectReportForObservation(hydration.report.reports, selectedAt);
+  if (!nearest?.report || nearest.distanceMs > 90 * 60 * 1000) return null;
+  const report = nearest.report;
+  const windContext = engine.windObservationSnapshot(report);
+  const tide = engine.currentTideObservationSnapshot(nearest.localTime);
+  const weather = engine.currentWeatherObservationSnapshot(nearest.localTime);
+  const isNow = Math.abs(Date.now() - selectedAt.getTime()) < 2 * 60 * 1000;
+  return {
+    schemaVersion: 3,
+    calculationVersion: result.canonical.calculation_version,
+    location: location === 'middleton' ? 'Middleton' : 'Seaford',
+    calculatedAt: new Date().toISOString(),
+    observedAt: selectedAt.toISOString(),
+    forecastTime: report.time,
+    forecastDistanceMinutes: Math.round(nearest.distanceMs / 60000),
+    displayTime: `Forecast ${engine.formatTime(report.time)} · ${isNow ? 'observation now' : `observation ${engine.formatTime(nearest.localTime)}`}`,
+    predictedFt: Number(report.finalFt),
+    modelPredictedFt: Number(report.originalFinalFt ?? report.finalFt),
+    predictedText: engine.liveSizeText(report),
+    calibration: 'normal',
+    activeDriver: report.activeDriver,
+    offshore: report.offshoreRaw,
+    local: report.localRaw,
+    wind: report.windRaw,
+    windContext,
+    tide,
+    weather,
+    dataContext: {
+      dataSource: hydration.data?.dataSource,
+      generatedAt: hydration.data?.lastSuccessfulFetchTime || hydration.generatedAt,
+      staleDataUsed: Boolean(hydration.data?.staleDataUsed),
+      warnings: hydration.data?.dataWarnings || [],
+      canonicalIssuedAt: result.canonical.issued_at,
+      canonicalValidUntil: result.canonical.valid_until,
+      canonicalStatus: result.canonical.status,
+      canonicalUrl: result.canonical.canonical_url
+    },
+    calculationResult: report
   };
 }
 
