@@ -45,3 +45,10 @@ test('observation interface clearly confirms and guards the selected time', () =
   assert.match(source, /Loading wave, wind and tide/);
   assert.match(source, /scrollIntoView/);
 });
+
+test('custom observation times allow every minute and cannot silently block save', () => {
+  const source = readFileSync(resolve('observation.js'), 'utf8');
+  assert.match(source, /<form id="obsForm" novalidate>/);
+  assert.match(source, /id="obsDateTime" type="datetime-local" step="60"/);
+  assert.doesNotMatch(source, /id="obsDateTime" type="datetime-local" step="300"/);
+});
