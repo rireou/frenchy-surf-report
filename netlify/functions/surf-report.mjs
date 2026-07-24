@@ -43,6 +43,34 @@ const LOCATION_MAP = {
   }
 };
 
+function normaliseLocation(value) {
+  return String(value || '').replace(/\.json$/i, '').toLowerCase();
+}
+
+function resolveLocation(event) {
+  const queryLocation = normaliseLocation(event.queryStringParameters?.location);
+  if (queryLocation) return queryLocation;
+
+  let pathname = String(event.path || '');
+  if (event.rawUrl) {
+    try {
+      pathname = new URL(event.rawUrl).pathname || pathname;
+    } catch {
+      // Keep the event path when rawUrl is unavailable or malformed.
+    }
+  }
+
+  const apiMatch = pathname.match(/\/api\/surf-reports\/([^/]+?)(?:\.json)?$/i);
+  if (apiMatch) return normaliseLocation(apiMatch[1]);
+
+  const reportMatch = pathname.match(/\/surf-report\/([^/]+)$/i);
+  if (reportMatch) return normaliseLocation(reportMatch[1]);
+
+  if (/\/(?:observe-)?middleton(?:\.html)?\/?$/i.test(pathname)) return 'middleton';
+  if (/\/surf-reports\/?$/i.test(pathname)) return 'index';
+  return 'seaford';
+}
+
 function safeJson(value) {
   return JSON.stringify(value).replace(/</g, '\\u003c').replace(/-->/g, '--\\u003e');
 }
@@ -325,7 +353,7 @@ async function loadIndex(force = false) {
 export async function handler(event) {
   const query = event.queryStringParameters || {};
   const format = query.format || (event.path?.endsWith('.json') ? 'json' : 'html');
-  const slug = String(query.location || 'seaford').replace(/\.json$/i, '').toLowerCase();
+  const slug = resolveLocation(event);
   const force = query.refresh === '1';
   const isPrivateObservationRoute = /^\/observe(?:-|\/|$)/.test(event.path || '');
   const htmlHeaders = isPrivateObservationRoute
@@ -372,6 +400,7 @@ export async function handler(event) {
 export const __test = {
   LOCATION_MAP,
   indexJson,
+  resolveLocation,
   regionalise,
   renderIndexHtml,
   renderReportHtml,
