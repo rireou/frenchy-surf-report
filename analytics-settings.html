@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Visitor statistics settings | Frenchy</title>
+  <script src="/analytics.js" defer></script>
+  <style>
+    :root{color-scheme:dark;font-family:Inter,system-ui,sans-serif;background:#06232c;color:#f5fbfc}
+    *{box-sizing:border-box}
+    body{margin:0;min-height:100vh;display:grid;place-items:center;padding:24px}
+    main{width:min(620px,100%);padding:32px;border:1px solid #287080;border-radius:24px;background:#0b3440;box-shadow:0 20px 60px #00151c88}
+    h1{margin:0 0 12px;font-size:clamp(1.8rem,6vw,3rem)}
+    p{line-height:1.55;color:#c9e5e9}
+    #status{padding:14px 16px;border-radius:12px;background:#06232c;font-weight:800;color:#8cebd2}
+    .actions{display:grid;gap:12px;margin-top:22px}
+    button,a{border:0;border-radius:12px;padding:15px 18px;font:inherit;font-weight:800;text-align:center;text-decoration:none;cursor:pointer}
+    button{background:linear-gradient(90deg,#8cebd2,#71d2f5);color:#06232c}
+    button.secondary{background:#174b58;color:#fff}
+    a{color:#8cebd2}
+  </style>
+</head>
+<body>
+  <main>
+    <p>FRENCHY PRIVATE SETTING</p>
+    <h1>Do not count this device</h1>
+    <p>Use this once on each phone or computer you use. It only changes this browser and does not send your IP address anywhere.</p>
+    <p id="status">Checking this device…</p>
+    <div class="actions">
+      <button id="exclude" type="button">Exclude this device from statistics</button>
+      <button id="include" class="secondary" type="button">Count this device again</button>
+      <a href="/">Back to the surf report</a>
+    </div>
+  </main>
+  <script>
+    addEventListener('DOMContentLoaded', () => {
+      const status = document.getElementById('status');
+      const render = () => {
+        const excluded = window.FrenchyAnalytics && window.FrenchyAnalytics.isExcluded();
+        status.textContent = excluded
+          ? 'This device is excluded. Your visits will not be counted.'
+          : 'This device is currently counted.';
+      };
+      document.getElementById('exclude').addEventListener('click', () => {
+        window.FrenchyAnalytics.setExcluded(true);
+        render();
+      });
+      document.getElementById('include').addEventListener('click', () => {
+        window.FrenchyAnalytics.setExcluded(false);
+        render();
+      });
+      render();
+    });
+  </script>
+</body>
+</html>
