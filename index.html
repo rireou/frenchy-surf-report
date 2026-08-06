@@ -588,6 +588,32 @@
 
       return { quality: 'bad', maxUnconfirmedFt: 1.5, maxConfirmedFt: 2.0 };
     }
+    function seafordWestFetchFloor(row, currentFt) {
+      const windSpeed = Number(row.wind?.wind_speed_10m || 0);
+      const windDir = ((Number(row.wind?.wind_direction_10m || 0) % 360) + 360) % 360;
+      const localWave = Number(row.local?.wave_height || 0);
+      const localPeriod = Number(row.local?.wave_period || 0);
+      const localDir = Number(row.local?.wave_direction || 0);
+      const windSea = Number(row.local?.wind_wave_height || 0);
+      const aligned = localDir >= 232 && localDir <= 258;
+      const moderateWestFetch = windSpeed >= 16 && windSpeed <= 24 && windDir >= 220 && windDir <= 265;
+      const notPureChop = localPeriod >= 6 || windSea <= localWave * 0.85;
+      let floorFt = 0;
+
+      if (moderateWestFetch && aligned && notPureChop && localWave >= 0.45) {
+        floorFt = localWave >= 0.6 && localPeriod >= 6 ? 1.45 : 1.15;
+      }
+
+      const ft = Math.max(Number(currentFt || 0), floorFt);
+      return {
+        ft,
+        applied: floorFt > 0 && ft > Number(currentFt || 0),
+        floorFt,
+        note: floorFt > 0
+          ? 'Moderate WSW/SW local fetch is locally aligned, so the report holds a small Seaford line instead of collapsing too low.'
+          : ''
+      };
+    }
     function stormSurfSizeFromWindFt(speedKmh, directionDeg) { const s = Number(speedKmh || 0), fit = northStormDirectionFit(directionDeg); if (fit <= 0 || s < 25) return 0; let ft = 0; if (s < 30) ft = lerp(1.0, 1.4, (s - 25) / 5); else if (s < 35) ft = lerp(1.4, 2.0, (s - 30) / 5); else if (s < 42) ft = lerp(2.0, 2.7, (s - 35) / 7); else ft = lerp(2.7, 3.4, Math.min((s - 42) / 13, 1)); return clamp(ft * fit, 0, 4); }
     function stormSurfSizeFromWindWaveFt(localWindWaveM) { const w = Number(localWindWaveM || 0); if (w < 0.35) return 0; let ft = w * 2.05; if (w >= 0.5) ft = Math.max(ft, 1.0); if (w >= 0.8) ft = Math.max(ft, 1.5); if (w >= 1.0) ft = Math.max(ft, 2.0); if (w >= 1.2) ft = Math.max(ft, 2.5); if (w >= 1.5) ft = Math.max(ft, 3.0); return clamp(ft, 0, 4.5); }
     function recentNorthStormFetchFt(rows, currentIndex) {
@@ -1324,6 +1350,16 @@
       report.windCompressionStormDominant = windCompression.stormIsDominant;
       if (windCompression.applied) {
         report.confidenceReason = windCompression.note;
+      }
+      const westFetchFloor = seafordWestFetchFloor(row, finalFt);
+      finalFt = westFetchFloor.ft;
+      report.finalFt = finalFt;
+      report.sizeText = sizeRange(finalFt);
+      report.westFetchFloorApplied = westFetchFloor.applied;
+      report.westFetchFloorFt = westFetchFloor.floorFt;
+      report.westFetchFloorNote = westFetchFloor.note;
+      if (westFetchFloor.applied) {
+        report.confidenceReason = westFetchFloor.note;
       }
       const strong230Floor = seafordStrong230SwellFloor(row, report, finalFt);
       finalFt = strong230Floor.ft;

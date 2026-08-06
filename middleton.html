@@ -435,6 +435,33 @@
       if (big) total = Math.max(total, southCoastSizeFt(big.heightM, big.directionDeg, big.periodS, calibration));
       return { ft: clamp(total, 0, 8), drivers: useful };
     }
+    function middletonSwRealityCap(report, localRealityFt, currentFt) {
+      const driver = report.activeDriver || {};
+      const dir = Number(driver.directionDeg || 0);
+      const period = Number(driver.periodS || 0);
+      const local = report.localRaw || {};
+      const localWave = Number(local.wave_height || 0);
+      const localPeriod = Number(local.wave_period || 0);
+      const localConfirming = localRealityFt >= 1.45 || localWave >= 1.05 || (localWave >= 0.85 && localPeriod >= 10);
+      const riskySw = dir >= 211 && dir <= 230 && period >= 9 && period <= 14.5;
+      let capFt = null;
+
+      if (riskySw && !localConfirming && currentFt > 3.2) {
+        capFt = period >= 11 ? 3.2 : 3.5;
+      }
+
+      if (riskySw && currentFt > 4.5) {
+        capFt = Math.min(capFt ?? 4.2, localConfirming ? 4.2 : 3.4);
+      }
+
+      const ft = capFt == null ? currentFt : Math.min(currentFt, capFt);
+      return {
+        ft: clamp(ft, 0, 8),
+        capped: capFt != null && ft < currentFt,
+        capFt,
+        note: capFt == null ? '' : 'SW offshore exposure is running hotter than the Middleton local cell, so the report trims the overcall.'
+      };
+    }
     function sizeRange(ft) { const x = clamp(Number(ft), 0, 8); if (x < 0.4) return 'Flat'; if (x < 0.8) return '0.5'; if (x < 1.15) return '1'; if (x < 1.45) return '1+'; if (x < 1.9) return '1-2'; if (x < 2.45) return '2'; if (x < 3.2) return '2-3'; if (x < 3.8) return '3'; if (x < 4.6) return '3-4'; if (x < 5.5) return '5'; if (x < 6.5) return '5-6'; return '6-8'; }
     function formatFtValue(value) { const n = Math.max(0, Number(value || 0)); if (n < 0.35) return 'Flat'; const rounded = Math.round(n * 2) / 2; return Number.isInteger(rounded) ? String(rounded) : String(rounded); }
     function sizeTextToFt(sizeText) { const text = String(sizeText || '').replace('ft', '').trim(); if (text.toLowerCase() === 'flat') return 0; if (text.includes('-')) { const [a, b] = text.split('-').map(Number); return (Number(a) + Number(b)) / 2; } return Number(text) || 0; }
@@ -505,9 +532,16 @@
       const modelFt = Math.max(activeDriver.kind === 'Local sea state' ? 0 : activeDriver.sizeFt, selectedOffshore.combined.ft);
       const localRealityFt = clamp(southCoastSizeFt(row.local.wave_height, row.local.wave_direction, row.local.wave_period, 'normal') * 0.45, 0, 1.6);
       const rawFinalFt = Math.max(modelFt, localRealityFt);
-      const finalFt = clamp(rawFinalFt + calibrationSizeAdjustFt(rawFinalFt, calibration), 0, 8);
+      let finalFt = clamp(rawFinalFt + calibrationSizeAdjustFt(rawFinalFt, calibration), 0, 8);
       const windSpeed = Number(row.wind.wind_speed_10m || 0), windDir = Number(row.wind.wind_direction_10m || 0), wq = windQuality(windSpeed, windDir);
       const report = { time: row.time, activeDriver, offshoreModelFt: modelFt, combinedOffshore: selectedOffshore.combined, insideFloorFt: localRealityFt, rawFinalFt, originalFinalFt: finalFt, finalFt, sizeText: sizeRange(finalFt), windSpeed, windDir, windQuality: wq, confidence: null, offshoreRaw: offshoreForModel, localRaw: row.local, windRaw: row.wind, offshorePointName: selectedOffshore.pointSource.name, offshorePointLatLon: selectedOffshore.pointSource.point, offshorePointSizeFt: selectedOffshore.combined.ft, offshorePointReason: `Selected strongest useful Middleton estimate from ${selection.estimates.length} Open-Meteo offshore points`, offshorePointDebug: selection.estimates.map(e => ({ name: e.pointSource.name, ft: Math.round(e.combined.ft * 10) / 10, driver: e.bestDriver ? `${fmtM(e.bestDriver.heightM)} @ ${fmtPeriod(e.bestDriver.periodS)} ${Math.round(e.bestDriver.directionDeg)}°` : 'none' })) };
+      const swRealityCap = middletonSwRealityCap(report, localRealityFt, finalFt);
+      finalFt = swRealityCap.ft;
+      report.finalFt = finalFt;
+      report.sizeText = sizeRange(finalFt);
+      report.swRealityCapped = swRealityCap.capped;
+      report.swRealityCapFt = swRealityCap.capFt;
+      report.swRealityCapNote = swRealityCap.note;
       report.confidence = confidenceLabel(report);
       return report;
     }
