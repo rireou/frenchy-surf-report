@@ -39,8 +39,36 @@ test('Middleton SW reality cap trims exposed 211-230 degree overcalls but leaves
 
   const classicWsw = engine.middletonSwRealityCap({
     activeDriver: { directionDeg: 236, periodS: 14.8 },
-    localRaw: { wave_height: 0.72, wave_period: 9 }
+    localRaw: { wave_height: 1.05, wave_period: 12, wave_direction: 236 }
   }, 1.0, 6.8);
   assert.equal(classicWsw.capped, false);
   assert.equal(classicWsw.ft, 6.8);
+
+  const underfilledWsw = engine.middletonSwRealityCap({
+    activeDriver: { heightM: 2.52, directionDeg: 236, periodS: 12.1 },
+    localRaw: { wave_height: 0.72, wave_period: 12.3, wave_direction: 212 }
+  }, 1.0, 4.6);
+  assert.equal(underfilledWsw.capped, true);
+  assert.ok(underfilledWsw.ft <= 2.2);
+
+  const swellnetFriday = engine.middletonSwRealityCap({
+    activeDriver: { heightM: 2.4, directionDeg: 229, periodS: 15.1 },
+    localRaw: { wave_height: 0.9, wave_period: 13, wave_direction: 225 }
+  }, 1.3, 4.7);
+  assert.equal(swellnetFriday.capped, true);
+  assert.ok(swellnetFriday.ft <= 3.2);
+
+  const swellnetSaturdayMorning = engine.middletonSwRealityCap({
+    activeDriver: { heightM: 2.66, directionDeg: 239, periodS: 12.1 },
+    localRaw: { wave_height: 0.8, wave_period: 11.75, wave_direction: 223 }
+  }, 1.3, 4.84);
+  assert.equal(swellnetSaturdayMorning.capped, true);
+  assert.ok(swellnetSaturdayMorning.ft <= 3.2);
+
+  const swellnetMonday = engine.middletonSwRealityCap({
+    activeDriver: { heightM: 3.6, directionDeg: 237, periodS: 16 },
+    localRaw: { wave_height: 1.2, wave_period: 14, wave_direction: 235 }
+  }, 1.6, 4.4);
+  assert.equal(swellnetMonday.capped, false);
+  assert.equal(swellnetMonday.ft, 4.4);
 });

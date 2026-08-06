@@ -439,11 +439,16 @@
       const driver = report.activeDriver || {};
       const dir = Number(driver.directionDeg || 0);
       const period = Number(driver.periodS || 0);
+      const heightM = Number(driver.heightM || 0);
       const local = report.localRaw || {};
       const localWave = Number(local.wave_height || 0);
       const localPeriod = Number(local.wave_period || 0);
+      const localDir = Number(local.wave_direction || 0);
       const localConfirming = localRealityFt >= 1.45 || localWave >= 1.05 || (localWave >= 0.85 && localPeriod >= 10);
       const riskySw = dir >= 211 && dir <= 230 && period >= 9 && period <= 14.5;
+      const exposedWswUnderfilled = dir >= 231 && dir <= 240 && period >= 11 && period <= 14.5 && localWave < 0.85 && localDir >= 190 && localDir <= 220;
+      const moderateSwGroundswell = dir >= 221 && dir <= 240 && period >= 14 && period <= 16.7 && heightM >= 1.7 && heightM <= 2.6;
+      const moderateWswMidPeriod = dir >= 231 && dir <= 244 && period >= 11 && period <= 13.2 && heightM >= 2.4 && heightM <= 2.9 && localWave < 0.95;
       let capFt = null;
 
       if (riskySw && !localConfirming && currentFt > 3.2) {
@@ -454,12 +459,25 @@
         capFt = Math.min(capFt ?? 4.2, localConfirming ? 4.2 : 3.4);
       }
 
+      if (exposedWswUnderfilled && currentFt > 2.4) {
+        capFt = Math.min(capFt ?? 2.2, 2.2);
+      }
+
+      if (moderateSwGroundswell && currentFt > 3.2) {
+        const moderateCap = heightM >= 2.25 ? 3.2 : 2.8;
+        capFt = Math.min(capFt ?? moderateCap, moderateCap);
+      }
+
+      if (moderateWswMidPeriod && currentFt > 3.2) {
+        capFt = Math.min(capFt ?? 3.2, 3.2);
+      }
+
       const ft = capFt == null ? currentFt : Math.min(currentFt, capFt);
       return {
         ft: clamp(ft, 0, 8),
         capped: capFt != null && ft < currentFt,
         capFt,
-        note: capFt == null ? '' : 'SW offshore exposure is running hotter than the Middleton local cell, so the report trims the overcall.'
+        note: capFt == null ? '' : 'Offshore exposure is running hotter than the Middleton local cell, so the report trims the overcall.'
       };
     }
     function sizeRange(ft) { const x = clamp(Number(ft), 0, 8); if (x < 0.4) return 'Flat'; if (x < 0.8) return '0.5'; if (x < 1.15) return '1'; if (x < 1.45) return '1+'; if (x < 1.9) return '1-2'; if (x < 2.45) return '2'; if (x < 3.2) return '2-3'; if (x < 3.8) return '3'; if (x < 4.6) return '3-4'; if (x < 5.5) return '5'; if (x < 6.5) return '5-6'; return '6-8'; }
