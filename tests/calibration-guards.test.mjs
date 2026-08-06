@@ -27,6 +27,28 @@ test('Seaford aligned WSW local fetch holds a small line without boosting messy 
   assert.equal(badDirection.ft, 0.5);
 });
 
+test('Seaford marginal underfilled 2ft rows do not round up like stronger pulses', () => {
+  const engine = createLegacyEngine('seaford');
+
+  const underfilledNoon = engine.seafordMarginalUnderfillTrim({
+    offshoreModelFt: 1.88,
+    insideFloorFt: 0.26,
+    localRaw: { wave_height: 0.46, wave_direction: 262 },
+    gulfPointRealityConfidence: 'low'
+  }, 1.88);
+  assert.equal(underfilledNoon.trimmed, true);
+  assert.equal(engine.publicSizeText(underfilledNoon.ft), '1.5');
+
+  const strongerEvening = engine.seafordMarginalUnderfillTrim({
+    offshoreModelFt: 2.34,
+    insideFloorFt: 0.29,
+    localRaw: { wave_height: 0.48, wave_direction: 256 },
+    gulfPointRealityConfidence: 'low'
+  }, 2.0);
+  assert.equal(strongerEvening.trimmed, false);
+  assert.equal(engine.publicSizeText(strongerEvening.ft), '2');
+});
+
 test('Middleton SW reality cap trims exposed 211-230 degree overcalls but leaves WSW classics alone', () => {
   const engine = createLegacyEngine('middleton');
 

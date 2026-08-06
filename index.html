@@ -614,6 +614,26 @@
           : ''
       };
     }
+    function seafordMarginalUnderfillTrim(report, currentFt) {
+      const ft = Number(currentFt || 0);
+      const offshoreFt = Number(report.offshoreModelFt || 0);
+      const insideFloor = Number(report.insideFloorFt || 0);
+      const localWave = Number(report.localRaw?.wave_height || 0);
+      const localDir = Number(report.localRaw?.wave_direction || 0);
+      const gulfLow = report.gulfPointRealityConfidence === 'low';
+      const marginalTwoFoot = ft > 1.75 && ft < 2.05 && offshoreFt < 2.05;
+      const underfilled = insideFloor < 0.6 && localWave < 0.55 && localDir > 250 && gulfLow;
+
+      if (marginalTwoFoot && underfilled) {
+        return {
+          ft: 1.7,
+          trimmed: true,
+          note: 'Marginal offshore swell is not filling into the Seaford/Gulf cells, so the public read stays below 2ft.'
+        };
+      }
+
+      return { ft, trimmed: false, note: '' };
+    }
     function stormSurfSizeFromWindFt(speedKmh, directionDeg) { const s = Number(speedKmh || 0), fit = northStormDirectionFit(directionDeg); if (fit <= 0 || s < 25) return 0; let ft = 0; if (s < 30) ft = lerp(1.0, 1.4, (s - 25) / 5); else if (s < 35) ft = lerp(1.4, 2.0, (s - 30) / 5); else if (s < 42) ft = lerp(2.0, 2.7, (s - 35) / 7); else ft = lerp(2.7, 3.4, Math.min((s - 42) / 13, 1)); return clamp(ft * fit, 0, 4); }
     function stormSurfSizeFromWindWaveFt(localWindWaveM) { const w = Number(localWindWaveM || 0); if (w < 0.35) return 0; let ft = w * 2.05; if (w >= 0.5) ft = Math.max(ft, 1.0); if (w >= 0.8) ft = Math.max(ft, 1.5); if (w >= 1.0) ft = Math.max(ft, 2.0); if (w >= 1.2) ft = Math.max(ft, 2.5); if (w >= 1.5) ft = Math.max(ft, 3.0); return clamp(ft, 0, 4.5); }
     function recentNorthStormFetchFt(rows, currentIndex) {
@@ -1350,6 +1370,15 @@
       report.windCompressionStormDominant = windCompression.stormIsDominant;
       if (windCompression.applied) {
         report.confidenceReason = windCompression.note;
+      }
+      const marginalUnderfillTrim = seafordMarginalUnderfillTrim(report, finalFt);
+      finalFt = marginalUnderfillTrim.ft;
+      report.finalFt = finalFt;
+      report.sizeText = sizeRange(finalFt);
+      report.marginalUnderfillTrimmed = marginalUnderfillTrim.trimmed;
+      report.marginalUnderfillTrimNote = marginalUnderfillTrim.note;
+      if (marginalUnderfillTrim.trimmed) {
+        report.confidenceReason = marginalUnderfillTrim.note;
       }
       const westFetchFloor = seafordWestFetchFloor(row, finalFt);
       finalFt = westFetchFloor.ft;

@@ -18,6 +18,7 @@ const ENGINE_EXPORTS = {
     'compassFromDeg',
     'nextTideCall',
     'seafordWestFetchFloor',
+    'seafordMarginalUnderfillTrim',
     'currentTideObservationSnapshot',
     'windObservationSnapshot',
     'currentWeatherObservationSnapshot',
