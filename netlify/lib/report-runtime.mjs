@@ -19,6 +19,7 @@ const ENGINE_EXPORTS = {
     'nextTideCall',
     'seafordWestFetchFloor',
     'seafordMarginalUnderfillTrim',
+    'seafordGulfRealityLimit',
     'currentTideObservationSnapshot',
     'windObservationSnapshot',
     'currentWeatherObservationSnapshot',

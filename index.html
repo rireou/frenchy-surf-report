@@ -767,8 +767,8 @@
         const baseExtra = hour >= 15 ? 0.55 : hour >= 12 ? 0.7 : 0.9;
         const confirmationExtra = insideIsConfirming ? 0.75 : properSwellIsShowing ? 0.45 : 0;
         cap = Math.max(insideFloorFt + baseExtra + confirmationExtra, 1.5);
-        if (d <= 245 && offshoreFt >= 2.8) cap = Math.max(cap, 3.0);
-        else if (d <= 245 && offshoreFt >= 2.5) cap = Math.max(cap, 2.5);
+        if (d <= 247 && offshoreFt >= 2.8) cap = Math.max(cap, 3.0);
+        else if (d <= 247 && offshoreFt >= 2.5) cap = Math.max(cap, 2.5);
         note = 'West swell limiter: over 242° needs the inside-gulf signal to confirm it. But 3m-ish swell at 243–245° is still allowed to hold at least 2.5ft.';
       }
       if (d >= 248) {
@@ -779,8 +779,8 @@
       if (hour >= 17 && d > 242) {
         const eveningExtra = insideIsConfirming ? 0.9 : properSwellIsShowing ? 0.65 : 0.45;
         const eveningCap = Math.max(insideFloorFt + eveningExtra, 1.75);
-        if (d <= 245 && offshoreFt >= 2.8) cap = Math.max(Math.min(cap ?? 99, Math.max(eveningCap, 3.0)), 3.0);
-        else if (d <= 245 && offshoreFt >= 2.5) cap = Math.max(Math.min(cap ?? 99, eveningCap), 2.5);
+        if (d <= 247 && offshoreFt >= 2.8) cap = Math.max(Math.min(cap ?? 99, Math.max(eveningCap, 3.0)), 3.0);
+        else if (d <= 247 && offshoreFt >= 2.5) cap = Math.max(Math.min(cap ?? 99, eveningCap), 2.5);
         else cap = Math.min(cap ?? 99, eveningCap);
         note = 'Evening west-swell check: reduces late-day hype, except strong 243–245° swell still holds at least 2.5ft.';
       }

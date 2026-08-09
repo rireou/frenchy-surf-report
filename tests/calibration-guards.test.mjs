@@ -49,6 +49,17 @@ test('Seaford marginal underfilled 2ft rows do not round up like stronger pulses
   assert.equal(engine.publicSizeText(strongerEvening.ft), '2');
 });
 
+test('Seaford evening west limiter does not cliff-drop confirmed 246 degree energy', () => {
+  const engine = createLegacyEngine('seaford');
+
+  const nearWest = engine.seafordGulfRealityLimit(2.95, 2.95, 0.56, 246, '2026-08-09T18:00');
+  assert.ok(nearWest.ft >= 2.8);
+  assert.equal(engine.publicSizeText(nearWest.ft), '3');
+
+  const trueWest = engine.seafordGulfRealityLimit(2.95, 2.95, 0.56, 250, '2026-08-09T18:00');
+  assert.ok(trueWest.ft < 2.5);
+});
+
 test('Middleton SW reality cap trims exposed 211-230 degree overcalls but leaves WSW classics alone', () => {
   const engine = createLegacyEngine('middleton');
 
