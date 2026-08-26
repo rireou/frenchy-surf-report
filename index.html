@@ -1241,6 +1241,48 @@
       return { ft, applied, note };
     }
 
+    function seafordObservationCalibration(report, currentFt) {
+      const driver = report.activeDriver || {};
+      const dir = Number(driver.directionDeg || 0);
+      const period = Number(driver.periodS || 0);
+      const localWave = Number(report.localRaw?.wave_height || 0);
+      let adjustmentFt = 0;
+      let band = '';
+
+      // 60-check calibration (24 Aug 2026). Use partial-bias corrections so a
+      // small sample cannot overpower the Gulf confirmation and safety gates.
+      if (dir >= 246 && dir <= 260 && localWave >= 0.4) {
+        adjustmentFt = 0.25;
+        band = '246-260 west-edge undercall';
+      } else if (dir >= 226 && dir <= 235 && period >= 11 && period <= 14) {
+        adjustmentFt = -0.3;
+        band = '226-235 long-period overcall';
+      } else if (period >= 11 && period <= 14) {
+        adjustmentFt = -0.15;
+        band = '11-14s overcall';
+      }
+
+      const ft = clamp(Number(currentFt || 0) + adjustmentFt, 0, 6);
+      return { ft, applied: adjustmentFt !== 0, adjustmentFt, band };
+    }
+
+    function seafordSouthEdgeUsableFloor(report, currentFt) {
+      const driver = report.activeDriver || {};
+      const heightM = Number(driver.heightM || 0);
+      const dir = Number(driver.directionDeg || 0);
+      const period = Number(driver.periodS || 0);
+      const windSpeed = Number(report.windSpeed || 0);
+      const setup = heightM >= 1.8 && dir >= 218 && dir <= 223 && period >= 8.8 && period <= 10.5 && windSpeed <= 15;
+      const floorFt = setup ? 0.85 : null;
+      const ft = floorFt == null ? Number(currentFt || 0) : Math.max(Number(currentFt || 0), floorFt);
+      return {
+        ft: clamp(ft, 0, 6),
+        applied: floorFt != null && ft > Number(currentFt || 0),
+        floorFt,
+        note: floorFt == null ? '' : 'Usable 218-223° south-edge swell: keep a cautious 1ft line instead of showing Flat.'
+      };
+    }
+
     function buildHourReport(row) {
       const calibration = $('calibrationSelect').value;
       const candidates = [
@@ -1400,6 +1442,22 @@
       if (strong230Floor.applied) {
         report.confidenceReason = strong230Floor.note;
       }
+      const observationCalibration = seafordObservationCalibration(report, finalFt);
+      finalFt = observationCalibration.ft;
+      report.finalFt = finalFt;
+      report.originalFinalFt = finalFt;
+      report.sizeText = sizeRange(finalFt);
+      report.observationCalibrationApplied = observationCalibration.applied;
+      report.observationCalibrationAdjustmentFt = observationCalibration.adjustmentFt;
+      report.observationCalibrationBand = observationCalibration.band;
+      const southEdgeFloor = seafordSouthEdgeUsableFloor(report, finalFt);
+      finalFt = southEdgeFloor.ft;
+      report.finalFt = finalFt;
+      report.originalFinalFt = finalFt;
+      report.sizeText = sizeRange(finalFt);
+      report.southEdgeFloorApplied = southEdgeFloor.applied;
+      report.southEdgeFloorFt = southEdgeFloor.floorFt;
+      report.southEdgeFloorNote = southEdgeFloor.note;
       report.confidence = report.needsBeachCheck || gulfPointReality.confidence === 'low' ? 'Low' : confidenceLabel(report);
       return report;
     }
@@ -2024,7 +2082,7 @@
 
     function copySummary() { if (!state.report) return; const day = state.report.days[state.selectedDay], r = selectedReportForDay(day); const text = `Seaford report ${formatDay(day.date)}: ${r.sizeText} ft, ${r.confidence.toLowerCase()} confidence. Wind ${compassFromDeg(r.windDir)} ${Math.round(r.windSpeed)} km/h. ${r.why}`; navigator.clipboard?.writeText(text); $('statusText').textContent = 'Summary copied'; }
 
-    const SEAFORD_CALCULATION_VERSION = 'seaford-2026.07.19.1';
+    const SEAFORD_CALCULATION_VERSION = 'seaford-2026.08.24.1';
     function shiftObservationDate(date, dayOffset) { const shifted = new Date(`${date}T12:00:00Z`); shifted.setUTCDate(shifted.getUTCDate() + dayOffset); return shifted.toISOString().slice(0, 10); }
     function observationDurationLabel(minutes) { const value = Math.max(0, Math.round(Number(minutes) || 0)); if (value < 45) return `${value} min`; const hours = Math.round(value / 30) / 2; return `${Number.isInteger(hours) ? hours : hours.toFixed(1)} hr`; }
     function tideRangeDetails(rangeM) { const value = Number(rangeM); if (!Number.isFinite(value)) return { rangeClass: 'unknown', rangeLabel: 'Tide change unavailable' }; if (value < 0.95) return { rangeClass: 'small', rangeLabel: `Small ${value.toFixed(2)} m tide change` }; if (value < 1.4) return { rangeClass: 'medium', rangeLabel: `Medium ${value.toFixed(2)} m tide change` }; return { rangeClass: 'big', rangeLabel: `Big ${value.toFixed(2)} m tide change` }; }

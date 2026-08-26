@@ -60,6 +60,66 @@ test('Seaford evening west limiter does not cliff-drop confirmed 246 degree ener
   assert.ok(trueWest.ft < 2.5);
 });
 
+test('Seaford shows a cautious 1ft for a usable 220 degree primary instead of Flat', () => {
+  const engine = createLegacyEngine('seaford');
+  const combined = engine.buildHourReport({
+    time: '2026-08-30T12:00',
+    offshore: {
+      swell_wave_height: 1.9,
+      swell_wave_direction: 220,
+      swell_wave_period: 9.3,
+      secondary_swell_wave_height: 0.8,
+      secondary_swell_wave_direction: 228,
+      secondary_swell_wave_period: 16.4,
+      wind_wave_height: 0,
+      wind_wave_direction: 0,
+      wind_wave_period: 0
+    },
+    local: { wave_height: 0.2, wave_direction: 220, wave_period: 8, wind_wave_height: 0.1 },
+    wind: { wind_speed_10m: 9, wind_direction_10m: 270 },
+    gulfChecks: [],
+    _allRows: [],
+    _index: 0
+  });
+
+  assert.equal(combined.combinedEnergy.aligned, false);
+  assert.ok(combined.combinedEnergy.secondaryFt >= 1.75);
+  assert.equal(combined.offshoreModelFt, combined.singleDriverFt);
+  assert.equal(combined.sizeText, '1');
+  assert.equal(combined.southEdgeFloorApplied, false);
+
+  const lowTideSuppressed = engine.seafordSouthEdgeUsableFloor({
+    activeDriver: { heightM: 1.9, directionDeg: 220, periodS: 9.3 },
+    windSpeed: 9
+  }, 0.25);
+  assert.equal(lowTideSuppressed.applied, true);
+  assert.equal(engine.publicSizeText(lowTideSuppressed.ft), '1');
+});
+
+test('Seaford 60-check calibration applies capped partial-bias corrections', () => {
+  const engine = createLegacyEngine('seaford');
+
+  const westEdge = engine.seafordObservationCalibration({
+    activeDriver: { directionDeg: 250, periodS: 10 },
+    localRaw: { wave_height: 0.55 }
+  }, 1.5);
+  assert.equal(westEdge.adjustmentFt, 0.25);
+  assert.equal(westEdge.ft, 1.75);
+
+  const classicLong = engine.seafordObservationCalibration({
+    activeDriver: { directionDeg: 230, periodS: 12 },
+    localRaw: { wave_height: 0.7 }
+  }, 3);
+  assert.equal(classicLong.adjustmentFt, -0.3);
+  assert.equal(classicLong.ft, 2.7);
+
+  const unconfirmedWest = engine.seafordObservationCalibration({
+    activeDriver: { directionDeg: 250, periodS: 10 },
+    localRaw: { wave_height: 0.25 }
+  }, 1.5);
+  assert.equal(unconfirmedWest.applied, false);
+});
+
 test('Middleton SW reality cap trims exposed 211-230 degree overcalls but leaves WSW classics alone', () => {
   const engine = createLegacyEngine('middleton');
 
@@ -104,4 +164,26 @@ test('Middleton SW reality cap trims exposed 211-230 degree overcalls but leaves
   }, 1.6, 4.4);
   assert.equal(swellnetMonday.capped, false);
   assert.equal(swellnetMonday.ft, 4.4);
+});
+
+test('Middleton 60-check calibration corrects broad biases without large jumps', () => {
+  const engine = createLegacyEngine('middleton');
+
+  const riskyLong = engine.middletonObservationCalibration({
+    activeDriver: { directionDeg: 224, periodS: 12.5 }
+  }, 4);
+  assert.equal(riskyLong.adjustmentFt, -0.4);
+  assert.equal(riskyLong.ft, 3.6);
+
+  const shortPeriod = engine.middletonObservationCalibration({
+    activeDriver: { directionDeg: 238, periodS: 8.5 }
+  }, 2);
+  assert.equal(shortPeriod.adjustmentFt, 0.2);
+  assert.equal(shortPeriod.ft, 2.2);
+
+  const classicLong = engine.middletonObservationCalibration({
+    activeDriver: { directionDeg: 238, periodS: 15 }
+  }, 5);
+  assert.equal(classicLong.applied, false);
+  assert.equal(classicLong.ft, 5);
 });

@@ -29,7 +29,7 @@ test('Middleton observation time selects the matching wave, wind and tide row', 
   assert.equal(morning.location, 'Middleton');
   assert.equal(morning.forecastTime, '2026-06-12T06:00');
   assert.equal(midday.forecastTime, '2026-06-12T12:00');
-  assert.equal(morning.predictedFt, 4.1324337600000005);
+  assert.equal(morning.predictedFt, 3.7324337600000006);
   assert.equal(midday.predictedFt, 7.809256704);
   assert.match(morning.tide.positionLabel, /Dropping/);
   assert.match(midday.tide.positionLabel, /Pushing/);

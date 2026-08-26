@@ -1,5 +1,5 @@
 {
-  "calculation_version": "middleton-2026.07.19.1",
+  "calculation_version": "middleton-2026.08.24.1",
   "wave": {
     "value_ft": 7.809256704,
     "model_value_ft": 7.809256704,
@@ -41,9 +41,9 @@
   "reports": [
     {
       "time": "2026-06-12T06:00",
-      "finalFt": 4.1324337600000005,
-      "originalFinalFt": 4.1324337600000005,
-      "sizeText": "3-4",
+      "finalFt": 3.7324337600000006,
+      "originalFinalFt": 3.7324337600000006,
+      "sizeText": "3",
       "confidence": "High",
       "driver": {
         "kind": "Primary swell",
@@ -75,8 +75,8 @@
     },
     {
       "time": "2026-06-12T18:00",
-      "finalFt": 3.026,
-      "originalFinalFt": 3.026,
+      "finalFt": 2.876,
+      "originalFinalFt": 2.876,
       "sizeText": "2-3",
       "confidence": "High",
       "driver": {

@@ -480,6 +480,35 @@
         note: capFt == null ? '' : 'Offshore exposure is running hotter than the Middleton local cell, so the report trims the overcall.'
       };
     }
+    function middletonObservationCalibration(report, currentFt) {
+      const driver = report.activeDriver || {};
+      const dir = Number(driver.directionDeg || 0);
+      const period = Number(driver.periodS || 0);
+      let adjustmentFt = 0;
+      let band = '';
+
+      // 60-check calibration (24 Aug 2026). Correct only part of the measured
+      // bias so the aggregate sample cannot replace local-cell reality checks.
+      if (dir >= 211 && dir <= 230 && period >= 11 && period <= 14) {
+        adjustmentFt = -0.4;
+        band = '211-230 long-period overcall';
+      } else if (dir >= 211 && dir <= 230) {
+        adjustmentFt = -0.2;
+        band = '211-230 direction overcall';
+      } else if (period < 9 && period > 0) {
+        adjustmentFt = 0.2;
+        band = 'sub-9s undercall';
+      } else if (period >= 9 && period < 11) {
+        adjustmentFt = -0.15;
+        band = '9-11s overcall';
+      } else if (period >= 11 && period <= 14) {
+        adjustmentFt = -0.2;
+        band = '11-14s overcall';
+      }
+
+      const ft = clamp(Number(currentFt || 0) + adjustmentFt, 0, 8);
+      return { ft, applied: adjustmentFt !== 0, adjustmentFt, band };
+    }
     function sizeRange(ft) { const x = clamp(Number(ft), 0, 8); if (x < 0.4) return 'Flat'; if (x < 0.8) return '0.5'; if (x < 1.15) return '1'; if (x < 1.45) return '1+'; if (x < 1.9) return '1-2'; if (x < 2.45) return '2'; if (x < 3.2) return '2-3'; if (x < 3.8) return '3'; if (x < 4.6) return '3-4'; if (x < 5.5) return '5'; if (x < 6.5) return '5-6'; return '6-8'; }
     function formatFtValue(value) { const n = Math.max(0, Number(value || 0)); if (n < 0.35) return 'Flat'; const rounded = Math.round(n * 2) / 2; return Number.isInteger(rounded) ? String(rounded) : String(rounded); }
     function sizeTextToFt(sizeText) { const text = String(sizeText || '').replace('ft', '').trim(); if (text.toLowerCase() === 'flat') return 0; if (text.includes('-')) { const [a, b] = text.split('-').map(Number); return (Number(a) + Number(b)) / 2; } return Number(text) || 0; }
@@ -560,6 +589,14 @@
       report.swRealityCapped = swRealityCap.capped;
       report.swRealityCapFt = swRealityCap.capFt;
       report.swRealityCapNote = swRealityCap.note;
+      const observationCalibration = middletonObservationCalibration(report, finalFt);
+      finalFt = observationCalibration.ft;
+      report.finalFt = finalFt;
+      report.originalFinalFt = finalFt;
+      report.sizeText = sizeRange(finalFt);
+      report.observationCalibrationApplied = observationCalibration.applied;
+      report.observationCalibrationAdjustmentFt = observationCalibration.adjustmentFt;
+      report.observationCalibrationBand = observationCalibration.band;
       report.confidence = confidenceLabel(report);
       return report;
     }
@@ -758,7 +795,7 @@
         $('hero').classList.add('error');
       }
     }
-    const MIDDLETON_CALCULATION_VERSION = 'middleton-2026.07.19.1';
+    const MIDDLETON_CALCULATION_VERSION = 'middleton-2026.08.24.1';
     function shiftObservationDate(date, dayOffset) { const shifted = new Date(`${date}T12:00:00Z`); shifted.setUTCDate(shifted.getUTCDate() + dayOffset); return shifted.toISOString().slice(0, 10); }
     function observationDurationLabel(minutes) { const value = Math.max(0, Math.round(Number(minutes) || 0)); if (value < 45) return `${value} min`; const hours = Math.round(value / 30) / 2; return `${Number.isInteger(hours) ? hours : hours.toFixed(1)} hr`; }
     function middletonTideRangeDetails(rangeM) { const value = Number(rangeM); if (!Number.isFinite(value)) return { rangeClass: 'unknown', rangeLabel: 'Tide change unavailable' }; if (value < 0.35) return { rangeClass: 'small', rangeLabel: `Small ${value.toFixed(2)} m tide change` }; if (value < 0.65) return { rangeClass: 'medium', rangeLabel: `Medium ${value.toFixed(2)} m tide change` }; return { rangeClass: 'big', rangeLabel: `Big ${value.toFixed(2)} m tide change` }; }

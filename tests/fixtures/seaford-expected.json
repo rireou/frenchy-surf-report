@@ -1,5 +1,5 @@
 {
-  "calculation_version": "seaford-2026.07.19.1",
+  "calculation_version": "seaford-2026.08.24.1",
   "wave": {
     "value_ft": 2.5,
     "model_value_ft": 2.5,
@@ -93,8 +93,8 @@
     },
     {
       "time": "2026-06-12T18:00",
-      "finalFt": 1.58532,
-      "originalFinalFt": 1.58532,
+      "finalFt": 1.4353200000000002,
+      "originalFinalFt": 1.4353200000000002,
       "sizeText": "1.5",
       "confidence": "Low",
       "driver": {
