@@ -415,14 +415,13 @@
     <section class="card panel" style="margin-top:16px;"><div class="section-head"><h2 id="windTrendTitle">Wind trend</h2><span class="section-tag">Wind window</span></div><div class="wind-trend-panel" id="windTrendPanel"></div></section>
     <section class="card panel" style="margin-top:16px;"><div class="section-head"><h2>Seaford weather</h2><span class="section-tag">Beach comfort</span></div><div class="weather-panel" id="weatherPanel"></div></section>
 
-    <section class="card panel" style="margin-top:16px;">
-      <div class="section-head"><h2>Seaford surf report for Adelaide's Mid Coast</h2><span class="section-tag">Local guide</span></div>
-      <p class="subtitle">This Seaford forecast combines local wave size, swell direction and period, wind, Port Noarlunga tide timing and Frenchy's beach checks. Compare it with the <a class="ghost-link" href="./middleton.html">Middleton surf report</a> for South Coast conditions, browse the <a class="ghost-link" href="/surf-reports">Mid Coast surf reports</a>, or explore <a class="ghost-link" href="https://cozy-gumption-81ef8c.netlify.app/coaching.html">surf coaching in Seaford</a>.</p>
-    </section>
+    <p class="subtitle report-intro">Seaford surf report for Adelaide's Mid Coast: forecast surf size, swell, wind and local tides. Compare conditions with our <a class="ghost-link" href="./middleton.html">Middleton surf report</a>.</p>
 
     <section class="sponsor-strip"><div><small>Advertising space</small><b>Local shops can support the daily report here</b><p>Perfect for coffee, board repairs, surf shops, physios, gyms or family-friendly local businesses around the Mid Coast.</p></div><a class="ghost-link" href="https://frenchysurfschool.square.site/" target="_blank" rel="noopener">Advertise here</a></section>
   </div>
 
+  <link rel="stylesheet" href="./phase1.css" />
+  <script src="./phase1-engine.js"></script>
   <script src="./frenchy-ui-v6.js" defer></script>
   <script src="./observation.js?v=20260724.2" defer></script>
   <script>
@@ -472,26 +471,23 @@
       return `https://api.open-meteo.com/v1/forecast?${params}`;
     }
     function weatherUrl() {
-      const params = new URLSearchParams({ latitude: CONFIG.weather.lat, longitude: CONFIG.weather.lon, current: 'temperature_2m,weather_code,precipitation,wind_speed_10m,wind_direction_10m', hourly: 'temperature_2m,weather_code,precipitation_probability,wind_speed_10m,wind_direction_10m', daily: 'temperature_2m_max,temperature_2m_min,weather_code,precipitation_probability_max,wind_speed_10m_max', timezone: CONFIG.tz, forecast_days: String(CONFIG.forecastDays) });
+      const params = new URLSearchParams({ latitude: CONFIG.weather.lat, longitude: CONFIG.weather.lon, current: 'temperature_2m,weather_code,precipitation,wind_speed_10m,wind_direction_10m', hourly: 'temperature_2m,weather_code,precipitation_probability,wind_speed_10m,wind_direction_10m', daily: 'temperature_2m_max,temperature_2m_min,weather_code,precipitation_probability_max,wind_speed_10m_max,sunrise,sunset', timezone: CONFIG.tz, forecast_days: String(CONFIG.forecastDays) });
       return `https://api.open-meteo.com/v1/forecast?${params}`;
     }
     function buildFallbackWindFromWeather(weatherData) {
-      const hourly = weatherData?.hourly || {};
-      const times = Array.isArray(hourly.time) ? hourly.time : [];
-      const currentSpeedRaw = weatherData?.current?.wind_speed_10m;
-      const hasCurrentSpeed = currentSpeedRaw != null && Number.isFinite(Number(currentSpeedRaw));
-      const currentSpeed = hasCurrentSpeed ? Number(currentSpeedRaw) : 0;
-      const currentDirRaw = weatherData?.current?.wind_direction_10m;
-      const currentDir = Number.isFinite(Number(currentDirRaw)) ? Number(currentDirRaw) : null;
-      const hasHourlySpeed = times.some((_, i) => Number.isFinite(Number(hourly.wind_speed_10m?.[i])));
-      if (!times.length || (!hasHourlySpeed && !hasCurrentSpeed)) return null;
-      const speeds = times.map((_, i) => Number.isFinite(Number(hourly.wind_speed_10m?.[i])) ? Number(hourly.wind_speed_10m[i]) : currentSpeed);
-      const dirs = times.map((_, i) => Number.isFinite(Number(hourly.wind_direction_10m?.[i])) ? Number(hourly.wind_direction_10m[i]) : currentDir);
-      return { hourly: { time: times, wind_speed_10m: speeds, wind_direction_10m: dirs }, current: { wind_speed_10m: currentSpeed, wind_direction_10m: currentDir }, fallback: true };
+      const hourly = weatherData?.hourly;
+      if (!Array.isArray(hourly?.time)) return null;
+      const known = v => v != null && v !== '' && Number.isFinite(Number(v));
+      if (!hourly.time.some((_,i) => known(hourly.wind_speed_10m?.[i]) && known(hourly.wind_direction_10m?.[i]))) return null;
+      return { hourly: { time: hourly.time,
+        wind_speed_10m: hourly.time.map((_,i) => known(hourly.wind_speed_10m?.[i]) ? Number(hourly.wind_speed_10m[i]) : null),
+        wind_direction_10m: hourly.time.map((_,i) => known(hourly.wind_direction_10m?.[i]) ? Number(hourly.wind_direction_10m[i]) : null)
+      }, fallback: true, source: 'weather API, matching valid hour', fetchedAt: new Date().toISOString() };
     }
-    function buildCalmWindFallback(referenceData) {
-      const times = Array.isArray(referenceData?.hourly?.time) ? referenceData.hourly.time : [];
-      return { hourly: { time: times, wind_speed_10m: times.map(() => 0), wind_direction_10m: times.map(() => null) }, current: { wind_speed_10m: 0, wind_direction_10m: null }, fallback: true, calm: true };
+    function buildUnknownWind(referenceData) {
+      const time = referenceData?.hourly?.time || [];
+      return { hourly: { time, wind_speed_10m: time.map(() => null), wind_direction_10m: time.map(() => null) },
+        current: { wind_speed_10m: null, wind_direction_10m: null }, unknown: true, source: 'unavailable' };
     }
     const FETCH_TIMEOUT_MS = 15000;
     const FETCH_RETRY_DELAY_MS = 700;
@@ -531,7 +527,7 @@
           if (attempt === 0) await delay(options.retryDelayMs ?? FETCH_RETRY_DELAY_MS);
         }
       }
-      if (entry?.value) {
+      if (entry?.value && Date.now() - Number(entry.savedAt || 0) <= 60 * 60 * 1000) {
         return { data: entry.value, cached: true, stale: true, savedAt: Number(entry.savedAt || 0), warning: `${key}: using stale cached data after fetch failed (${lastError?.message || lastError})` };
       }
       const hardError = new Error(`${key}: no cached data available and fetch failed (${lastError?.message || lastError})`);
@@ -801,7 +797,7 @@
     function confidenceLabel(report) { let score = 0.52; if (report.insideFloorFt > 0.9) score += 0.12; if (report.activeDriver.directionScore > 0.65) score += 0.12; if (report.activeDriver.periodS >= 10) score += 0.06; if (report.windQuality < 0.4) score -= 0.05; score = clamp(score, 0, 1); if (score >= 0.72) return 'High'; if (score >= 0.48) return 'Medium'; return 'Low'; }
     function indexByTime(hourly) { const out = {}; hourly.time.forEach((time, i) => out[time] = pickHour(hourly, i)); return out; }
     function pickHour(hourly, i) { const obj = {}; Object.keys(hourly).forEach(k => obj[k] = Array.isArray(hourly[k]) ? hourly[k][i] : hourly[k]); return obj; }
-    function combineHourly(offshore, local, wind, gulfData = []) { const mapLocal = indexByTime(local.hourly), mapWind = indexByTime(wind.hourly), gulfMaps = gulfData.filter(item => item?.data?.hourly).map(item => ({ point: item.point, map: indexByTime(item.data.hourly) })), gulfFailures = gulfData.filter(item => item?.failed).map(item => ({ name: item.point?.name || item.key || 'Gulf check point', error: item.error || 'Fetch failed' })); const rows = offshore.hourly.time.map((time, i) => ({ time, offshore: pickHour(offshore.hourly, i), local: mapLocal[time] || null, wind: mapWind[time] || null, gulfChecks: gulfMaps.map(g => ({ name: g.point.name, point: g.point, data: g.map[time] || null })).filter(g => g.data), gulfCheckFailures: gulfFailures })).filter(x => x.local && x.wind); rows.forEach((row, index) => { row._index = index; row._allRows = rows; }); return rows; }
+    function combineHourly(offshore, local, wind, gulfData = []) { const mapLocal = indexByTime(local.hourly), mapWind = indexByTime(wind?.hourly || {}), gulfMaps = gulfData.filter(item => item?.data?.hourly).map(item => ({ point: item.point, map: indexByTime(item.data.hourly) })), gulfFailures = gulfData.filter(item => item?.failed).map(item => ({ name: item.point?.name || item.key || 'Gulf check point', error: item.error || 'Fetch failed' })); const rows = offshore.hourly.time.map((time, i) => ({ time, offshore: pickHour(offshore.hourly, i), local: mapLocal[time] || null, wind: mapWind[time] || {}, gulfChecks: gulfMaps.map(g => ({ name: g.point.name, point: g.point, data: g.map[time] || null })).filter(g => g.data), gulfCheckFailures: gulfFailures })).filter(x => x.local && x.wind); rows.forEach((row, index) => { row._index = index; row._allRows = rows; }); return rows; }
 
     const TIDE_SOURCE_BY_DATE = {};
     const TIDE_POINTS = {
@@ -1284,6 +1280,7 @@
     }
 
     function buildHourReport(row) {
+      const calculationTrace = { steps: [], status: 'calculated' };
       const calibration = $('calibrationSelect').value;
       const candidates = [
         buildCandidate(row.offshore, 'Offshore swell', 'Primary swell', 'swell_wave_height', 'swell_wave_direction', 'swell_wave_period'),
@@ -1292,11 +1289,11 @@
       ].filter(c => c.heightM > 0);
       candidates.forEach(c => { c.directionScore = directionScore(c.directionDeg); c.periodFactor = periodFactor(c.periodS); c.driverScore = scoreCandidate(c); });
       const activeDriver = candidates.sort((a, b) => b.driverScore - a.driverScore)[0] || { kind: 'No clear driver', sourceName: 'No source', heightM: 0, directionDeg: 0, periodS: 0, directionScore: 0, periodFactor: 0, driverScore: 0 };
-      const singleDriverFt = sectorCalibratedSizeFt(activeDriver.heightM, activeDriver.directionDeg, activeDriver.periodS, calibration);
+      const singleDriverFt = phase1Step(calculationTrace, "singleDriverFt = sectorCalibratedSizeFt(activeDriver.heightM, activeDriver.directionDeg, activeDriver.periodS, calibration)", sectorCalibratedSizeFt(activeDriver.heightM, activeDriver.directionDeg, activeDriver.periodS, calibration));
       const combinedEnergy = combinedSwellEnergyFt(row, calibration);
-      const offshoreModelFt = Math.max(singleDriverFt, combinedEnergy.ft);
+      const offshoreModelFt = phase1Step(calculationTrace, "offshoreModelFt = Math.max(singleDriverFt, combinedEnergy.ft)", Math.max(singleDriverFt, combinedEnergy.ft));
       const westFallbackGate = seafordWestFallbackCap(row, offshoreModelFt, activeDriver);
-      const gatedOffshoreModelFt = westFallbackGate.ft;
+      const gatedOffshoreModelFt = phase1Step(calculationTrace, "gatedOffshoreModelFt = westFallbackGate.ft", westFallbackGate.ft);
       const insideFloorFt = insideGulfFloorFt(row.local);
       const rawStormSurf = stormSurfInfo(row);
       const stormGate = seafordStormConfirmation(row, rawStormSurf);
@@ -1309,10 +1306,10 @@
         capNote: stormGate.note,
         directionGate: stormGate.directionGate
       };
-      let preliminaryFt = Math.max(gatedOffshoreModelFt, insideFloorFt);
+      let preliminaryFt = phase1Step(calculationTrace, "preliminaryFt = Math.max(gatedOffshoreModelFt, insideFloorFt)", Math.max(gatedOffshoreModelFt, insideFloorFt));
       if (stormSurf.active) preliminaryFt = Math.max(preliminaryFt, insideFloorFt * 1.4, stormSurf.ft);
       const gulfLimit = stormSurf.active ? { ft: preliminaryFt, capFt: null, note: 'Storm Surf Mode: skipped west-swell limiter because local N–NW windswell is the driver.' } : seafordGulfRealityLimit(preliminaryFt, gatedOffshoreModelFt, insideFloorFt, activeDriver.directionDeg, row.time);
-      preliminaryFt = gulfLimit.ft;
+      preliminaryFt = phase1Step(calculationTrace, "preliminaryFt = gulfLimit.ft", gulfLimit.ft);
       const localWeak = Number(row.local.wave_height || 0) < 0.32;
       const directionPoor = activeDriver.directionScore < 0.25;
       let suppressionNote = 'No live buoy suppression in browser-only mode.';
@@ -1320,23 +1317,23 @@
       const windSpeed = Number(row.wind.wind_speed_10m || 0), windDir = Number(row.wind.wind_direction_10m || 0), wq = windQuality(windSpeed, windDir);
       const tideDrag = stormSurf.active ? { penaltyFt: 0, capFt: null, phase: 'storm surf', note: 'Storm surf comes from local wind wave, so low-tide groundswell gate is not used.' } : lowTideDrag(row.time, activeDriver.directionDeg, gatedOffshoreModelFt, insideFloorFt);
       const tidePush = stormSurf.active ? { boostFt: 0, phase: 'storm surf', note: 'Storm surf mode ignores high-tide groundswell boost.' } : highTidePush(row.time, activeDriver.directionDeg, gatedOffshoreModelFt);
-      let groundswellFt = Math.max(preliminaryFt, insideFloorFt) - tideDrag.penaltyFt + tidePush.boostFt;
+      let groundswellFt = phase1Step(calculationTrace, "groundswellFt = Math.max(preliminaryFt, insideFloorFt) - tideDrag.penaltyFt + tidePush.boostFt", Math.max(preliminaryFt, insideFloorFt) - tideDrag.penaltyFt + tidePush.boostFt);
       if (tideDrag.capFt && groundswellFt > tideDrag.capFt) groundswellFt = tideDrag.capFt;
-      groundswellFt = clamp(groundswellFt, 0, 6);
-      let finalFt = stormSurf.active ? Math.max(groundswellFt, stormSurf.ft) : groundswellFt;
+      groundswellFt = phase1Step(calculationTrace, "groundswellFt = clamp(groundswellFt, 0, 6)", clamp(groundswellFt, 0, 6));
+      let finalFt = phase1Step(calculationTrace, "finalFt = stormSurf.active ? Math.max(groundswellFt, stormSurf.ft) : groundswellFt", stormSurf.active ? Math.max(groundswellFt, stormSurf.ft) : groundswellFt);
       if (stormSurf.capped) {
-        finalFt = Math.min(finalFt, stormSurf.ft);
+        finalFt = phase1Step(calculationTrace, "finalFt = Math.min(finalFt, stormSurf.ft)", Math.min(finalFt, stormSurf.ft));
       }
       if (westFallbackGate.capped) {
-        finalFt = Math.min(finalFt, westFallbackGate.ft);
+        finalFt = phase1Step(calculationTrace, "finalFt = Math.min(finalFt, westFallbackGate.ft)", Math.min(finalFt, westFallbackGate.ft));
       }
-      finalFt = clamp(finalFt + calibrationSizeAdjustFt(finalFt, calibration), 0, 6);
+      finalFt = phase1Step(calculationTrace, "finalFt = clamp(finalFt + calibrationSizeAdjustFt(finalFt, calibration), 0, 6)", clamp(finalFt + calibrationSizeAdjustFt(finalFt, calibration), 0, 6));
       const lifted = insideFloorFt > gatedOffshoreModelFt + 0.15;
       const why = stormSurf.capped ? `${stormSurf.capNote || 'N/NW fetch is showing, but the local Seaford signal has not filled in yet.'} Expect around ${sizeRange(stormSurf.ft)} ft for now. Watch for it to build only if the local wind-wave fills in.` : stormSurf.active ? `Storm surf running on the Mid Coast. Swell surf is about ${sizeRange(gatedOffshoreModelFt)} ft, but ${stormSurf.source} is creating about ${sizeRange(stormSurf.ft)} ft. Windy and messy, but rideable for foamies, mals and keen surfers.` : lifted ? `Inside-gulf signal is lifting the forecast. Offshore alone suggests about ${sizeRange(gatedOffshoreModelFt)} ft, but the Seaford local cell shows energy already in the gulf.` : 'Offshore driver is doing most of the work. The local Seaford cell is not lifting the forecast much.';
       const report = { time: row.time, activeDriver, offshoreModelFt: gatedOffshoreModelFt, offshoreUncappedFt: offshoreModelFt, westFallbackCapped: westFallbackGate.capped, westFallbackCapNote: westFallbackGate.note, singleDriverFt, combinedEnergy, insideFloorFt, stormSurfFt: stormSurf.ft, hasLocalStormSurf: stormSurf.active, localWindWaveM: stormSurf.localWindWave, stormFetchFt: stormSurf.fetchFt, stormMemoryFetchFt: stormSurf.memoryFetchFt, stormSurfSource: stormSurf.source, stormSurfNote: stormSurf.note, stormConfirmed: stormSurf.confirmed, stormCapped: stormSurf.capped, stormCapNote: stormSurf.capNote, stormDirectionQuality: stormSurf.directionGate?.quality, groundswellFt, originalFinalFt: finalFt, finalFt, sizeText: '', windSpeed, windDir, windQuality: wq, confidence: null, why, suppressionNote, gulfLimit, tideDrag, tidePush, sourceMode: stormSurf.active ? 'storm-surf-mode' : 'fallback-only', localRaw: row.local, offshoreRaw: row.offshore, windRaw: row.wind, gulfCheckFailures: row.gulfCheckFailures || [] };
       const modelFinalFt = finalFt;
       const realityGate = applyMidCoastRealityGate(row, report, modelFinalFt);
-      finalFt = realityGate.ft;
+      finalFt = phase1Step(calculationTrace, "finalFt = realityGate.ft", realityGate.ft);
       report.finalFt = finalFt;
       report.sizeText = sizeRange(finalFt);
       report.gulfRealityConfirmed = realityGate.gulf.confirmed;
@@ -1349,7 +1346,7 @@
       report.sanityCheckNote = realityGate.sanityCheckNote;
       report.sanityCheckHour = realityGate.sanityCheckHour;
       const confidenceGate = applyOvercheckConfidenceGate(row, report, finalFt, modelFinalFt);
-      finalFt = confidenceGate.ft;
+      finalFt = phase1Step(calculationTrace, "finalFt = confidenceGate.ft", confidenceGate.ft);
       report.finalFt = finalFt;
       report.sizeText = sizeRange(finalFt);
       report.gulfRealityConfirmed = confidenceGate.gulfRealityConfirmed;
@@ -1365,10 +1362,10 @@
       const trustedSwell = isTrustedMidCoastSwell(activeDriver);
       if (!gulfPointReality.confirmed && gulfPointReality.recommendedCapFt != null) {
         const capFt = trustedSwell ? Math.max(2, gulfPointReality.recommendedCapFt) : gulfPointReality.recommendedCapFt;
-        finalFt = Math.min(finalFt, capFt);
+        finalFt = phase1Step(calculationTrace, "finalFt = Math.min(finalFt, capFt)", Math.min(finalFt, capFt));
       }
       if (trustedSwell && gulfPointReality.confirmed && gulfPointReality.confidence !== 'low' && modelFinalFt >= 3) {
-        finalFt = Math.max(finalFt, Math.min(modelFinalFt, 3));
+        finalFt = phase1Step(calculationTrace, "finalFt = Math.max(finalFt, Math.min(modelFinalFt, 3))", Math.max(finalFt, Math.min(modelFinalFt, 3)));
       }
       report.finalFt = finalFt;
       report.sizeText = sizeRange(finalFt);
@@ -1379,7 +1376,7 @@
       report.gulfPointStrongestFt = gulfPointReality.strongestPointFt;
       report.gulfPointChecks = gulfPointReality.checks;
       const trustedSwGate = seafordTrustedSwellRealismCap(row, report, finalFt);
-      finalFt = trustedSwGate.ft;
+      finalFt = phase1Step(calculationTrace, "finalFt = trustedSwGate.ft", trustedSwGate.ft);
       report.finalFt = finalFt;
       report.sizeText = sizeRange(finalFt);
       report.trustedSwCapped = trustedSwGate.capped;
@@ -1395,7 +1392,7 @@
         report.confidenceReason = 'Multiple Gulf points confirm the size.';
       }
       const finalRealityTrim = seafordFinalRealityTrim(row, report, finalFt);
-      finalFt = finalRealityTrim.ft;
+      finalFt = phase1Step(calculationTrace, "finalFt = finalRealityTrim.ft", finalRealityTrim.ft);
       report.finalRealityTrimmed = finalRealityTrim.trimmed;
       report.finalRealityTrimNote = finalRealityTrim.note;
       report.finalRealityTrustedConfirmed = finalRealityTrim.trustedConfirmed;
@@ -1403,7 +1400,7 @@
         report.confidenceReason = finalRealityTrim.note;
       }
       const windCompression = seafordWindCompressionPenalty(row, report, finalFt);
-      finalFt = windCompression.ft;
+      finalFt = phase1Step(calculationTrace, "finalFt = windCompression.ft", windCompression.ft);
       report.finalFt = finalFt;
       report.sizeText = sizeRange(finalFt);
       report.windCompressionApplied = windCompression.applied;
@@ -1414,7 +1411,7 @@
         report.confidenceReason = windCompression.note;
       }
       const marginalUnderfillTrim = seafordMarginalUnderfillTrim(report, finalFt);
-      finalFt = marginalUnderfillTrim.ft;
+      finalFt = phase1Step(calculationTrace, "finalFt = marginalUnderfillTrim.ft", marginalUnderfillTrim.ft);
       report.finalFt = finalFt;
       report.sizeText = sizeRange(finalFt);
       report.marginalUnderfillTrimmed = marginalUnderfillTrim.trimmed;
@@ -1423,7 +1420,7 @@
         report.confidenceReason = marginalUnderfillTrim.note;
       }
       const westFetchFloor = seafordWestFetchFloor(row, finalFt);
-      finalFt = westFetchFloor.ft;
+      finalFt = phase1Step(calculationTrace, "finalFt = westFetchFloor.ft", westFetchFloor.ft);
       report.finalFt = finalFt;
       report.sizeText = sizeRange(finalFt);
       report.westFetchFloorApplied = westFetchFloor.applied;
@@ -1433,7 +1430,7 @@
         report.confidenceReason = westFetchFloor.note;
       }
       const strong230Floor = seafordStrong230SwellFloor(row, report, finalFt);
-      finalFt = strong230Floor.ft;
+      finalFt = phase1Step(calculationTrace, "finalFt = strong230Floor.ft", strong230Floor.ft);
       report.finalFt = finalFt;
       report.originalFinalFt = finalFt;
       report.sizeText = sizeRange(finalFt);
@@ -1443,7 +1440,7 @@
         report.confidenceReason = strong230Floor.note;
       }
       const observationCalibration = seafordObservationCalibration(report, finalFt);
-      finalFt = observationCalibration.ft;
+      finalFt = phase1Step(calculationTrace, "finalFt = observationCalibration.ft", observationCalibration.ft);
       report.finalFt = finalFt;
       report.originalFinalFt = finalFt;
       report.sizeText = sizeRange(finalFt);
@@ -1451,7 +1448,7 @@
       report.observationCalibrationAdjustmentFt = observationCalibration.adjustmentFt;
       report.observationCalibrationBand = observationCalibration.band;
       const southEdgeFloor = seafordSouthEdgeUsableFloor(report, finalFt);
-      finalFt = southEdgeFloor.ft;
+      finalFt = phase1Step(calculationTrace, "finalFt = southEdgeFloor.ft", southEdgeFloor.ft);
       report.finalFt = finalFt;
       report.originalFinalFt = finalFt;
       report.sizeText = sizeRange(finalFt);
@@ -1459,6 +1456,8 @@
       report.southEdgeFloorFt = southEdgeFloor.floorFt;
       report.southEdgeFloorNote = southEdgeFloor.note;
       report.confidence = report.needsBeachCheck || gulfPointReality.confidence === 'low' ? 'Low' : confidenceLabel(report);
+      calculationTrace.rules = { westFallbackGate, insideFloorFt, stormSurf, gulfLimit, suppressionNote, tideDrag, tidePush, realityGate, confidenceGate, gulfPointReality, trustedSwGate, finalRealityTrim, windCompression, marginalUnderfillTrim, westFetchFloor, strong230Floor, observationCalibration, southEdgeFloor };
+      report.calculationTrace = calculationTrace;
       return report;
     }
 
@@ -1797,7 +1796,7 @@
     }
 
     function render() { if (!state.report) return; const days = state.report.days; const detailDay = days[state.selectedDay] || days[0]; const liveDay = days.find(d => d.date === localIsoDate()) || days[0]; const liveReport = selectedReportForDay(liveDay); $('mainSize').textContent = liveSizeText(liveReport); $('viewingTimeLabel').textContent = selectedTimeLabel(liveReport); const dailySummary = buildDailySummary(liveDay, liveReport); $('dailyHeadline').textContent = dailySummary.headline; $('plainWhy').textContent = dailySummary.text; $('bestWindowStat').textContent = dailySummary.bestWindow; $('windShiftStat').textContent = dailySummary.windShift; $('windMain').textContent = `${Math.round(liveReport.windSpeed)} km/h`; $('windSub').textContent = `${compassFromDeg(liveReport.windDir)} wind · ${Math.round(liveReport.windDir)}°`; $('tideCall').textContent = nextTideCall(liveReport); $('sourceRow').innerHTML = state.data?.staleDataUsed ? '<span>Using recently cached data.</span>' : ''; renderFreshness(liveReport); $('tideTitle').textContent = `Tide · ${formatDay(detailDay.date)}`; $('swellTrendTitle').textContent = `Swell trend · ${formatDay(detailDay.date)}`; $('windTrendTitle').textContent = `Wind trend · ${formatDay(detailDay.date)}`; renderDays(days); renderSwellDetail(detailDay); renderTidePanel(detailDay); renderSwellTrendPanel(detailDay); renderWindTrendPanel(detailDay); renderWeatherPanel(); renderLiveCorrectionBox(liveDay, liveReport); applyCanonicalFreshness(); }
-    function renderDays(days) { $('days').innerHTML = days.map((day, i) => { const windReport = day.peak || day.best; const windLine = windReport ? `${compassFromDeg(windReport.windDir)} ${Math.round(windReport.windSpeed)}km/h` : ''; const cleanSize = String(day.sizeText || '').replace(/\s*ft$/i, ''); return `<div class="day-card ${i === state.selectedDay ? 'active' : ''}" data-day="${i}"><div class="day-name">${formatDay(day.date)}</div><div class="day-size">${cleanSize}<span style="font-size:14px;color:var(--muted);letter-spacing:0;"> ft</span></div>${windLine ? `<div class="day-wind">${windLine}</div>` : ''}</div>`; }).join(''); document.querySelectorAll('.day-card').forEach(card => card.addEventListener('click', () => { const clicked = Number(card.dataset.day); if (state.selectedDay === clicked && state.expandedDay === clicked) { state.expandedDay = null; } else { state.selectedDay = clicked; state.expandedDay = clicked; } render(); })); }
+    function renderDays(days) { $('days').innerHTML = days.map((day, i) => { const windReport = day.peak || day.best; const windLine = windReport ? simpleWindText(windReport.windDir, windReport.windSpeed) : ''; const cleanSize = String(day.sizeText || '').replace(/\s*ft$/i, ''); return `<div class="day-card ${i === state.selectedDay ? 'active' : ''}" data-day="${i}"><div class="day-name">${formatDay(day.date)}</div><div class="day-size">${cleanSize}<span style="font-size:14px;color:var(--muted);letter-spacing:0;"> ft</span></div>${windLine ? `<div class="day-wind">${windLine}</div>` : ''}</div>`; }).join(''); document.querySelectorAll('.day-card').forEach(card => card.addEventListener('click', () => { const clicked = Number(card.dataset.day); if (state.selectedDay === clicked && state.expandedDay === clicked) { state.expandedDay = null; } else { state.selectedDay = clicked; state.expandedDay = clicked; } render(); })); }
     function fmtM(value) { const n = Number(value || 0); return n ? `${n.toFixed(1)}m` : '--'; }
     function fmtPeriod(value) { const n = Number(value || 0); return n ? `${n.toFixed(1)}s` : '--'; }
     function fmtDirection(value) { const n = Number(value || 0); return n ? `${Math.round(n)}° ${compassFromDeg(n)}` : '--'; }
@@ -1820,7 +1819,7 @@
       if (!renderedChecks && !renderedFailures) return `<div class="swell-data"><strong>Gulf debug</strong><small>No Gulf point data matched this hour.</small></div>`;
       return renderedChecks + renderedFailures;
     }
-    function renderSwellDetail(day) { if (state.expandedDay !== state.selectedDay) { $('swellDetail').innerHTML = ''; $('swellDetailHint').textContent = 'Tap any date above to open the 6 AM, 12 PM and 6 PM read.'; return; } $('swellDetailHint').textContent = 'Tap the same date again to close the 6 AM, 12 PM and 6 PM read.'; const rows = [6, 12, 18].map(hour => nearestHour(day.reports, hour)).filter(Boolean); $('swellDetail').innerHTML = rows.map(r => { const primary = { h: r.offshoreRaw.swell_wave_height, p: r.offshoreRaw.swell_wave_period, d: r.offshoreRaw.swell_wave_direction }, secondary = { h: r.offshoreRaw.secondary_swell_wave_height, p: r.offshoreRaw.secondary_swell_wave_period, d: r.offshoreRaw.secondary_swell_wave_direction }; const driverLabel = r.activeDriver.kind === 'Secondary swell' ? 'Secondary' : r.activeDriver.kind === 'Primary swell' ? 'Primary' : 'Mixed'; return `<div class="swell-row"><div><b>${formatTime(r.time)}</b><small style="display:block;color:var(--muted);margin-top:2px;">${driverLabel}</small></div><div class="swell-pill">${r.sizeText} ft</div><div class="swell-data"><strong>Primary: ${fmtM(primary.h)} @ ${fmtPeriod(primary.p)}</strong><small>${fmtDirection(primary.d)}</small></div><div class="swell-data"><strong>Secondary: ${fmtM(secondary.h)} @ ${fmtPeriod(secondary.p)}</strong><small>${secondary.h ? fmtDirection(secondary.d) : 'No useful secondary line'}</small></div><div class="swell-data wind-read"><strong>Wind: ${simpleWindText(r.windDir, r.windSpeed)}</strong></div>${renderGulfDebug(r)}</div>`; }).join('') + renderManualRealityDebug(day); }
+    function renderSwellDetail(day) { if (state.expandedDay !== state.selectedDay) { $('swellDetail').innerHTML = ''; $('swellDetailHint').textContent = 'Tap any date above to open the 6 AM, 12 PM and 6 PM read.'; return; } $('swellDetailHint').textContent = 'Tap the same date again to close the 6 AM, 12 PM and 6 PM read.'; const rows = [6, 12, 18].map(hour => nearestHour(day.reports, hour)).filter(Boolean); $('swellDetail').innerHTML = rows.map(r => { const primary = { h: r.offshoreRaw.swell_wave_height, p: r.offshoreRaw.swell_wave_period, d: r.offshoreRaw.swell_wave_direction }, secondary = { h: r.offshoreRaw.secondary_swell_wave_height, p: r.offshoreRaw.secondary_swell_wave_period, d: r.offshoreRaw.secondary_swell_wave_direction }; const driverLabel = r.activeDriver.kind === 'Secondary swell' ? 'Secondary' : r.activeDriver.kind === 'Primary swell' ? 'Primary' : 'Mixed'; return `<div class="swell-row"><div><b>${formatTime(r.time)}</b><small style="display:block;color:var(--muted);margin-top:2px;">${driverLabel}</small></div><div class="swell-pill">${phase1.unit(r.sizeText)}</div><div class="swell-data"><strong>Primary: ${fmtM(primary.h)} @ ${fmtPeriod(primary.p)}</strong><small>${fmtDirection(primary.d)}</small></div><div class="swell-data"><strong>Secondary: ${fmtM(secondary.h)} @ ${fmtPeriod(secondary.p)}</strong><small>${secondary.h ? fmtDirection(secondary.d) : 'No useful secondary line'}</small></div><div class="swell-data wind-read"><strong>Wind: ${simpleWindText(r.windDir, r.windSpeed)}</strong></div>${renderGulfDebug(r)}</div>`; }).join('') + renderManualRealityDebug(day); }
 
     function graphX(hour) { return 78 + (clamp(Number(hour), 0, 24) / 24) * 600; }
     function graphLeftPct(hour) { return (graphX(hour) / 720) * 100; }
@@ -1829,7 +1828,7 @@
     function makeTidePath(points, minH, maxH) { const sorted = points.slice().sort((a, b) => timeToHour(a.time) - timeToHour(b.time)); const extended = [{ time: '00:00', height: sorted[0].height + (sorted[0].type === 'Low' ? 0.10 : -0.10), type: 'Guide' }, ...sorted, { time: '23:59', height: sorted[sorted.length - 1].height + (sorted[sorted.length - 1].type === 'Low' ? 0.10 : -0.10), type: 'Guide' }]; const coords = extended.map(p => ({ x: graphX(timeToHour(p.time)), y: tideY(p.height, minH, maxH) })); let d = `M ${coords[0].x} ${coords[0].y}`; for (let i = 1; i < coords.length; i++) { const prev = coords[i - 1], curr = coords[i], midX = (prev.x + curr.x) / 2; d += ` C ${midX} ${prev.y}, ${midX} ${curr.y}, ${curr.x} ${curr.y}`; } return d; }
     function renderTidePanel(day) { const points = tideForDate(day.date); if (!points) { $('tidePanel').innerHTML = `<div class="warning error"><b>No trusted tide points loaded for ${formatDay(day.date)}.</b><br>Import the Port Noarlunga tide JSON for full-year tide support.</div>`; return; } const cleanPoints = points.map(normaliseTidePoint).filter(p => p.time && Number.isFinite(p.height)); const graphPoints = cleanPoints; if (!cleanPoints.length) { $('tidePanel').innerHTML = `<div class="warning error"><b>Tide data found but could not be read.</b></div>`; return; } const minH = 0, maxH = Math.max(3, Math.ceil(Math.max(...graphPoints.map(p => p.height))));
       const path = makeTidePath(graphPoints, minH, maxH), fillPath = `${path} L 696 220 L 78 220 Z`;
-      const tideGridLines = makeTideGridLines(minH, maxH); const pointDots = graphPoints.map(p => { const x = graphX(timeToHour(p.time)), y = tideY(p.height, minH, maxH), labelY = p.type === 'High' ? Math.max(14, y - 14) : Math.min(218, y + 22), anchor = x < 100 ? 'start' : x > 650 ? 'end' : 'middle'; return `<circle cx="${x}" cy="${y}" r="5" fill="#eafaff" stroke="#32a9ff" stroke-width="3" /><text x="${x}" y="${labelY}" text-anchor="${anchor}" fill="rgba(243,251,255,0.88)" font-size="12" font-weight="800">${formatClock(p.time)}</text>`; }).join(''); const xAxisLabels = axisLabels().join(''); const now = new Date(), showNow = day.date === localIsoDate(), nowPct = graphLeftPct(now.getHours() + now.getMinutes() / 60); const eventsHtml = graphPoints.map(p => `<div class="tide-event"><div class="tide-arrow ${p.type === 'Low' ? 'low' : 'high'}">${p.type === 'High' ? '▲' : '▼'}</div><div><b>${formatClock(p.time)}</b><small>${p.type} tide · ${p.height.toFixed(2)} m</small></div></div>`).join(''); $('tidePanel').innerHTML = `<div class="tide-graph">${showNow ? `<div class="tide-now-line" style="left:${nowPct}%"></div><div class="tide-now-label" style="left:${nowPct}%">Now</div>` : ''}<svg viewBox="0 0 720 240" preserveAspectRatio="none">${tideGridLines}<path d="${fillPath}" fill="rgba(119,216,255,0.25)" /><path d="${path}" fill="none" stroke="#31a9ff" stroke-width="4" stroke-linecap="round" />${pointDots}${xAxisLabels}</svg></div><div class="tide-events">${eventsHtml}</div>`; }
+      const tideGridLines = makeTideGridLines(minH, maxH); const pointDots = graphPoints.map(p => { const x = graphX(timeToHour(p.time)), y = tideY(p.height, minH, maxH), labelY = p.type === 'High' ? Math.max(14, y - 14) : Math.min(218, y + 22), anchor = x < 100 ? 'start' : x > 650 ? 'end' : 'middle'; return `<circle cx="${x}" cy="${y}" r="5" fill="#eafaff" stroke="#32a9ff" stroke-width="3" /><text x="${x}" y="${labelY}" text-anchor="${anchor}" fill="rgba(243,251,255,0.88)" font-size="12" font-weight="800">${formatClock(p.time)}</text>`; }).join(''); const xAxisLabels = axisLabels().join(''); const now = new Date(), showNow = day.date === localIsoDate(), nowPct = graphLeftPct(adelaideMinutesNow() / 60); const eventsHtml = graphPoints.map(p => `<div class="tide-event"><div class="tide-arrow ${p.type === 'Low' ? 'low' : 'high'}">${p.type === 'High' ? '▲' : '▼'}</div><div><b>${formatClock(p.time)}</b><small>${p.type} tide · ${p.height.toFixed(2)} m</small></div></div>`).join(''); $('tidePanel').innerHTML = `<div class="tide-graph">${showNow ? `<div class="tide-now-line" style="left:${nowPct}%"></div><div class="tide-now-label" style="left:${nowPct}%">Now</div>` : ''}<svg viewBox="0 0 720 240" preserveAspectRatio="none">${tideGridLines}<path d="${fillPath}" fill="rgba(119,216,255,0.25)" /><path d="${path}" fill="none" stroke="#31a9ff" stroke-width="4" stroke-linecap="round" />${pointDots}${xAxisLabels}</svg></div><div class="tide-events">${eventsHtml}</div>`; }
 
     function axisLabels(y = 236) { return [{ h: 0, label: '12am' }, { h: 3, label: '3am' }, { h: 6, label: '6am' }, { h: 9, label: '9am' }, { h: 12, label: '12pm' }, { h: 15, label: '3pm' }, { h: 18, label: '6pm' }, { h: 21, label: '9pm' }, { h: 24, label: '12am' }].map(t => `<text x="${graphX(t.h)}" y="${y}" text-anchor="middle" fill="rgba(210,227,236,0.95)" font-size="12" font-weight="900">${t.label}</text>`); }
     function swellGraphY(sizeFt, minFt, maxFt) { const top = 24, bottom = 206, range = Math.max(0.25, maxFt - minFt); return bottom - ((sizeFt - minFt) / range) * (bottom - top); }
@@ -1869,7 +1868,7 @@
     function trendArrow(deltaFt) { if (deltaFt > 0.35) return '↗'; if (deltaFt < -0.35) return '↘'; return '→'; }
     function buildSwellTrendWindows(points) { if (points.length < 2) return []; const windows = []; let start = points[0], previousTrend = trendLabel(points[1].sizeFt - points[0].sizeFt); for (let i = 1; i < points.length; i++) { const currentTrend = i < points.length - 1 ? trendLabel(points[i + 1].sizeFt - points[i].sizeFt) : previousTrend; if (currentTrend !== previousTrend || i === points.length - 1) { const end = points[i], delta = end.sizeFt - start.sizeFt; if (Math.abs(delta) >= 0.35 || previousTrend === 'holding') windows.push({ start, end, trend: previousTrend, delta }); start = points[i]; previousTrend = currentTrend; } } return windows.filter(w => w.end.hour > w.start.hour).slice(0, 3); }
     function makeSwellGridLines(minFt, maxFt) { return [1, 2, 3].filter(v => v <= maxFt).map(v => { const y = swellGraphY(v, minFt, maxFt); return `<line x1="78" y1="${y}" x2="696" y2="${y}" stroke="rgba(255,255,255,0.13)" /><text x="18" y="${y - 8}" fill="rgba(255,255,255,0.95)" font-size="13" font-weight="950">${v}ft</text>`; }).join(''); }
-    function renderSwellTrendPanel(day) { const reports = smoothSwellTrendPoints(day.reports); if (!reports.length) { $('swellTrendPanel').innerHTML = `<div class="warning error"><b>No swell trend data.</b></div>`; return; } const maxDataFt = Math.max(...reports.map(r => r.sizeFt), ...day.reports.map(r => Number(r.finalFt || 0)), 3); const maxFt = Math.max(3, Math.ceil(maxDataFt)); const minFt = 0; const path = makeSwellTrendPath(reports, minFt, maxFt), fillPath = `${path} L 696 220 L 78 220 Z`, best = reports.slice().sort((a, b) => b.sizeFt - a.sizeFt)[0]; const swellGridLines = makeSwellGridLines(minFt, maxFt); const markers = [0,3,6,9,12,15,18,21].map(hour => reports.slice().sort((a,b) => Math.abs(a.hour - hour) - Math.abs(b.hour - hour))[0]).filter(Boolean); const markerDots = markers.map(p => { const x = graphX(p.hour), y = swellGraphY(p.sizeFt, minFt, maxFt); return `<circle cx="${x}" cy="${y}" r="5" fill="#eafff5" stroke="#9cf2ca" stroke-width="3" />`; }).join(''); const now = new Date(), showNow = day.date === localIsoDate(), nowPct = graphLeftPct(now.getHours() + now.getMinutes() / 60), windows = buildSwellTrendWindows(reports), bestText = `${formatTime(best.time)} · ${best.sizeText} ft`; const cards = [`<div class="swell-trend-card"><small>Best pulse</small><b>${bestText}</b><small>${simpleWindText(best.windDir, best.windSpeed)}</small></div>`, ...windows.slice(0, 2).map(w => `<div class="swell-trend-card"><small>${trendArrow(w.delta)} ${w.trend}</small><b>${formatTime(w.start.time)} → ${formatTime(w.end.time)}</b><small>${w.start.sizeText} ft to ${w.end.sizeText} ft</small></div>`)].join(''); $('swellTrendPanel').innerHTML = `<div class="swell-graph">${showNow ? `<div class="swell-now-line" style="left:${nowPct}%"></div><div class="swell-now-label" style="left:${nowPct}%">Now</div>` : ''}<svg viewBox="0 0 720 240" preserveAspectRatio="none">${swellGridLines}<path d="${fillPath}" fill="rgba(156,242,202,0.18)" /><path d="${path}" fill="none" stroke="#9cf2ca" stroke-width="4" stroke-linecap="round" />${markerDots}${axisLabels().join('')}</svg></div><div class="swell-trend-cards">${cards}</div>`; }
+    function renderSwellTrendPanel(day) { const reports = smoothSwellTrendPoints(day.reports); if (!reports.length) { $('swellTrendPanel').innerHTML = `<div class="warning error"><b>No swell trend data.</b></div>`; return; } const maxDataFt = Math.max(...reports.map(r => r.sizeFt), ...day.reports.map(r => Number(r.finalFt || 0)), 3); const maxFt = Math.max(3, Math.ceil(maxDataFt)); const minFt = 0; const path = makeSwellTrendPath(reports, minFt, maxFt), fillPath = `${path} L 696 220 L 78 220 Z`, best = reports.filter(r => isDaylightSurfTime(r.time)).slice().sort((a, b) => b.sizeFt - a.sizeFt)[0]; const swellGridLines = makeSwellGridLines(minFt, maxFt); const markers = [0,3,6,9,12,15,18,21].map(hour => reports.slice().sort((a,b) => Math.abs(a.hour - hour) - Math.abs(b.hour - hour))[0]).filter(Boolean); const markerDots = markers.map(p => { const x = graphX(p.hour), y = swellGraphY(p.sizeFt, minFt, maxFt); return `<circle cx="${x}" cy="${y}" r="5" fill="#eafff5" stroke="#9cf2ca" stroke-width="3" />`; }).join(''); const now = new Date(), showNow = day.date === localIsoDate(), nowPct = graphLeftPct(adelaideMinutesNow() / 60), windows = buildSwellTrendWindows(reports), bestText = best ? `${formatTime(best.time)} · ${phase1.unit(best.sizeText)}` : 'No daylight pulse available'; const cards = [`<div class="swell-trend-card"><small>Best pulse</small><b>${bestText}</b><small>${simpleWindText(best?.windDir, best?.windSpeed)}</small></div>`, ...windows.slice(0, 2).map(w => `<div class="swell-trend-card"><small>${trendArrow(w.delta)} ${w.trend}</small><b>${formatTime(w.start.time)} → ${formatTime(w.end.time)}</b><small>${phase1.unit(w.start.sizeText)} to ${phase1.unit(w.end.sizeText)}</small></div>`)].join(''); $('swellTrendPanel').innerHTML = `<div class="swell-graph">${showNow ? `<div class="swell-now-line" style="left:${nowPct}%"></div><div class="swell-now-label" style="left:${nowPct}%">Now</div>` : ''}<svg viewBox="0 0 720 240" preserveAspectRatio="none">${swellGridLines}<path d="${fillPath}" fill="rgba(156,242,202,0.18)" /><path d="${path}" fill="none" stroke="#9cf2ca" stroke-width="4" stroke-linecap="round" />${markerDots}${axisLabels().join('')}</svg></div><div class="swell-trend-cards">${cards}</div>`; }
 
     function windGraphY(speed, minSpeed, maxSpeed) { const top = 34, bottom = 246, range = Math.max(4, maxSpeed - minSpeed); return bottom - ((speed - minSpeed) / range) * (bottom - top); }
     function windLevel(speedKmh) { return clamp(Number(speedKmh || 0) / 15, 0, 4); }
@@ -1912,7 +1911,7 @@
       const selectedLabel = state.selectedWeatherDay === null ? 'Today' : formatDay(selectedWeatherDate);
       $('weatherPanel').innerHTML = `<div class="weather-current"><div class="weather-now"><small class="label">Now in Seaford</small><div class="weather-icon">${weatherEmoji(currentCode, wind.current.wind_speed_10m, todayRain)}</div><div class="weather-temp">${Math.round(currentTemp)}<span>°C</span></div><div class="wind-sub">${weatherSummaryText(currentCode, todayRain)}${currentRain > 0 ? ` · ${currentRain.toFixed(1)} mm now` : ''}</div></div><div class="weather-summary"><span class="weather-summary-title">${selectedWeatherTitle}</span><b>${weatherPositiveLine(selectedMin, selectedMax, selectedRain, selectedCode, selectedLabel, 12)}</b>${selectedWeatherHours}</div></div><div class="weather-days">${days}</div>`; document.querySelectorAll('.weather-day').forEach(card => card.addEventListener('click', () => { const clicked = Number(card.dataset.weatherDay); state.selectedWeatherDay = state.selectedWeatherDay === clicked ? null : clicked; renderWeatherPanel(); })); }
 
-    function renderWindTrendPanel(day) { const reports = day.reports.map(r => ({ time: r.time, hour: reportHourValue(r), speed: Number(r.windSpeed || 0), speedLevel: windLevel(r.windSpeed), direction: r.windDir, quality: r.windQuality })).sort((a, b) => a.hour - b.hour); if (!reports.length) { $('windTrendPanel').innerHTML = `<div class="warning error"><b>No wind trend data.</b></div>`; return; } const minSpeed = 0, maxSpeed = 4; const path = makeWindTrendPath(reports.map(r => ({ ...r, speed: r.speedLevel })), minSpeed, maxSpeed), fillPath = `${path} L 696 260 L 78 260 Z`; const windGridLines = makeWindGridLines(minSpeed, maxSpeed); const markers = [0,3,6,9,12,15,18,21].map(hour => nearestHour(day.reports, hour)).filter(Boolean).map(r => ({ hour: reportHourValue(r), speed: Number(r.windSpeed || 0), direction: r.windDir, label: formatTime(r.time) })); const markerDots = markers.map(p => { const x = graphX(p.hour), y = windGraphY(windLevel(p.speed), minSpeed, maxSpeed), rotation = windArrowRotation(p.direction); return `<circle cx="${x}" cy="${y}" r="6" fill="#eafaff" stroke="#77d8ff" stroke-width="3" /><text x="${x}" y="${Math.max(24, y - 16)}" text-anchor="middle" class="wind-arrow-marker" style="transform: rotate(${rotation}deg);">↑</text>`; }).join(''); const now = new Date(), showNow = day.date === localIsoDate(), nowHour = now.getHours() + now.getMinutes() / 60, nowPct = graphLeftPct(nowHour); const cleanest = reports.slice().sort((a, b) => b.quality - a.quality || a.speed - b.speed)[0], lightest = reports.slice().sort((a, b) => a.speed - b.speed)[0], strongest = reports.slice().sort((a, b) => b.speed - a.speed)[0]; const cards = [`<div class="wind-trend-card"><small>Cleanest window</small><b>${formatTime(cleanest.time)}</b><small>${simpleWindText(cleanest.direction, cleanest.speed)}</small></div>`, `<div class="wind-trend-card"><small>Lightest wind</small><b>${formatTime(lightest.time)}</b><small>${simpleWindText(lightest.direction, lightest.speed)}</small></div>`, `<div class="wind-trend-card"><small>Strongest wind</small><b>${formatTime(strongest.time)}</b><small>${simpleWindText(strongest.direction, strongest.speed)}</small></div>`].join(''); $('windTrendPanel').innerHTML = `<div class="wind-graph">${showNow ? `<div class="wind-now-line" style="left:${nowPct}%"></div><div class="wind-now-label" style="left:${nowPct}%">Now</div>` : ''}<svg viewBox="0 0 720 300" preserveAspectRatio="none">${windGridLines}<path d="${fillPath}" fill="rgba(119,216,255,0.18)" /><path d="${path}" fill="none" stroke="#77d8ff" stroke-width="4" stroke-linecap="round" />${markerDots}${axisLabels(286).join('')}</svg></div><div class="wind-trend-cards">${cards}</div>`; }
+    function renderWindTrendPanel(day) { const reports = day.reports.map(r => ({ time: r.time, hour: reportHourValue(r), speed: Number(r.windSpeed || 0), speedLevel: windLevel(r.windSpeed), direction: r.windDir, quality: r.windQuality })).sort((a, b) => a.hour - b.hour); if (!reports.length) { $('windTrendPanel').innerHTML = `<div class="warning error"><b>No wind trend data.</b></div>`; return; } const minSpeed = 0, maxSpeed = 4; const path = makeWindTrendPath(reports.map(r => ({ ...r, speed: r.speedLevel })), minSpeed, maxSpeed), fillPath = `${path} L 696 260 L 78 260 Z`; const windGridLines = makeWindGridLines(minSpeed, maxSpeed); const markers = [0,3,6,9,12,15,18,21].map(hour => nearestHour(day.reports, hour)).filter(Boolean).map(r => ({ hour: reportHourValue(r), speed: Number(r.windSpeed || 0), direction: r.windDir, label: formatTime(r.time) })); const markerDots = markers.map(p => { const x = graphX(p.hour), y = windGraphY(windLevel(p.speed), minSpeed, maxSpeed), rotation = windArrowRotation(p.direction); return `<circle cx="${x}" cy="${y}" r="6" fill="#eafaff" stroke="#77d8ff" stroke-width="3" /><text x="${x}" y="${Math.max(24, y - 16)}" text-anchor="middle" class="wind-arrow-marker" style="transform: rotate(${rotation}deg);">↑</text>`; }).join(''); const now = new Date(), showNow = day.date === localIsoDate(), nowHour = adelaideMinutesNow() / 60, nowPct = graphLeftPct(nowHour); const cleanest = reports.filter(r => isDaylightSurfTime(r.time) && phase1Number(r.speed) && phase1Number(r.direction)).slice().sort((a, b) => b.quality - a.quality || a.speed - b.speed)[0], lightest = reports.slice().sort((a, b) => a.speed - b.speed)[0], strongest = reports.slice().sort((a, b) => b.speed - a.speed)[0]; const cards = [`<div class="wind-trend-card"><small>Cleanest window</small><b>${cleanest ? formatTime(cleanest.time) : 'Unavailable'}</b><small>${simpleWindText(cleanest?.direction, cleanest?.speed)}</small></div>`, `<div class="wind-trend-card"><small>Lightest wind</small><b>${formatTime(lightest.time)}</b><small>${simpleWindText(lightest.direction, lightest.speed)}</small></div>`, `<div class="wind-trend-card"><small>Strongest wind</small><b>${formatTime(strongest.time)}</b><small>${simpleWindText(strongest.direction, strongest.speed)}</small></div>`].join(''); $('windTrendPanel').innerHTML = `<div class="wind-graph">${showNow ? `<div class="wind-now-line" style="left:${nowPct}%"></div><div class="wind-now-label" style="left:${nowPct}%">Now</div>` : ''}<svg viewBox="0 0 720 300" preserveAspectRatio="none">${windGridLines}<path d="${fillPath}" fill="rgba(119,216,255,0.18)" /><path d="${path}" fill="none" stroke="#77d8ff" stroke-width="4" stroke-linecap="round" />${markerDots}${axisLabels(286).join('')}</svg></div><div class="wind-trend-cards">${cards}</div>`; }
 
     function setReportLoadingState(isLoading, force = false) {
       const refreshBtn = $('refreshBtn');
@@ -2022,8 +2021,8 @@
               windData = weatherWind;
               windWarnings.push('Using weather wind fallback.');
             } else {
-              windData = buildCalmWindFallback(offshoreRes.data);
-              windWarnings.push('Wind data unavailable; using calm fallback.');
+              windData = buildUnknownWind(offshoreRes.data);
+              windWarnings.push('Wind data unavailable; wind remains unknown.');
             }
           }
           const gulfResults = await Promise.allSettled(GULF_CHECK_POINTS.map((point, i) => fetchOptionalJsonCached(`gulf-check-${i}`, marineUrl(point, true), fetchOptions).then(res => ({ ...res, point }))));
@@ -2080,9 +2079,9 @@
       }
     }
 
-    function copySummary() { if (!state.report) return; const day = state.report.days[state.selectedDay], r = selectedReportForDay(day); const text = `Seaford report ${formatDay(day.date)}: ${r.sizeText} ft, ${r.confidence.toLowerCase()} confidence. Wind ${compassFromDeg(r.windDir)} ${Math.round(r.windSpeed)} km/h. ${r.why}`; navigator.clipboard?.writeText(text); $('statusText').textContent = 'Summary copied'; }
+    function copySummary() { if (!state.report) return; const day = state.report.days[state.selectedDay], r = selectedReportForDay(day); const text = `Seaford report ${formatDay(day.date)}: ${phase1.unit(r.sizeText)}, ${r.confidence.toLowerCase()} confidence. Wind ${compassFromDeg(r.windDir)} ${Math.round(r.windSpeed)} km/h. ${r.why}`; navigator.clipboard?.writeText(text); $('statusText').textContent = 'Summary copied'; }
 
-    const SEAFORD_CALCULATION_VERSION = 'seaford-2026.08.24.1';
+    const SEAFORD_CALCULATION_VERSION = 'seaford-phase1-2026.09.05.1';
     function shiftObservationDate(date, dayOffset) { const shifted = new Date(`${date}T12:00:00Z`); shifted.setUTCDate(shifted.getUTCDate() + dayOffset); return shifted.toISOString().slice(0, 10); }
     function observationDurationLabel(minutes) { const value = Math.max(0, Math.round(Number(minutes) || 0)); if (value < 45) return `${value} min`; const hours = Math.round(value / 30) / 2; return `${Number.isInteger(hours) ? hours : hours.toFixed(1)} hr`; }
     function tideRangeDetails(rangeM) { const value = Number(rangeM); if (!Number.isFinite(value)) return { rangeClass: 'unknown', rangeLabel: 'Tide change unavailable' }; if (value < 0.95) return { rangeClass: 'small', rangeLabel: `Small ${value.toFixed(2)} m tide change` }; if (value < 1.4) return { rangeClass: 'medium', rangeLabel: `Medium ${value.toFixed(2)} m tide change` }; return { rangeClass: 'big', rangeLabel: `Big ${value.toFixed(2)} m tide change` }; }
@@ -2193,6 +2192,92 @@
       if (state.report) render();
     });
 
+
+    // Phase 1: instrument and guard the existing engine; do not retune it.
+    const phase1 = installPhase1(() => state, {
+      build: buildHourReport, summary: buildDailySummary, minutes: timeToMinutesFromReport,
+      today: localIsoDate, nowMinutes: adelaideMinutesNow, score: surfWindowScore, size: liveSizeText
+      ,transfer: driver => ({ directionOnlyClampedFt: sectorCalibratedSizeFt(driver.heightM, driver.directionDeg, 0),
+        periodAdjustmentBeforeClampFt: periodBonusFt(driver.periodS),
+        startingBeachSizeFt: sectorCalibratedSizeFt(driver.heightM, driver.directionDeg, driver.periodS),
+        formula: sectorCalibratedSizeFt.toString(), note: 'Existing empirical direction transfer followed by additive period adjustment and 0–6ft clamp; diagnostic only.' })
+    }, 'seaford');
+    buildHourReport = phase1.build;
+    buildDailySummary = phase1.summary;
+    surfDaylightBounds = phase1.bounds;
+    formatTime = phase1.clock;
+
+
+    const phase1OldHold = applySeafordNowcastHold;
+    applySeafordNowcastHold = (reports, now) => {
+      const valid = reports.filter(r => phase1Number(r.finalFt));
+      if (valid.length) phase1OldHold(valid, now);
+      for (const r of valid) {
+        if (r.calculationTrace) {
+          phase1Step(r.calculationTrace, 'recent Gulf pulse nowcast hold', r.finalFt);
+          r.calculationTrace.nowcastHold = r.nowcastHold || null;
+          r.calculationTrace.finalFt = r.finalFt;
+        }
+      }
+      return reports;
+    };
+    const phase1OldGroup = groupByDay;
+    groupByDay = rows => phase1OldGroup(rows).map(day => {
+      if (day.reports.some(r => !phase1Number(r.finalFt))) {
+        const valid = day.reports.filter(r => phase1Number(r.finalFt) && isDaylightSurfTime(r.time));
+        const best = valid.slice().sort((a,b) => surfWindowScore(b)-surfWindowScore(a))[0];
+        const peak = valid.slice().sort((a,b) => b.finalFt-a.finalFt)[0];
+        return { ...day, best: best || day.reports[0], peak: peak || day.reports[0], avgFt: peak?.finalFt ?? null, sizeText: peak ? sizeRange(peak.finalFt) : 'Unavailable', incomplete: true };
+      }
+      return day;
+    });
+    const phase1OldWindPanel = renderWindTrendPanel;
+    renderWindTrendPanel = day => {
+      if (day.reports.some(r => !phase1.validWind(r.windRaw))) {
+        $('windTrendPanel').textContent = 'Wind trend incomplete — missing hours are unknown, not calm.';
+        return;
+      }
+      phase1OldWindPanel(day);
+    };
+    const phase1OldSwellPanel = renderSwellTrendPanel;
+    renderSwellTrendPanel = day => {
+      if (day.reports.some(r => !phase1Number(r.finalFt))) {
+        $('swellTrendPanel').textContent = 'Size trend incomplete — missing wind prevents a verified calculation.';
+        return;
+      }
+      phase1OldSwellPanel(day);
+    };
+    const phase1OldSize = liveSizeText;
+    liveSizeText = report => report && phase1Number(report.finalFt) ? phase1OldSize(report).replace(/\s*ft\s*$/i, '') : 'Unavailable';
+    const phase1OldWindSnapshot = windObservationSnapshot;
+    windObservationSnapshot = report => phase1.validWind(report?.windRaw)
+      ? phase1OldWindSnapshot(report)
+      : { speedKmh: null, directionDeg: null, directionCompass: 'unknown', directionName: 'unknown', strength: 'unknown', label: 'Wind unknown' };
+    const phase1OldQuality = surfQualityLabel;
+    surfQualityLabel = report => phase1.validWind(report?.windRaw) ? phase1OldQuality(report) : 'Quality unknown';
+    const phase1OldSimpleWind = simpleWindText;
+    simpleWindText = (direction, speed) => phase1Number(direction) && phase1Number(speed) ? phase1OldSimpleWind(direction, speed) : 'Wind unknown';
+    const phase1OldRender = render;
+    render = () => {
+      phase1OldRender();
+      const currentDay = state.report?.days?.find(d => d.date === localIsoDate()) || state.report?.days?.[0];
+      if (!currentDay) return;
+      const current = selectedReportForDay(currentDay);
+      if (!phase1.validWind(current?.windRaw)) {
+        $('windMain').textContent = 'Unknown';
+        $('windSub').textContent = 'Wind unavailable';
+      }
+      const debug = document.getElementById('phase1Debug');
+      if (debug) debug.textContent = JSON.stringify(current, null, 2);
+      if (typeof window !== 'undefined') window.__FRENCHY_PHASE1_CURRENT__ = current;
+      if (typeof Event !== 'undefined') document.dispatchEvent(new Event('phase1-report-rendered'));
+    };
+    const phase1OldSelect = selectedReportForDay;
+    selectedReportForDay = day => {
+      const selected = $('timeSelect').value;
+      const hour = selected === 'now' ? (day.date === localIsoDate() ? adelaideMinutesNow()/60 : 9) : Number(selected);
+      return day.reports.slice().sort((a,b) => Math.abs(timeToMinutesFromReport(a.time)/60-hour) - Math.abs(timeToMinutesFromReport(b.time)/60-hour))[0];
+    };
     $('refreshBtn').addEventListener('click', () => loadReport(true));
     $('timeSelect').addEventListener('change', render);
     $('calibrationSelect').addEventListener('change', () => { if (!state.data) return; rebuildReportsFromState(); render(); });

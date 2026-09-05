@@ -1,0 +1,23 @@
+/* Readability pass only: retain the existing colours, cards and surf identity. */
+.aside-stack { grid-template-rows: auto; align-self: start; }
+.report-intro { margin: 20px 0; font-size: 16px; line-height: 1.6; }
+.time-chip { min-height: 44px !important; min-width: 64px; font-size: 15px !important; }
+.decision-item b { font-size: 16px; line-height: 1.4; }
+.decision-item small, .side-eyebrow, .label { font-size: 13px; }
+.phase1-debug { margin: 24px auto; max-width: 1100px; padding: 16px; }
+.phase1-debug pre { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 13px; }
+@media(max-width: 700px) {
+  .spot-tab { font-size: 17px; min-height: 48px; }
+  .spot-tab small { font-size: 12px; }
+  .plain-why, #plainWhy, #bestWindowStat { font-size: 16px !important; line-height: 1.5; }
+  #viewingTimeLabel { font-size: 14px !important; line-height: 1.45; }
+  .day-name, .day-wind, .wind-sub, .swell-data small { font-size: 14px !important; }
+  .decision-grid { gap: 12px; }
+  .quick-stats { order: 4; }
+  .decision-grid { order: 5; }
+  .quick-stat small { font-size: 13px; }
+  .quick-stat:first-child small::before { display: none; }
+  #viewingTimeLabel { letter-spacing: .03em; text-transform: none; }
+  .aside-stack { margin-top: 16px; }
+  #hero::before { font-size: 24px; }
+}
