@@ -685,6 +685,12 @@
     function applyCanonicalFreshness() {
       const report = window.__FRENCHY_CANONICAL_REPORT__;
       if (!report) return;
+      if (window.__FRENCHY_REFRESH_FAILED__ || state.data?.staleDataUsed) {
+        $('statusText').textContent = 'Refresh failed · previous report retained';
+        $('sourceRow').textContent = `Showing previous forecast issued ${report.issued_at} · fresh data unavailable`;
+        document.dispatchEvent(new Event('phase1-report-rendered'));
+        return;
+      }
       $('statusText').textContent = report.status === 'current' ? 'Current report' : report.status === 'expired' ? 'Report expired' : 'Report unavailable';
       const regional = report.spot?.calibration_scope === 'regional-mid-coast';
       $('sourceRow').innerHTML = regional
@@ -710,12 +716,14 @@
       let hydration = !force ? window.__FRENCHY_SSR_STATE__ : null;
       if (force) {
         const slug = window.__FRENCHY_CANONICAL_REPORT__?.spot?.id || 'middleton';
-        const response = await fetch(`/api/surf-reports/${encodeURIComponent(slug)}.json?full=1&refresh=1`, { cache: 'no-store' });
+        const response = await fetch(`/api/surf-reports/${encodeURIComponent(slug)}.json?full=1&refresh=1`, { cache: 'no-cache', signal: AbortSignal.timeout(25000) });
         if (!response.ok) throw new Error(`Canonical report refresh failed: ${response.status}`);
         const payload = await response.json();
+        if (!payload.hydration?.report?.reports?.length || !payload.hydration?.data || !payload.canonical?.issued_at) throw new Error('Fresh report is unavailable; previous report retained.');
         hydration = payload.hydration;
         window.__FRENCHY_CANONICAL_REPORT__ = payload.canonical;
         window.__FRENCHY_SSR_STATE__ = hydration;
+        window.__FRENCHY_REFRESH_FAILED__ = Boolean(hydration.data.staleDataUsed);
       }
       if (!applyServerHydration(hydration)) return false;
       render();
@@ -724,6 +732,8 @@
     }
 
     async function loadReport(force = false) {
+      if (state.isLoadingReport) return;
+      state.isLoadingReport = true;
       $('statusText').textContent = 'Loading report...';
       try {
         if (window.__FRENCHY_CANONICAL_REQUIRED__) {
@@ -789,9 +799,16 @@
         render();
       } catch (err) {
         console.error(err);
+        if (window.__FRENCHY_CANONICAL_REQUIRED__ && state.report) {
+          window.__FRENCHY_REFRESH_FAILED__ = true;
+          applyCanonicalFreshness();
+          return; // Keep size, plan, timestamps and the frozen observation inputs intact.
+        }
         $('statusText').textContent = 'Data error';
         $('plainWhy').textContent = err.message || 'Could not load report.';
         $('hero').classList.add('error');
+      } finally {
+        state.isLoadingReport = false;
       }
     }
     const MIDDLETON_CALCULATION_VERSION = 'middleton-phase1-2026.09.05.1';
@@ -958,7 +975,14 @@
     $('importTideBtn').addEventListener('click', () => $('tideFileInput').click());
     $('tideFileInput').addEventListener('change', async event => { const file = event.target.files?.[0]; if (!file) return; try { await importTideJsonFile(file); } catch (err) { console.error(err); $('statusText').textContent = 'Tide import failed'; alert(err.message || 'Tide import failed'); } });
     // Internal model tests run before deployment, not in every visitor's browser.
-    loadReport();
+    // Paint the server snapshot first. A deliberate reload always revalidates;
+    // normal visits only revalidate an aged snapshot. No asset cache-busting.
+    loadReport().then(() => {
+      if (!window.__FRENCHY_CANONICAL_REQUIRED__) return;
+      const navigation = performance.getEntriesByType?.('navigation')?.[0];
+      const issued = Date.parse(window.__FRENCHY_CANONICAL_REPORT__?.issued_at || '');
+      if (navigation?.type === 'reload' || performance.navigation?.type === 1 || !Number.isFinite(issued) || Date.now() - issued > 4 * 60 * 1000) loadReport(true);
+    });
   </script>
 </body>
 </html>

@@ -389,8 +389,8 @@ export async function handler(event) {
     const body = query.full === '1'
       ? { canonical: result.canonical, hydration: result.hydration, ...(query.at ? { observation } : {}) }
       : result.canonical;
-    const headers = query.at
-      ? { ...JSON_HEADERS, 'Cache-Control': 'private, no-store' }
+    const headers = query.at || force
+      ? { ...JSON_HEADERS, 'Cache-Control': 'private, no-store', 'Netlify-CDN-Cache-Control': 'no-store' }
       : JSON_HEADERS;
     return { statusCode: 200, headers, body: JSON.stringify(body) };
   }

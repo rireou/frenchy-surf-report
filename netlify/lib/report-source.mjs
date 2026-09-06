@@ -29,7 +29,8 @@ async function loadSource(location, force = false) {
   const now = Date.now();
   const existing = cache.get(location);
   if (!force && existing?.value && now - existing.savedAt <= SOURCE_CACHE_MS) return existing.value;
-  if (!force && existing?.promise) return existing.promise;
+  // An in-flight request already fetches fresh source data, including for reloads.
+  if (existing?.promise) return existing.promise;
   const promise = freshSource(location)
     .then(value => {
       cache.set(location, { value, savedAt: Date.now(), promise: null });

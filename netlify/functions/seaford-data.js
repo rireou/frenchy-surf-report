@@ -101,12 +101,21 @@ function buildUnknownWind(referenceData) {
 exports.handler = async () => {
   const warnings = [];
   try {
-    const [offshore, local, weatherResult, windResult] = await Promise.all([
+    const localPromise = fetchJson('Seaford local marine', marineUrl(CONFIG.local, true));
+    const gulfPromise = Promise.allSettled(GULF_CHECK_POINTS.map(async point => {
+      // The first Gulf check is exactly the same URL as the required local source.
+      const result = marineUrl(point, true) === marineUrl(CONFIG.local, true)
+        ? await localPromise.then(data => ({data, failed:false}), error => ({data:null, failed:true, error:error.message}))
+        : await optionalFetch(point.name, marineUrl(point, true));
+      if (result.failed) warnings.push(`${point.name}: ${result.error}`);
+      return { point, data: result.data, failed: result.failed, error: result.error || null };
+    }));
+    const [[offshore, local, weatherResult, windResult], gulfResults] = await Promise.all([Promise.all([
       fetchJson('Seaford offshore marine', marineUrl(CONFIG.offshore, false)),
-      fetchJson('Seaford local marine', marineUrl(CONFIG.local, true)),
+      localPromise,
       optionalFetch('Seaford weather', weatherUrl()),
       optionalFetch('Seaford wind', windUrl())
-    ]);
+    ]), gulfPromise]);
 
     if (weatherResult.failed) warnings.push(`Seaford weather: ${weatherResult.error}`);
     let wind = windResult.data;
@@ -122,11 +131,6 @@ exports.handler = async () => {
       warnings.push(`Seaford wind: ${windResult.error}`);
     }
 
-    const gulfResults = await Promise.allSettled(GULF_CHECK_POINTS.map(async point => {
-      const result = await optionalFetch(point.name, marineUrl(point, true));
-      if (result.failed) warnings.push(`${point.name}: ${result.error}`);
-      return { point, data: result.data, failed: result.failed, error: result.error || null };
-    }));
     const gulfChecks = gulfResults.map((result, index) => result.status === 'fulfilled'
       ? result.value
       : { point: GULF_CHECK_POINTS[index], data: null, failed: true, error: result.reason?.message || String(result.reason) });

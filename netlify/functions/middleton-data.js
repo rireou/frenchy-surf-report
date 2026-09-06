@@ -100,21 +100,20 @@ function buildUnknownWind(referenceData) {
 exports.handler = async () => {
   const warnings = [];
   try {
-    const offshoreResults = await Promise.allSettled(CONFIG.offshorePoints.map(async point => {
+    const [offshoreResults, [local, weatherResult, windResult]] = await Promise.all([Promise.allSettled(CONFIG.offshorePoints.map(async point => {
       const result = await optionalFetch(point.name, marineUrl(point));
       if (result.failed) warnings.push(`${point.name}: ${result.error}`);
       return { name: point.name, point, data: result.data, failed: result.failed, error: result.error || null };
-    }));
+    })), Promise.all([
+      fetchJson('Middleton local marine', marineUrl(CONFIG.local)),
+      optionalFetch('Middleton weather', weatherUrl()),
+      optionalFetch('Middleton wind', windUrl())
+    ])]);
     const offshore = offshoreResults.map((result, index) => result.status === 'fulfilled'
       ? result.value
       : { name: CONFIG.offshorePoints[index].name, point: CONFIG.offshorePoints[index], data: null, failed: true, error: result.reason?.message || String(result.reason) }).filter(item => item.data);
     if (!offshore.length) throw new Error('No Middleton offshore points loaded.');
 
-    const [local, weatherResult, windResult] = await Promise.all([
-      fetchJson('Middleton local marine', marineUrl(CONFIG.local)),
-      optionalFetch('Middleton weather', weatherUrl()),
-      optionalFetch('Middleton wind', windUrl())
-    ]);
     if (weatherResult.failed) warnings.push(`Middleton weather: ${weatherResult.error}`);
     let wind = windResult.data;
     if (windResult.failed) {
