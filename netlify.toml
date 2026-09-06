@@ -62,11 +62,13 @@
   from = "/middleton.html"
   to = "/.netlify/functions/surf-report?location=middleton"
   status = 200
+  force = true
 
 [[redirects]]
   from = "/index.html"
   to = "/"
   status = 301
+  force = true
 
 [[redirects]]
   from = "/wave-map"
@@ -77,6 +79,7 @@
   from = "/"
   to = "/.netlify/functions/surf-report?location=seaford"
   status = 200
+  force = true
 
 [[headers]]
   for = "/*.css"
