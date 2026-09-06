@@ -88,22 +88,22 @@ function createDomStubs() {
   };
 }
 
-function extractLegacyScript(location) {
+function extractLegacyScript(location, sourceHtml) {
   const fileName = location === 'middleton' ? 'middleton.html' : 'index.html';
-  const html = readProjectText(fileName);
+  const html = sourceHtml || readProjectText(fileName);
   const scripts = [...html.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/gi)];
   if (!scripts.length) throw new Error(`No inline script found in ${fileName}`);
   let source = scripts.at(-1)[1];
   const bootstrapMarker = "$('refreshBtn').addEventListener";
   const markerIndex = source.lastIndexOf(bootstrapMarker);
   if (markerIndex < 0) throw new Error(`Could not isolate the ${location} bootstrap`);
-  source = source.slice(0, markerIndex);
+  source = readProjectText('phase1-engine.js') + '\n' + source.slice(0, markerIndex);
   const exports = ENGINE_EXPORTS[location];
   source += `\n;globalThis.__FRENCHY_ENGINE__ = { ${exports.join(', ')} };\n`;
   return { fileName, source };
 }
 
-export function createLegacyEngine(location) {
+export function createLegacyEngine(location, sourceHtml) {
   if (!ENGINE_EXPORTS[location]) throw new Error(`Unsupported surf-report location: ${location}`);
   const { document } = createDomStubs();
   const storage = new Map();
@@ -143,7 +143,7 @@ export function createLegacyEngine(location) {
     fetch: async () => { throw new Error('Network access is disabled inside the calculation runtime'); },
     alert() {}
   });
-  const { fileName, source } = extractLegacyScript(location);
+  const { fileName, source } = extractLegacyScript(location, sourceHtml);
   new vm.Script(source, { filename: fileName }).runInContext(context, { timeout: 5000 });
   return context.__FRENCHY_ENGINE__;
 }
@@ -240,6 +240,7 @@ function localForecastIso(localTime) {
 }
 
 function waveRange(display, valueFt) {
+  if (/unavailable|unknown|--/i.test(String(display))) return { min_ft: null, max_ft: null };
   const numbers = String(display).match(/\d+(?:\.\d+)?/g)?.map(Number) || [];
   if (!numbers.length) return { min_ft: 0, max_ft: 0 };
   if (numbers.length === 1) return { min_ft: numbers[0], max_ft: numbers[0] };
@@ -279,8 +280,8 @@ function buildCanonical(location, engine, source, reportState, now) {
       calibration_scope: 'spot-specific'
     },
     wave: {
-      value_ft: Number(report.finalFt),
-      model_value_ft: Number(report.originalFinalFt ?? report.finalFt),
+      value_ft: report.finalFt == null ? null : Number(report.finalFt),
+      model_value_ft: report.finalFt == null ? null : Number(report.originalFinalFt ?? report.finalFt),
       display,
       ...range,
       confidence: String(report.confidence || 'unknown').toLowerCase()
@@ -309,6 +310,7 @@ function buildCanonical(location, engine, source, reportState, now) {
       wind_shift: summary.windShift,
       tide_call: engine.nextTideCall(report)
     },
+    provenance: report.provenance,
     forecast_for: localForecastIso(report.time),
     issued_at: issued.toISOString(),
     valid_until: validUntil.toISOString(),
@@ -327,7 +329,7 @@ function buildCanonical(location, engine, source, reportState, now) {
 
 export function buildReportFromSource(location, source, tideData, options = {}) {
   const now = options.now instanceof Date ? options.now : new Date(options.now || Date.now());
-  const engine = createLegacyEngine(location);
+  const engine = createLegacyEngine(location, options.sourceHtml);
   const data = normaliseSource(location, source);
   const normalisedTides = engine.normaliseTideDataset(tideData || {});
   if (location === 'seaford') engine.state.portNoarlungaTides = normalisedTides;
@@ -375,6 +377,7 @@ export function buildObservationSnapshot(location, result, observedAt) {
   const nearest = selectReportForObservation(hydration.report.reports, selectedAt);
   if (!nearest?.report || nearest.distanceMs > 90 * 60 * 1000) return null;
   const report = nearest.report;
+  if (report.finalFt == null) return null;
   const windContext = engine.windObservationSnapshot(report);
   const tide = engine.currentTideObservationSnapshot(nearest.localTime);
   const weather = engine.currentWeatherObservationSnapshot(nearest.localTime);
@@ -409,6 +412,8 @@ export function buildObservationSnapshot(location, result, observedAt) {
       canonicalStatus: result.canonical.status,
       canonicalUrl: result.canonical.canonical_url
     },
+    provenance: report.provenance,
+    calculationTrace: report.calculationTrace,
     calculationResult: report
   };
 }

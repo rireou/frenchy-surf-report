@@ -109,7 +109,7 @@ function reportJsonLd(report) {
     ['Wind speed', report.wind?.speed_kmh, 'KMH'],
     ['Wind direction', report.wind?.direction_deg, 'DEG'],
     ['Tide height', report.tide?.heightM, 'MTR']
-  ].filter(([, value]) => Number.isFinite(Number(value))).map(([name, value, unitCode]) => ({
+  ].filter(([, value]) => value != null && Number.isFinite(Number(value))).map(([name, value, unitCode]) => ({
     '@type': 'PropertyValue',
     name,
     value,
@@ -262,8 +262,8 @@ function renderReportHtml(config, result) {
   html = setElement(html, 'bestWindowStat', escapeHtml(report.summary.best_window || 'Unavailable'));
   html = setElement(html, 'windShiftStat', escapeHtml(report.summary.wind_shift || 'Unavailable'));
   html = setElement(html, 'tideCall', escapeHtml(report.summary.tide_call || 'Unavailable'));
-  html = setElement(html, 'windMain', report.wind ? `${Math.round(report.wind.speed_kmh)} km/h` : 'Unavailable');
-  html = setElement(html, 'windSub', report.wind ? `${escapeHtml(report.wind.direction_compass)} wind · ${Math.round(report.wind.direction_deg)}°` : 'No verified wind');
+  html = setElement(html, 'windMain', report.wind?.speed_kmh != null ? `${Math.round(report.wind.speed_kmh)} km/h` : 'Unknown');
+  html = setElement(html, 'windSub', report.wind?.direction_deg != null ? `${escapeHtml(report.wind.direction_compass)} wind · ${Math.round(report.wind.direction_deg)}°` : 'No verified wind');
   html = setElement(
     html,
     'sourceRow',
@@ -389,8 +389,8 @@ export async function handler(event) {
     const body = query.full === '1'
       ? { canonical: result.canonical, hydration: result.hydration, ...(query.at ? { observation } : {}) }
       : result.canonical;
-    const headers = query.at
-      ? { ...JSON_HEADERS, 'Cache-Control': 'private, no-store' }
+    const headers = query.at || force
+      ? { ...JSON_HEADERS, 'Cache-Control': 'private, no-store', 'Netlify-CDN-Cache-Control': 'no-store' }
       : JSON_HEADERS;
     return { statusCode: 200, headers, body: JSON.stringify(body) };
   }

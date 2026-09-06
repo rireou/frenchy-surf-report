@@ -1,7 +1,7 @@
 [functions]
   directory = "netlify/functions"
   node_bundler = "esbuild"
-  included_files = ["index.html", "middleton.html", "port_noarlunga_2026_tides.json", "victor_harbor_2026_tides.json"]
+  included_files = ["index.html", "middleton.html", "phase1-engine.js", "port_noarlunga_2026_tides.json", "victor_harbor_2026_tides.json"]
 
 [[redirects]]
   from = "/api/surf-reports/index.json"
@@ -62,11 +62,13 @@
   from = "/middleton.html"
   to = "/.netlify/functions/surf-report?location=middleton"
   status = 200
+  force = true
 
 [[redirects]]
   from = "/index.html"
   to = "/"
   status = 301
+  force = true
 
 [[redirects]]
   from = "/wave-map"
@@ -77,6 +79,7 @@
   from = "/"
   to = "/.netlify/functions/surf-report?location=seaford"
   status = 200
+  force = true
 
 [[headers]]
   for = "/*.css"

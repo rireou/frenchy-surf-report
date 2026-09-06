@@ -25,6 +25,7 @@ function validatedSnapshotLocation(snapshot) {
 }
 
 function finiteNumber(value, min, max) {
+  if (value == null || value === '') return null;
   const number = Number(value);
   return Number.isFinite(number) && number >= min && number <= max ? number : null;
 }
@@ -220,7 +221,8 @@ export default async (request) => {
       timezone: "Australia/Adelaide", location: validated.location, actualFt: validated.actualFt,
       predictedFt: validated.predictedFt, errorFt: Number((validated.actualFt - validated.predictedFt).toFixed(2)),
       condition: validated.condition, note: validated.note, calculationVersion: validated.calculationVersion,
-      snapshot: validated.snapshot
+      snapshot: validated.snapshot,
+      originalForecast: { predictedFt: validated.predictedFt, calculationVersion: validated.calculationVersion, snapshot: validated.snapshot }
     };
     await store().setJSON(`observations/${id}`, record);
     await store().set(`idempotency/${requestedSlug}/${validated.clientToken}`, id);
@@ -243,6 +245,8 @@ export default async (request) => {
     }
     const updated = {
       ...current, ...validated, updatedAt: new Date().toISOString(), revision: Number(current.revision || 1) + 1,
+      originalForecast: current.originalForecast || { predictedFt: current.predictedFt, calculationVersion: current.calculationVersion, snapshot: current.snapshot },
+      forecastHistory: validated.snapshot ? [...(current.forecastHistory || []), { revision: current.revision, observedAt: current.observedAt, predictedFt: current.predictedFt, calculationVersion: current.calculationVersion, snapshot: current.snapshot }] : (current.forecastHistory || []),
       errorFt: Number((validated.actualFt - Number(validated.predictedFt ?? current.predictedFt)).toFixed(2))
     };
     await store().setJSON(`observations/${id}`, updated);

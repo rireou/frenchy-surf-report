@@ -1,0 +1,98 @@
+/* Readability pass only: retain the existing colours, cards and surf identity. */
+.aside-stack { grid-template-rows: auto; align-self: start; }
+.report-intro { margin: 20px 0; font-size: 16px; line-height: 1.6; }
+.mobile-report-links { display: none; }
+.desktop-weather-emoji { display: none; }
+.hero-card > div:first-of-type { height: 100%; display: flex; flex-direction: column; }
+@media(min-width: 801px) {
+  .decision-layout { grid-template-columns: minmax(0, 1fr); }
+  .decision-layout > .aside-stack { display: none; }
+  .hero-card::before { display: inline-block; margin-right: 16px; vertical-align: middle; }
+  .desktop-weather-emoji:not([hidden]) { display: inline-block; position: static; font-size: 58px; line-height: 1; vertical-align: middle; margin: 10px 0 22px; }
+  .has-compact-weather::before { max-width: 48%; min-height: 190px; }
+  .desktop-weather-emoji.compact-weather:not([hidden]) { position: absolute; top: 24px; right: 24px; display: flex; align-items: center; gap: clamp(12px, 2vw, 27px); width: min(522px, 46%); box-sizing: border-box; padding: 30px 0; margin: 0; border: 0; border-radius: 0; background: transparent; color: #f5f6f7; font-size: clamp(24px, 2.5vw, 36px); line-height: 1.35; }
+  .compact-weather-icon { font-size: clamp(52px, 5.5vw, 78px); flex-shrink: 0; }
+  .compact-weather-copy { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .compact-weather-temp { font-weight: 600; }
+  .compact-weather-condition { color: #d6d8dd; overflow-wrap: anywhere; }
+  .has-compact-weather .decision-top { top: 235px; }
+}
+@media(max-width: 800px) {
+  .mobile-report-links { display: flex; gap: 10px; order: -1; margin: 0 0 16px; flex-wrap: wrap; }
+  .mobile-report-links a { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 0 16px; border: 1px solid var(--mint); border-radius: 12px; color: var(--text); background: #062533; font-size: 15px; font-weight: 700; text-decoration: none; }
+  .mobile-report-links a:hover { background: #174858; }
+  .mobile-report-links a:focus-visible { outline: 2px solid var(--mint); outline-offset: 3px; }
+}
+.time-chip { min-height: 44px !important; min-width: 64px; font-size: 15px !important; }
+.decision-item b { font-size: 16px; line-height: 1.4; }
+.decision-item small, .side-eyebrow, .label { font-size: 13px; }
+.phase1-debug { margin: 24px auto; max-width: 1100px; padding: 16px; }
+.phase1-debug pre { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 13px; }
+@media(max-width: 700px) {
+  .spot-tab { font-size: 17px; min-height: 48px; }
+  .spot-tab small { font-size: 12px; }
+  .plain-why, #plainWhy, #bestWindowStat { font-size: 16px !important; line-height: 1.5; }
+  #viewingTimeLabel { font-size: 14px !important; line-height: 1.45; }
+  .day-name, .day-wind, .wind-sub, .swell-data small { font-size: 14px !important; }
+  .decision-grid { gap: 12px; }
+  .quick-stats { order: 4; }
+  .decision-grid { order: 5; }
+  .quick-stat small { font-size: 13px; }
+  .quick-stat:first-child small::before { display: none; }
+  #viewingTimeLabel { letter-spacing: .03em; text-transform: none; }
+  .aside-stack { margin-top: 16px; }
+  #hero::before { font-size: 24px; }
+}
+
+/* Main report only: one compact panel, natural flow, unchanged report content. */
+#hero { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 18px 24px; min-height: 0; padding: 24px; align-items: start; }
+#hero::before { display: block; grid-column: 1; grid-row: 1; max-width: none; min-height: 0; margin: 0; font-size: clamp(26px, 3vw, 38px); line-height: 1.12; letter-spacing: -.035em; }
+#hero > div:first-of-type { grid-column: 1 / -1; display: grid; height: auto; min-width: 0; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); grid-template-areas: 'label .' 'controls .' 'size verdict' 'metrics metrics' 'window window'; gap: 8px 28px; }
+#hero .live-label { grid-area: label; margin: 0; }
+#hero .time-shortcuts { grid-area: controls; width: min(360px, 100%); margin: 0; }
+#hero .live-main { grid-area: size; margin: 0; min-width: 0; }
+#hero .size { font-size: clamp(60px, 6vw, 86px); line-height: 1.05; }
+#hero .size-helper { margin-top: 4px; line-height: 1.4; }
+#hero #viewingTimeLabel { font-size: 13px !important; letter-spacing: 0; overflow-wrap: anywhere; }
+#hero .day-summary { grid-area: verdict; position: static; align-self: start; max-width: none; min-width: 0; margin: 0; padding: 8px 0 0; border: 0; }
+#hero .day-summary b { font-size: 25px; line-height: 1.2; }
+#hero .day-summary p { margin: 8px 0 0; font-size: 16px; line-height: 1.5; overflow-wrap: anywhere; }
+#hero .decision-grid { grid-area: metrics; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; margin: 8px 0 0; padding: 14px 0; border-top: 1px solid var(--edge); border-bottom: 1px solid var(--edge); }
+#hero .decision-item { grid-column: auto; min-height: 0; min-width: 0; padding: 0 16px; border: 0; border-radius: 0; background: none; gap: 6px; }
+#hero .decision-item:first-child { padding-left: 0; }
+#hero .decision-item:nth-child(2), #hero .decision-item:nth-child(3) { border-left: 1px solid var(--edge); }
+#hero .decision-item small { font-size: 11px; letter-spacing: .1em; }
+#hero .decision-item b { font-size: 16px; line-height: 1.4; overflow-wrap: anywhere; }
+#hero .quick-stats { grid-area: window; margin: 0; padding: 4px 0 0; border: 0; min-width: 0; }
+#hero .quick-stat:first-child small::before { display: none; }
+#hero .quick-stat small { font-size: 12px; color: var(--mint); letter-spacing: .08em; }
+#hero .quick-stat b { display: block; margin-top: 6px; font-size: 16px; line-height: 1.5; overflow-wrap: anywhere; }
+#hero .decision-top { position: static; margin: 0; }
+#hero .desktop-weather-emoji:not([hidden]) { grid-column: 2; grid-row: 1; position: static; margin: 0; padding: 0; width: auto; max-width: 230px; font-size: 38px; line-height: 1.2; }
+#hero .compact-weather:not([hidden]) { display: flex; align-items: center; font-size: 13px; gap: 8px; max-width: 180px; background: transparent; border: 0; }
+#hero .compact-weather-icon { font-size: 30px; }
+#hero .compact-weather-copy { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.decision-layout > .aside-stack { display: none; }
+/* Larger desktop weather; keep the mobile report's compact weather unchanged. */
+@media(min-width: 801px) {
+  #hero { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  #hero .compact-weather:not([hidden]) { justify-self: end; min-width: 0; max-width: 270px; font-size: clamp(13px, 1.355vw, 19.5px); gap: clamp(8px, .835vw, 12px); }
+  #hero .compact-weather-icon { font-size: clamp(30px, 3.125vw, 45px); }
+  #hero .compact-weather-copy { gap: 3px; }
+}
+@media(max-width: 800px) {
+  #hero { grid-template-columns: minmax(0, 1fr); gap: 14px; padding: 18px 16px; border-radius: 20px; }
+  #hero::before { font-size: 26px; }
+  #hero > div:first-of-type { grid-template-columns: minmax(0, 1fr); grid-template-areas: 'links' 'label' 'controls' 'size' 'verdict' 'metrics' 'window'; gap: 10px; }
+  #hero .mobile-report-links { grid-area: links; margin: 0 0 2px; }
+  #hero .live-main { margin: 0; }
+  #hero .size { font-size: 64px; }
+  #hero .day-summary { padding: 4px 0 0; border: 0; }
+  #hero .day-summary b { font-size: 22px; }
+  #hero .day-summary p { margin-top: 6px; }
+  #hero .decision-item { padding: 0 9px; }
+  #hero .decision-item:first-child { padding-left: 0; }
+  #hero .decision-item:last-of-type { padding-right: 0; }
+  #hero .decision-item b { font-size: 14px; }
+  #hero .desktop-weather-emoji:not([hidden]) { display: flex; grid-column: 1; grid-row: 3; max-width: none; width: 100%; padding-top: 12px; border-top: 1px solid var(--edge); }
+}
