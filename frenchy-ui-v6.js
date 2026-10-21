@@ -6,9 +6,12 @@
   function buildShell(){
     const header=document.querySelector('header'),hero=$('hero'),controls=document.querySelector('.controls');if(!header||!hero)return;
     const initialStatus=$('statusText')?.textContent;
+    const reportTitle=header.querySelector('h1')?.textContent?.replace(/Surf Report$/, 'surf report') || `${spot} surf report`;
     header.innerHTML=`<div class="brand-lockup"><div class="brand-mark"><img src="/icons/frenchy-brand-44.png" srcset="/icons/frenchy-brand-88.png 2x, /icons/frenchy-brand-132.png 3x" width="44" height="44" alt="Frenchy Surf School"></div><div><div class="brand-name">Frenchy Surf Report</div><div class="brand-sub">Local surf intelligence</div></div></div><nav class="main-nav"><a href="${cameraUrl}" target="_blank" rel="noopener">Live camera</a><a href="./wave-map.html">Swell journey</a><a href="https://frenchysurfschool.square.site/">Coaching</a></nav><div class="top-actions"><div class="status-pill"><span class="dot"></span><span id="statusText">Report updated</span></div><button class="header-refresh" id="headerRefresh">Refresh report</button></div>`;
     const spotbar=document.createElement('div');spotbar.className='spot-bar';spotbar.innerHTML=`<div class="spot-tabs"><a class="spot-tab ${!isMiddleton?'active':''}" href="./index.html">Seaford<small>Mid Coast</small></a><a class="spot-tab ${isMiddleton?'active':''}" href="./middleton.html">Middleton<small>South Coast</small></a></div><div class="adelaide-clock">Adelaide time<b id="adelaideClock">Loading…</b></div>`;header.after(spotbar);
-    hero.dataset.reportTitle=`${spot} surf report`;
+    hero.dataset.reportTitle=reportTitle;
+    const reportHeading=document.createElement('h1');reportHeading.className='report-heading';reportHeading.textContent=reportTitle;
+    hero.prepend(reportHeading);hero.classList.add('has-report-heading');
     if(initialStatus)$('statusText').textContent=initialStatus;
     const generated=document.createElement('small');generated.id='reportGenerated';generated.style.cssText='display:block;margin-top:4px;font-size:11px;line-height:1.4;color:var(--muted)';
     $('viewingTimeLabel')?.after(generated);

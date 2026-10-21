@@ -1,6 +1,7 @@
 import { getSurfReport } from '../lib/report-source.mjs';
 import { readProjectText } from '../lib/project-files.mjs';
 import { buildObservationSnapshot } from '../lib/report-runtime.mjs';
+import { packInlineState, unpackInlineState } from '../lib/inline-state.mjs';
 
 const SITE = 'https://report.frenchysurfschool.com.au';
 const SCHOOL = 'https://www.frenchysurfschool.com.au/';
@@ -20,24 +21,28 @@ const LOCATION_MAP = {
   seaford: {
     engine: 'seaford',
     name: 'Seaford',
+    searchTitle: 'Seaford Surf Report – Adelaide Mid Coast | Frenchy Surf Report',
     slug: 'seaford',
     scope: 'spot-specific'
   },
   middleton: {
     engine: 'middleton',
     name: 'Middleton',
+    searchTitle: 'Middleton Surf Report – South Coast SA | Frenchy Surf Report',
     slug: 'middleton',
     scope: 'spot-specific'
   },
   'mid-coast': {
     engine: 'seaford',
     name: 'Adelaide Mid Coast',
+    searchTitle: 'Adelaide Mid Coast Surf Report | Frenchy Surf Report',
     slug: 'mid-coast',
     scope: 'regional-mid-coast'
   },
   'south-port': {
     engine: 'seaford',
     name: 'South Port',
+    searchTitle: 'South Port Surf Report – Adelaide Mid Coast | Frenchy Surf Report',
     slug: 'south-port',
     scope: 'regional-mid-coast'
   }
@@ -244,14 +249,33 @@ function renderReportHtml(config, result) {
   let html = readProjectText(fileName);
   const regional = config.scope !== 'spot-specific';
   const display = report.wave?.display || 'Unavailable';
+  const title = config.searchTitle;
+  const region = config.engine === 'middleton' ? "South Australia's South Coast" : "Adelaide's Mid Coast";
   const description = report.status === 'unavailable'
     ? `${config.name} surf report is temporarily unavailable; Frenchy Surf Report is not presenting stale conditions as current.`
-    : `${config.name} surf report: ${display} ft, ${report.wind?.label || 'wind unavailable'}, ${report.tide?.positionLabel || 'tide unavailable'}. Updated ${report.issued_at}.`;
+    : `${config.name} surf report for ${region}: ${display} ft, ${report.wind?.label || 'wind unavailable'}, ${report.tide?.positionLabel || 'tide unavailable'}. Updated ${report.issued_at}.`;
   html = html
-    .replace(/<title>[\s\S]*?<\/title>/i, `<title>${escapeHtml(config.name)} Surf Report | Frenchy Surf Report</title>`)
+    .replace(/<title>[\s\S]*?<\/title>/i, `<title>${escapeHtml(title)}</title>`)
     .replace(/<link rel="canonical" href="[^"]+"\s*\/?>/i, `<link rel="canonical" href="${report.canonical_url}" />`);
   html = replaceMeta(html, 'description', description);
   html = html.replace(/(<meta property="og:url" content=")[^"]*("\s*\/?>)/i, `$1${escapeHtml(report.canonical_url)}$2`);
+  html = html.replace(/(<meta property="og:title" content=")[^"]*("\s*\/?>)/i, `$1${escapeHtml(title)}$2`);
+  html = html.replace(/(<meta property="og:description" content=")[^"]*("\s*\/?>)/i, `$1${escapeHtml(description)}$2`);
+  // Regional pages reuse the Seaford shell, but must describe their own URL.
+  html = html.replace(/(<script type="application\/ld\+json">)([\s\S]*?)(<\/script>)/g, (_, open, json, close) => {
+    const schema = JSON.parse(json);
+    for (const node of schema['@graph'] || []) {
+      if (node['@type'] !== 'WebPage') continue;
+      Object.assign(node, {
+        '@id': `${report.canonical_url}#webpage`,
+        url: report.canonical_url,
+        name: title,
+        description,
+        about: { '@id': `${report.canonical_url}#place` }
+      });
+    }
+    return open + safeJson(schema) + close;
+  });
   html = replaceMeta(html, 'frenchy:report-status', report.status);
   html = replaceMeta(html, 'frenchy:issued-at', report.issued_at);
   html = replaceMeta(html, 'frenchy:valid-until', report.valid_until);
@@ -284,12 +308,14 @@ function renderReportHtml(config, result) {
       .replace(/Seaford Surf Report/g, `${escapeHtml(config.name)} Surf Report`);
   }
   const jsonLd = safeJson(reportJsonLd(report));
-  const stateScript = safeJson(result.hydration);
-  const injected = [
-    `<script type="application/ld+json" id="currentSurfReportJsonLd">${jsonLd}</script>`,
-    `<script>window.__FRENCHY_CANONICAL_REQUIRED__=true;window.__FRENCHY_SSR_STATE__=${stateScript};window.__FRENCHY_CANONICAL_REPORT__=${safeJson(report)};</script>`
-  ].join('\n  ');
-  return html.replace('</head>', `  ${injected}\n</head>`);
+  const stateScript = safeJson(packInlineState(result.hydration));
+  const hydration = `<script>window.__FRENCHY_CANONICAL_REQUIRED__=true;window.__FRENCHY_SSR_STATE__=(${unpackInlineState.toString()})(${stateScript});window.__FRENCHY_CANONICAL_REPORT__=${safeJson(report)};</script>`;
+  html = html.replace('</head>', `  <script type="application/ld+json" id="currentSurfReportJsonLd">${jsonLd}</script>\n</head>`);
+  // Keep crawlable report content before state, while defining globals before
+  // the existing application scripts execute. No forecast data is discarded.
+  const appScript = '<script src="./phase1-engine.js"></script>';
+  if (!html.includes(appScript)) throw new Error('Missing report hydration insertion point');
+  return html.replace(appScript, hydration + '\n  ' + appScript);
 }
 
 function indexJson(results) {
