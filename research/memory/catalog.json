@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "predecessor": "https://github.com/rireou/frenchy-surf-report/pull/72",
+  "privateEvidence": "FRENCHY_RESEARCH_HOME or sibling frenchy-research-private; no private metrics or records in this catalog",
+  "topics": [
+    {"id":"seaford-direction-classic","topic":"direction","status":"hypothesis","summary":"Investigate historical overprediction in the 225–235 degree sector; do not apply a universal reduction."},
+    {"id":"seaford-direction-west","topic":"direction","status":"hypothesis","summary":"Investigate underprediction west of 245 degrees, accounting for Gulf and local wind evidence."},
+    {"id":"seaford-wind-compression","topic":"wind","status":"inconclusive","summary":"N/NE/E compression may be excessive in some conditions; independent-day support is limited."},
+    {"id":"seaford-period","topic":"period","status":"insufficient-evidence","summary":"Long-period sectors require more independent observations; driver ranking and additive period bonus are distinct."},
+    {"id":"seaford-tide","topic":"tide","status":"inconclusive","summary":"Retain tide adjustments pending causal/prospective evidence; arithmetic ablations do not replay downstream gates."},
+    {"id":"seaford-direction-continuity","topic":"direction","status":"experimental","summary":"Preserve previous 220–225 degree smoothing experiments and cross-hour explanations; energy is diagnostic only."},
+    {"id":"model-d-v1","topic":"experiment","status":"shadow-only","summary":"Freeze PR72's development-selected ridge residual model. Do not retrain on prospective evaluation observations."},
+    {"id":"forecast-timing","topic":"data-quality","status":"established-limitation","summary":"Matched forecast valid time does not prove the forecast was archived before the observation."},
+    {"id":"prior-calibration","topic":"history","status":"retain-baseline","summary":"Consult accepted calibration commits and their documented rationale before removing useful existing rules."},
+    {"id":"prior-phase2","topic":"history","status":"historical-research-only","summary":"Consult earlier partial-input candidates and their rejection/retention decisions; these are not prospective accuracy scores."},
+    {"id":"prior-buoy","topic":"history","status":"historical-research-only","summary":"Retain earlier buoy QC and spectral limitations; no validated numerical size uplift was established."}
+  ]
+}

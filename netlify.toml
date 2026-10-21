@@ -142,3 +142,6 @@
   [headers.values]
     Cache-Control = "private, no-store"
     X-Robots-Tag = "noindex, nofollow"
+
+[functions.research]
+  included_files = ["research/memory/dashboard.html", "research/accuracy/dashboard.html"]

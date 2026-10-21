@@ -7,3 +7,9 @@ analysis.json
 record-audit.csv
 *-surf-observations-*.csv
 *-surf-observations-*.json
+
+# Never commit private evidence, forecasts, fitted artifacts or populated exports.
+research-private/
+private-research/
+private-research-export*.json
+model-d-v1.json

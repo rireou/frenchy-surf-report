@@ -13,7 +13,7 @@
   const apiRecordUrl = id => `${API}&id=${encodeURIComponent(id)}`;
   const AUTH_API = "/api/observations/auth";
   const correctionChoices = [
-    { label: "Correct", delta: 0 }, { label: "+0.5 ft", delta: 0.5 }, { label: "+1 ft", delta: 1 },
+    { label: "Looks right", delta: 0 }, { label: "+0.5 ft", delta: 0.5 }, { label: "+1 ft", delta: 1 },
     { label: "−0.5 ft", delta: -0.5 }, { label: "−1 ft", delta: -1 }
   ];
   const sizeChoices = [0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 6];
@@ -45,12 +45,13 @@
           <fieldset class="obs-fieldset"><legend>Quick correction <small>fastest option</small></legend><div class="obs-chips" id="obsCorrections">${correctionChoices.map(choice => `<button class="obs-chip" type="button" data-delta="${choice.delta}"><strong>${choice.label}</strong><small data-result>--</small></button>`).join("")}</div></fieldset>
           <fieldset class="obs-fieldset"><legend>Or tap the actual size</legend><div class="obs-chips obs-size-chips" id="obsSizes">${sizeChoices.map(size => `<button class="obs-chip" type="button" data-size="${size}"><strong>${size}</strong><small>ft</small></button>`).join("")}<button class="obs-chip" type="button" data-size="other"><strong>Other</strong><small>type size</small></button></div><div class="obs-other obs-hidden" id="obsOther"><input class="obs-input" id="obsOtherSize" type="number" min="0" max="8" step="0.25" inputmode="decimal" placeholder="Actual size in feet"><button class="obs-primary" type="button" id="obsUseOther">Use</button></div></fieldset>
           <fieldset class="obs-fieldset"><legend>Wave quality <small>optional</small></legend><div class="obs-chips obs-condition-chips" id="obsQuality">${conditions.map(item => `<button class="obs-chip" type="button" data-condition="${item.value}"><strong>${item.label}</strong></button>`).join("")}</div></fieldset>
-          <details id="obsEvaluation"><summary>Optional accuracy details</summary><p class="obs-help">Keep typical waves and occasional sets separate. Leave unknown values blank. These details apply to new checks only.</p>
+          <div id="obsQuickDetails" class="obs-quick-details"><p class="obs-help">Optional — typical waves and occasional sets are different.</p>
+            <div class="obs-detail-pair"><label>Typical (ft)<input class="obs-input" id="obsTypical" type="number" min="0" max="8" step="0.25" inputmode="decimal" placeholder="Optional"></label><label>Occasional sets (ft)<input class="obs-input" id="obsSets" type="number" min="0" max="8" step="0.25" inputmode="decimal" placeholder="Optional"></label></div>
+            <label>Confidence<select class="obs-input" id="obsConfidence"><option value="unknown">Not specified</option><option value="low">Low — brief or obstructed view</option><option value="medium">Medium — reasonable view</option><option value="high">High — clear view over several sets</option></select></label>
+          </div>
+          <details id="obsEvaluation"><summary>Optional accuracy details</summary><p class="obs-help">Keep typical waves and occasional sets separate. Leave unknown values blank. Size scale and meaning are remembered on this device; measured sizes and confidence reset for each check.</p>
             <label>Size scale<select class="obs-input" id="obsSizeDefinition"><option value="unknown">Not specified</option><option value="local-surf-feet">Local surf-size scale (ft)</option><option value="wave-face-feet">Wave face height (ft)</option></select></label>
             <label>The actual size above describes<select class="obs-input" id="obsActualMeaning"><option value="unspecified">Not specified</option><option value="typical">Typical waves</option><option value="occasional-sets">Occasional sets</option></select></label>
-            <label>Typical size (ft, optional)<input class="obs-input" id="obsTypical" type="number" min="0" max="8" step="0.25" inputmode="decimal"></label>
-            <label>Occasional sets (ft, optional)<input class="obs-input" id="obsSets" type="number" min="0" max="8" step="0.25" inputmode="decimal"></label>
-            <label>Observation confidence<select class="obs-input" id="obsConfidence"><option value="unknown">Not specified</option><option value="low">Low — brief or obstructed view</option><option value="medium">Medium — reasonable view</option><option value="high">High — clear view over several sets</option></select></label>
             <label>Observer label (optional, self-reported)<input class="obs-input" id="obsObserverLabel" maxlength="80" autocomplete="off"></label>
             <label>Unusual local factors (optional)<input class="obs-input" id="obsLocalFactors" maxlength="300" placeholder="e.g. long gaps between sets, bank or viewing limitations"></label>
           </details>
@@ -60,7 +61,7 @@
       </section>
       <section class="obs-card"><div class="obs-progress"><div class="obs-count" id="obsCount">0</div><div><h2 id="obsProgressTitle">First target: 30</h2><p id="obsProgressText">Collect a range of real conditions for a useful comparison.</p><div class="obs-progress-bar"><div class="obs-progress-fill" id="obsProgressFill" style="width:0%"></div></div><div class="obs-milestones"><span data-milestone="30">30</span><span data-milestone="60">60</span><span data-milestone="100">100</span></div></div></div><div class="obs-collection"><div><small>Today</small><b id="obsTodayCount">0 / 3</b><span>up to three checks each day</span></div><div><small>Last 30 days</small><b id="obsThirtyDayCount">0 / 90</b><span>all existing data stays saved</span></div></div></section>
       <section class="obs-card"><div class="obs-section-head"><div><h2>Accuracy report</h2><p>Uses actual minus predicted size. Positive means the report underestimated.</p></div></div><div id="obsAnalysis"></div></section>
-      <section class="obs-card"><div class="obs-section-head"><div><h2>${spot.name} observation history</h2><p>Edit mistakes, delete incorrect entries, or export this location.</p></div><div class="obs-export"><a class="obs-link" id="obsCsv" href="${API}&format=csv">CSV</a><a class="obs-link" id="obsJson" href="${API}&format=json">JSON</a></div></div><div class="obs-history" id="obsHistory"></div></section>
+      <section class="obs-card"><div class="obs-section-head"><div><h2>${spot.name} observation history</h2><p>Existing history stays accessible. Export this location or <a href="/research">open private research</a>.</p></div><div class="obs-export"><a class="obs-link" id="obsCsv" href="${API}&format=csv">CSV</a><a class="obs-link" id="obsJson" href="${API}&format=json">JSON</a></div></div><div class="obs-history" id="obsHistory"></div></section>
     </div>`;
   document.body.appendChild(root);
 
@@ -150,7 +151,7 @@
       const sameDay = records.filter(record => adelaideDateKey(record.observedAt) === adelaideDateKey(input.observedAt));
       if (sameDay.length >= 3) { const error = new Error(`Three ${spot.name} observations are already saved for that day. Edit one if a correction is needed.`); error.status = 409; error.result = { dailyLimit: true }; throw error; }
       const now = new Date().toISOString();
-      const record = { id: makeToken(), revision: 1, schemaVersion: 3, observedAt: input.observedAt, createdAt: now, updatedAt: now, timezone: "Australia/Adelaide", location: spot.name, actualFt: input.actualFt, predictedFt: input.snapshot.predictedFt, errorFt: Number((input.actualFt - input.snapshot.predictedFt).toFixed(2)), condition: input.condition || "", note: input.note || "", calculationVersion: input.snapshot.calculationVersion, snapshot: input.snapshot };
+      const record = { id: makeToken(), revision: 1, schemaVersion: 3, observedAt: input.observedAt, createdAt: now, updatedAt: now, timezone: "Australia/Adelaide", location: spot.name, actualFt: input.actualFt, predictedFt: input.snapshot.predictedFt, errorFt: Number((input.actualFt - input.snapshot.predictedFt).toFixed(2)), condition: input.condition || "", note: input.note || "", calculationVersion: input.snapshot.calculationVersion, snapshot: input.snapshot, evaluationDetails: input.evaluationDetails, validationStatus: input.validationStatus };
       records.unshift(record); saveDemoRecords(records); return { observation: record };
     }
     const id = new URL(path, location.href).searchParams.get("id");
@@ -204,7 +205,8 @@
 
   function selectActual(value, sourceButton = null) {
     if (!Number.isFinite(Number(value))) return;
-    state.actualFt = clamp(roundQuarter(value), 0, 8);
+    state.actualFt = sourceButton?.dataset.delta === "0" ? Number(value) : clamp(roundQuarter(value), 0, 8);
+    state.validationStatus = sourceButton?.dataset.delta === "0" ? "confirmed" : "corrected";
     state.saved = false;
     $("obsSave").disabled = !state.snapshot;
     $("obsSave").textContent = state.editingId ? "Save changes" : `Save ${formatFt(state.actualFt)} ft observation`;
@@ -275,7 +277,7 @@
     // New observation times must not inherit the previous check's measured sizes.
     ["obsTypical","obsSets","obsLocalFactors"].forEach(id => { $(id).value = ""; });
     $("obsConfidence").value = "unknown";
-    $("obsActualMeaning").value = "unspecified";
+    applySizeConvention();
     renderSelectedTime();
     if (revealSelection) $("obsSelectedTimeCard").scrollIntoView?.({ behavior: "smooth", block: "center" });
     $("obsSelectedTimeCard").classList.remove("ready", "error");
@@ -416,7 +418,7 @@
     const record = state.records.find(item => item.id === id);
     if (!record) return;
     state.editingId = id; state.condition = record.condition || ""; state.saved = false;
-    $("obsEvaluation").hidden = true;
+    $("obsEvaluation").hidden = true; $("obsQuickDetails").hidden = true;
     state.timeOffsetMinutes = null; state.customObservedAt = record.observedAt; state.snapshot = record.snapshot;
     renderSelectedTime();
     $("obsDateTime").value = toDateTimeInput(record.observedAt);
@@ -431,7 +433,7 @@
 
   function cancelEdit() {
     state.editingId = null; state.condition = ""; state.clientToken = makeToken();
-    $("obsEvaluation").hidden = false;
+    $("obsEvaluation").hidden = false; $("obsQuickDetails").hidden = false;
     state.timeOffsetMinutes = 0; state.customObservedAt = null;
     $("obsCancelEdit").classList.add("obs-hidden");
     $("obsCustomTime").classList.add("obs-hidden");
@@ -466,7 +468,7 @@
         const evaluationDetails={measurementDefinition:$("obsSizeDefinition").value,actualValueMeaning:$("obsActualMeaning").value,
           typicalFt:$("obsTypical").value,occasionalSetFt:$("obsSets").value,observationConfidence:$("obsConfidence").value,
           observerLabel:$("obsObserverLabel").value,unusualLocalFactors:$("obsLocalFactors").value};
-        const result = await request(API, { method: "POST", body: JSON.stringify({ actualFt: state.actualFt, condition: state.condition, observedAt: state.snapshot.observedAt || selectedObservedAt(), clientToken: state.clientToken, snapshot: state.snapshot, evaluationDetails }) });
+        const result = await request(API, { method: "POST", body: JSON.stringify({ actualFt: state.actualFt, condition: state.condition, observedAt: state.snapshot.observedAt || selectedObservedAt(), clientToken: state.clientToken, snapshot: state.snapshot, evaluationDetails, validationStatus: state.validationStatus }) });
         if (!state.records.some(record => record.id === result.observation.id)) state.records.unshift(result.observation);
         state.saved = true;
         button.textContent = result.deduplicated ? "Already saved ✓" : "Saved ✓";
@@ -498,7 +500,16 @@
     await refreshSnapshotForTime();
   }
 
+  function applySizeConvention() {
+    let saved = {}; try { saved = JSON.parse(localStorage.getItem("frenchy-observation-size-convention-v1:" + spot.slug) || "{}"); } catch {}
+    $("obsSizeDefinition").value = ["local-surf-feet","wave-face-feet"].includes(saved.scale) ? saved.scale : "unknown";
+    $("obsActualMeaning").value = ["typical","occasional-sets"].includes(saved.meaning) ? saved.meaning : "unspecified";
+  }
+
   function bindEvents() {
+    for (const id of ["obsSizeDefinition","obsActualMeaning"]) $(id).addEventListener("change", () => {
+      try { localStorage.setItem("frenchy-observation-size-convention-v1:" + spot.slug, JSON.stringify({scale:$("obsSizeDefinition").value,meaning:$("obsActualMeaning").value})); } catch {}
+    });
     $("obsLoginForm").addEventListener("submit", login);
     $("obsLogout").addEventListener("click", logout);
     $("obsForm").addEventListener("submit", saveObservation);

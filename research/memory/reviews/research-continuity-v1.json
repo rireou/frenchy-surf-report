@@ -1,0 +1,6 @@
+{
+  "consultedFindingIds": ["pr72-data-provenance", "pr72-rule-interactions", "pr72-model-a", "pr72-model-b", "pr72-model-c", "pr72-model-d", "prior-direction-case", "pr72-preserve-calibration"],
+  "privateLedgerDigest": "e9e25e5d63554ec15640424f415c11b299af455908c0f13b9708c8f5088337e9",
+  "rationale": "Reuse PR72's optional provenance instrumentation and private historical analysis. This branch adds isolated research memory, frozen shadow inference and optional observation capture. No production calculation source, coefficients or provider selection changes relative to PR72. Negative and inconclusive experiments are retained. The inherited report-runtime change relative to master records provenance only.",
+  "productionChangeApproved": false
+}

@@ -21,4 +21,4 @@ element('quality').value='strict';element('quality').onchange();assert.match(ele
 for(const group of ['period','height','windCompass','windSpeed','tideStage','tideHeight','surfSize','combination']){element('group').value=group;element('group').onchange();assert.match(element('groupTable').innerHTML,/<table>/)}
 for(const m of ['B','C','D']){element('candidate').value=m;element('candidate').onchange();assert.match(element('candidateChart').innerHTML,/<svg/);assert.match(element('regressions').innerHTML,/New overcalls/)}
 element('search').value='2026-10-21';element('search').oninput();assert.match(element('records').innerHTML,/2026-10-21/);
-console.log('Offline dashboard: syntax, data load, core metrics, version/time/timing filters, 8 condition views, 3 candidates and audit search pass. Browser visual QA remains pending.');
+console.log('Offline dashboard: syntax, data load, core metrics, version/time/timing filters, 8 condition views, 3 candidates and audit search pass. This is a DOM fixture check; actual browser evidence is recorded separately.');

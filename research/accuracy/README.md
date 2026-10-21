@@ -20,3 +20,5 @@ Optional server: `node research/accuracy/server.mjs ../private-accuracy/analysis
 Protocol and limitations are explicit in PROTOCOL.md and SOURCE-AUDIT.md. A is the saved historical forecast; it is not a reconstructed current engine run. B/C/D are local residual experiments. Current/earlier versions, timely/retrospective inputs and typical/set uncertainty must remain distinguished.
 
 Future observation fields are optional: target definition, typical/set sizes, confidence, self-reported observer label, local factors and source/provider timing. Their implementation does not infer historical values or change existing observations. An exact SHA-256 fingerprint of the calculation source is captured independently of deployment metadata. Git code revision is null unless a genuine40-character COMMIT_REF is supplied; provider lead time stays null when unavailable.
+
+Browser verification update: the research-memory branch completed actual desktop/tablet/phone-width testing after repairing the foreground localhost launcher. See ../memory/QA.md for scope and remaining hosted/hardware checks. Original analytical findings and evidence files are unchanged.

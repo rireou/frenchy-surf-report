@@ -130,7 +130,7 @@ function csvExport(records) {
     ["tide_range_class", record => record.snapshot?.tide?.rangeClass], ["tide_range_label", record => record.snapshot?.tide?.rangeLabel],
     ["weather_code", record => record.snapshot?.weather?.weatherCode],
     ["temperature_c", record => record.snapshot?.weather?.temperatureC], ["calculation_snapshot_json", record => record.snapshot],
-    ["evaluation_details_json", record => record.evaluationDetails], ["evaluation_provenance_json", record => record.snapshot?.evaluationProvenance]
+    ["evaluation_details_json", record => record.evaluationDetails], ["evaluation_provenance_json", record => record.snapshot?.evaluationProvenance], ["validation_status", record => record.validationStatus]
   ];
   return [columns.map(([name]) => csvCell(name)).join(","), ...records.map(record => columns.map(([, getter]) => csvCell(getter(record))).join(","))].join("\r\n");
 }
@@ -149,6 +149,7 @@ function validateCreate(input) {
   validateSnapshotTime(snapshot, observedAt);
   const calculationVersion = cleanText(snapshot?.calculationVersion || "unknown", 100);
   const evaluationDetails=validateEvaluationDetails(input.evaluationDetails,actualFt);
+  if(input.validationStatus === "confirmed" && Math.abs(actualFt-predictedFt) > 0.000001) throw new Error("A confirmed check must preserve the model value. Choose a correction for a different actual size.");
   return { actualFt, predictedFt, condition, note: cleanText(input.note, 300), clientToken, snapshot, calculationVersion, observedAt, location, evaluationDetails };
 }
 
@@ -226,6 +227,7 @@ export default async (request) => {
       condition: validated.condition, note: validated.note, calculationVersion: validated.calculationVersion,
       snapshot: validated.snapshot,
       ...(validated.evaluationDetails ? {evaluationDetails:validated.evaluationDetails} : {}),
+      validationStatus: input.validationStatus === "confirmed" ? "confirmed" : input.validationStatus === "corrected" ? "corrected" : "unspecified",
       originalForecast: { predictedFt: validated.predictedFt, calculationVersion: validated.calculationVersion, snapshot: validated.snapshot }
     };
     await store().setJSON(`observations/${id}`, record);
