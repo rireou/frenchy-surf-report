@@ -5,7 +5,7 @@ export function researchEnvironment(context,env=process.env) {
   return {...env,CONTEXT:context?.deploy?.context||'local',SITE_ID:context?.site?.id||'',DEPLOY_ID:context?.deploy?.id||'local',RESEARCH_DEPLOY_PUBLISHED:context?.deploy?.published===true?'true':'false'};
 }
 export function researchStoreName(env=process.env) {
-  if(env.CONTEXT==='production'&&env.SITE_ID)return 'frenchy-private-research-v1';
+  if(env.CONTEXT==='production'&&env.SITE_ID&&env.RESEARCH_DEPLOY_PUBLISHED==='true')return 'frenchy-private-research-v1';
   const id=String(env.DEPLOY_ID||'local').replace(/[^a-zA-Z0-9-]/g,'').slice(0,60);
   return 'frenchy-private-research-preview-'+id;
 }

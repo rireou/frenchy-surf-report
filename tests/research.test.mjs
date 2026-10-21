@@ -63,8 +63,8 @@ test('private filesystem ledger refuses public paths, rewrites and evidence tamp
   }finally{await rm(root,{recursive:true,force:true});}
 });
 test('preview namespaces cannot collide with private production research store',()=>{
-  assert.equal(researchStoreName({CONTEXT:'production',SITE_ID:'fixture'}),'frenchy-private-research-v1');
-  for(const env of [{},{CONTEXT:'deploy-preview',SITE_ID:'fixture',DEPLOY_ID:'test1'},{CONTEXT:'production'}])assert.notEqual(researchStoreName(env),'frenchy-private-research-v1');
+  assert.equal(researchStoreName({CONTEXT:'production',SITE_ID:'fixture',RESEARCH_DEPLOY_PUBLISHED:'true'}),'frenchy-private-research-v1');
+  for(const env of [{},{CONTEXT:'deploy-preview',SITE_ID:'fixture',DEPLOY_ID:'test1'},{CONTEXT:'production'},{CONTEXT:'production',SITE_ID:'fixture',RESEARCH_DEPLOY_PUBLISHED:'false'}])assert.notEqual(researchStoreName(env),'frenchy-private-research-v1');
   const env=researchEnvironment({deploy:{context:'deploy-preview',id:'preview1',published:false},site:{id:'fixture'}},{CONTEXT:'production',SITE_ID:'wrong',RESEARCH_ARCHIVE_ENABLED:'true'});
   assert.equal(env.CONTEXT,'deploy-preview');assert.equal(env.RESEARCH_DEPLOY_PUBLISHED,'false');assert.equal(researchStoreName(env),'frenchy-private-research-preview-preview1');assert.equal(researchEnvironment(null,{CONTEXT:'production'}).CONTEXT,'local');
 });
