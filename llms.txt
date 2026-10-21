@@ -1,6 +1,6 @@
-# Frenchy Surf Reports
+# Frenchy Surf Report
 
-Frenchy Review publishes current surf reports for Seaford and Middleton in South Australia.
+Frenchy Surf Report publishes current surf reports for Seaford and Middleton in South Australia.
 
 Canonical HTML:
 - https://frenchyreview.netlify.app/
