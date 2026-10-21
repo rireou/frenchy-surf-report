@@ -1,8 +1,8 @@
 import { randomUUID } from "node:crypto";
-import { getStore } from "@netlify/blobs";
 import { isObservationAdmin, verifySameOrigin } from "../lib/observation-auth.mjs";
+import { validateEvaluationDetails } from "../lib/observation-evaluation.mjs";
+import { observationStore } from "../lib/observation-store.mjs";
 
-const STORE_NAME = "frenchy-surf-observations";
 const SCHEMA_VERSION = 3;
 const DUPLICATE_WINDOW_MS = 3 * 60 * 1000;
 const MAX_NEW_OBSERVATION_AGE_MS = 48 * 60 * 60 * 1000;
@@ -10,7 +10,6 @@ const MAX_FUTURE_SKEW_MS = 5 * 60 * 1000;
 const DAILY_OBSERVATION_LIMIT = 3;
 const jsonHeaders = { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" };
 const send = (status, body, extraHeaders = {}) => new Response(JSON.stringify(body), { status, headers: { ...jsonHeaders, ...extraHeaders } });
-const store = () => getStore({ name: STORE_NAME, consistency: "strong" });
 const LOCATIONS = { seaford: "Seaford", middleton: "Middleton" };
 
 function locationFromSlug(value) {
@@ -70,7 +69,7 @@ function cleanJson(value, depth = 0) {
   return output;
 }
 
-async function listObservations(location = null) {
+async function listObservations(store, location = null) {
   const listing = await store().list({ prefix: "observations/" });
   const records = await Promise.all((listing.blobs || []).slice(0, 1000).map(entry => store().get(entry.key, { type: "json", consistency: "strong" })));
   return records.filter(record => record && (!location || record.location === location)).sort((a, b) => String(b.observedAt).localeCompare(String(a.observedAt)));
@@ -128,7 +127,8 @@ function csvExport(records) {
     ["next_tide_time", record => record.snapshot?.tide?.after?.time], ["tide_range_m", record => record.snapshot?.tide?.rangeM],
     ["tide_range_class", record => record.snapshot?.tide?.rangeClass], ["tide_range_label", record => record.snapshot?.tide?.rangeLabel],
     ["weather_code", record => record.snapshot?.weather?.weatherCode],
-    ["temperature_c", record => record.snapshot?.weather?.temperatureC], ["calculation_snapshot_json", record => record.snapshot]
+    ["temperature_c", record => record.snapshot?.weather?.temperatureC], ["calculation_snapshot_json", record => record.snapshot],
+    ["evaluation_details_json", record => record.evaluationDetails], ["evaluation_provenance_json", record => record.snapshot?.evaluationProvenance], ["validation_status", record => record.validationStatus]
   ];
   return [columns.map(([name]) => csvCell(name)).join(","), ...records.map(record => columns.map(([, getter]) => csvCell(getter(record))).join(","))].join("\r\n");
 }
@@ -146,7 +146,9 @@ function validateCreate(input) {
   const observedAt = validateObservedAt(input.observedAt);
   validateSnapshotTime(snapshot, observedAt);
   const calculationVersion = cleanText(snapshot?.calculationVersion || "unknown", 100);
-  return { actualFt, predictedFt, condition, note: cleanText(input.note, 300), clientToken, snapshot, calculationVersion, observedAt, location };
+  const evaluationDetails=validateEvaluationDetails(input.evaluationDetails,actualFt);
+  if(input.validationStatus === "confirmed" && Math.abs(actualFt-predictedFt) > 0.000001) throw new Error("A confirmed check must preserve the model value. Choose a correction for a different actual size.");
+  return { actualFt, predictedFt, condition, note: cleanText(input.note, 300), clientToken, snapshot, calculationVersion, observedAt, location, evaluationDetails };
 }
 
 function validateUpdate(input, current) {
@@ -167,14 +169,16 @@ function validateUpdate(input, current) {
   return result;
 }
 
-export default async (request) => {
-  if (!isObservationAdmin(request)) return send(401, { error: "Please log in to the observation page." });
+export function createObservationHandler({openStore=observationStore,authorize=isObservationAdmin}={}) {
+return async (request, context) => {
+  if (!authorize(request)) return send(401, { error: "Please log in to the observation page." });
+  const database=openStore(context),store=()=>database;
   const url = new URL(request.url);
   const requestedLocation = locationFromSlug(url.searchParams.get("spot"));
   const requestedSlug = requestedLocation.toLowerCase();
 
   if (request.method === "GET") {
-    const records = await listObservations(requestedLocation);
+    const records = await listObservations(store, requestedLocation);
     const format = url.searchParams.get("format");
     if (format === "csv") {
       return new Response(csvExport(records), { status: 200, headers: { "Content-Type": "text/csv; charset=utf-8", "Content-Disposition": `attachment; filename="${requestedSlug}-surf-observations-${new Date().toISOString().slice(0, 10)}.csv"`, "Cache-Control": "no-store" } });
@@ -202,7 +206,7 @@ export default async (request) => {
       if (prior) return send(200, { observation: prior, deduplicated: true });
     }
 
-    const existing = await listObservations(requestedLocation);
+    const existing = await listObservations(store, requestedLocation);
     const duplicate = existing.find(record =>
       Math.abs(new Date(record.observedAt).getTime() - new Date(validated.observedAt).getTime()) < DUPLICATE_WINDOW_MS &&
       Number(record.actualFt) === validated.actualFt && Number(record.predictedFt) === validated.predictedFt
@@ -222,6 +226,8 @@ export default async (request) => {
       predictedFt: validated.predictedFt, errorFt: Number((validated.actualFt - validated.predictedFt).toFixed(2)),
       condition: validated.condition, note: validated.note, calculationVersion: validated.calculationVersion,
       snapshot: validated.snapshot,
+      ...(validated.evaluationDetails ? {evaluationDetails:validated.evaluationDetails} : {}),
+      validationStatus: input.validationStatus === "confirmed" ? "confirmed" : input.validationStatus === "corrected" ? "corrected" : "unspecified",
       originalForecast: { predictedFt: validated.predictedFt, calculationVersion: validated.calculationVersion, snapshot: validated.snapshot }
     };
     await store().setJSON(`observations/${id}`, record);
@@ -239,7 +245,7 @@ export default async (request) => {
     let validated;
     try { validated = validateUpdate(input, current); } catch (error) { return send(400, { error: error.message }); }
     if (validated.observedAt && adelaideDateKey(validated.observedAt) !== adelaideDateKey(current.observedAt)) {
-      const existing = await listObservations(requestedLocation);
+      const existing = await listObservations(store, requestedLocation);
       const targetDayCount = existing.filter(record => record.id !== id && adelaideDateKey(record.observedAt) === adelaideDateKey(validated.observedAt)).length;
       if (targetDayCount >= DAILY_OBSERVATION_LIMIT) return send(409, { error: `Three ${requestedLocation} observations are already saved for that day.`, dailyLimit: true });
     }
@@ -249,6 +255,14 @@ export default async (request) => {
       forecastHistory: validated.snapshot ? [...(current.forecastHistory || []), { revision: current.revision, observedAt: current.observedAt, predictedFt: current.predictedFt, calculationVersion: current.calculationVersion, snapshot: current.snapshot }] : (current.forecastHistory || []),
       errorFt: Number((validated.actualFt - Number(validated.predictedFt ?? current.predictedFt)).toFixed(2))
     };
+    // An edit is not another explicit Looks right/Correct it validation. Preserve
+    // the original research target/status before clearing now-ambiguous details.
+    const researchChanged=updated.actualFt!==current.actualFt||updated.predictedFt!==current.predictedFt||updated.observedAt!==current.observedAt;
+    if(researchChanged&&(current.evaluationDetails||current.validationStatus)) {
+      updated.evaluationHistory=[...(current.evaluationHistory||[]),{revision:current.revision,observedAt:current.observedAt,actualFt:current.actualFt,predictedFt:current.predictedFt,validationStatus:current.validationStatus||'unspecified',evaluationDetails:current.evaluationDetails||null}];
+      if(current.evaluationDetails)updated.evaluationDetails=validateEvaluationDetails({measurementDefinition:current.evaluationDetails.measurementDefinition,observerLabel:current.evaluationDetails.observerLabel});
+      updated.validationStatus='unspecified';
+    }
     await store().setJSON(`observations/${id}`, updated);
     return send(200, { observation: updated });
   }
@@ -260,5 +274,7 @@ export default async (request) => {
 
   return send(405, { error: "Method not allowed" });
 };
+}
+export default createObservationHandler();
 
 export const config = { path: "/api/observations" };
