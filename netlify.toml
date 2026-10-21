@@ -1,3 +1,16 @@
+# Only the legacy production hostname redirects; Deploy Previews stay testable.
+[[redirects]]
+  from = "https://frenchyreview.netlify.app/*"
+  to = "https://report.frenchysurfschool.com.au/:splat"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "http://frenchyreview.netlify.app/*"
+  to = "https://report.frenchysurfschool.com.au/:splat"
+  status = 301
+  force = true
+
 [functions]
   directory = "netlify/functions"
   node_bundler = "esbuild"
