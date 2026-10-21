@@ -245,10 +245,10 @@ function renderReportHtml(config, result) {
   const regional = config.scope !== 'spot-specific';
   const display = report.wave?.display || 'Unavailable';
   const description = report.status === 'unavailable'
-    ? `${config.name} surf report is temporarily unavailable; Frenchy Review is not presenting stale conditions as current.`
+    ? `${config.name} surf report is temporarily unavailable; Frenchy Surf Report is not presenting stale conditions as current.`
     : `${config.name} surf report: ${display} ft, ${report.wind?.label || 'wind unavailable'}, ${report.tide?.positionLabel || 'tide unavailable'}. Updated ${report.issued_at}.`;
   html = html
-    .replace(/<title>[\s\S]*?<\/title>/i, `<title>${escapeHtml(config.name)} Surf Report | Frenchy Surf School</title>`)
+    .replace(/<title>[\s\S]*?<\/title>/i, `<title>${escapeHtml(config.name)} Surf Report | Frenchy Surf Report</title>`)
     .replace(/<link rel="canonical" href="[^"]+"\s*\/?>/i, `<link rel="canonical" href="${report.canonical_url}" />`);
   html = replaceMeta(html, 'description', description);
   html = replaceMeta(html, 'frenchy:report-status', report.status);
@@ -269,7 +269,7 @@ function renderReportHtml(config, result) {
     'sourceRow',
     regional
       ? `<span><strong>Regional report:</strong> ${escapeHtml(config.name)} uses the Seaford-calibrated Mid Coast model. It is not a spot-specific estimate.</span>`
-      : `<span>Calculated by Frenchy Review from current marine, wind and tide inputs.</span>`
+      : `<span>Calculated by Frenchy Surf Report from current marine, wind and tide inputs.</span>`
   );
   html = setElement(
     html,
@@ -322,7 +322,9 @@ function renderIndexHtml(results) {
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>South Australia Surf Reports | Frenchy Surf School</title>
+  <title>South Australia Surf Reports | Frenchy Surf Report</title>
+  <link rel="icon" href="/icons/frenchy-brand-32.png" type="image/png" sizes="32x32">
+  <meta property="og:site_name" content="Frenchy Surf Report">
   <meta name="description" content="Current Seaford, Adelaide Mid Coast and Middleton surf reports with wave size, swell, wind, tide, freshness and JSON data." />
   <link rel="canonical" href="${SITE}/surf-reports" />
   <style>
@@ -331,12 +333,12 @@ function renderIndexHtml(results) {
   <script type="application/ld+json">${safeJson({
     '@context': 'https://schema.org',
     '@type': 'CollectionPage',
-    name: 'Frenchy Surf Reports',
+    name: 'Frenchy Surf Report',
     url: `${SITE}/surf-reports`,
     hasPart: data.reports.map(item => ({ '@type': 'WebPage', url: item.canonical_url, name: `${item.spot.name} Surf Report` }))
   })}</script>
 </head>
-<body><main class="wrap"><header><h1>Frenchy Surf Reports</h1><p>Current, timestamped surf conditions for Seaford, the Adelaide Mid Coast and Middleton.</p><p class="note">South Port uses the regional Mid Coast report and is never presented as a separately calibrated spot forecast.</p></header><section class="grid">${cards}</section><p><a href="${SITE}/surf-report-data">How the data and freshness work</a> · <a href="${SCHOOL}">Frenchy Surf School</a></p></main></body>
+<body><main class="wrap"><header><div style="display:flex;align-items:center;gap:11px"><img src="/icons/frenchy-brand-88.png" width="44" height="44" alt="Frenchy Surf School"><div><h1 style="margin:0">Frenchy Surf Report</h1><small>LOCAL SURF INTELLIGENCE</small></div></div><p>Current, timestamped surf conditions for Seaford, the Adelaide Mid Coast and Middleton.</p><p class="note">South Port uses the regional Mid Coast report and is never presented as a separately calibrated spot forecast.</p></header><section class="grid">${cards}</section><p><a href="${SITE}/surf-report-data">How the data and freshness work</a> · <a href="${SCHOOL}">Frenchy Surf School</a></p></main></body>
 </html>`;
 }
 

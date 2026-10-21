@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <script src="/analytics.js" defer></script>
-  <title>Seaford Surf Report | Live Seaford SA Surf Forecast | Frenchy</title>
+  <title>Seaford Surf Report | Live Seaford SA Surf Forecast | Frenchy Surf Report</title>
   <meta name="description" content="Live Seaford surf report with swell, wind, tide, incoming pulse and surf rating for Seaford, South Australia." />
   <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1" />
   <link rel="canonical" href="https://frenchyreview.netlify.app/" />
@@ -13,7 +13,7 @@
   <meta property="og:description" content="Live Seaford surf report with swell, wind, tide, incoming pulse and surf rating for Seaford, South Australia." />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://frenchyreview.netlify.app/" />
-  <meta property="og:site_name" content="Frenchy Surf Reports" />
+  <meta property="og:site_name" content="Frenchy Surf Report" />
   <meta property="og:locale" content="en_AU" />
   <meta name="twitter:card" content="summary" />
   <script type="application/ld+json">
@@ -23,7 +23,7 @@
         {
           "@type": "WebSite",
           "@id": "https://frenchyreview.netlify.app/#website",
-          "name": "Frenchy Surf Reports",
+          "name": "Frenchy Surf Report",
           "url": "https://frenchyreview.netlify.app/",
           "inLanguage": "en-AU"
         },
@@ -330,9 +330,10 @@
   </style>
   <link rel="stylesheet" href="./frenchy-ui-v3.css" />
   <link rel="stylesheet" href="./observation.css?v=20260724.1" />
-  <link rel="icon" href="./surf-icon.svg" type="image/svg+xml" />
+  <link rel="icon" href="/icons/frenchy-brand-32.png" type="image/png" sizes="32x32">
   <link rel="manifest" href="./manifest.webmanifest" />
   <meta name="theme-color" content="#061b24" />
+  <link rel="stylesheet" href="/branding.css">
 </head>
 <body>
   <div class="wrap">
@@ -386,7 +387,7 @@
           <div class="decision-item"><small>Forecast confidence</small><b id="confidenceCall">Checking sources…</b></div>
         </div>
         <div class="beach-check"><b>Frenchy beach check</b> · No manual observation posted yet. The report is currently model-led.</div>
-        <div class="share-strip"><p>Share the report with your surf mate and help Frenchy Review improve faster.</p><button type="button" id="shareReportBtn">Share report</button></div>
+        <div class="share-strip"><p>Share the report with your surf mate and help Frenchy Surf Report improve faster.</p><button type="button" id="shareReportBtn">Share report</button></div>
         <div class="live-correction-box">
           <div><b>Live size check</b><small id="liveCorrectionStatus">Add what you see now to correct the live report.</small></div>
           <input id="liveActualSizeInput" type="number" min="0" max="6" step="0.25" placeholder="2" />
@@ -1935,7 +1936,7 @@
       const regional = report.spot?.calibration_scope === 'regional-mid-coast';
       $('sourceRow').innerHTML = regional
         ? `<span><b>Regional report:</b> ${report.spot.name} uses the Seaford-calibrated Mid Coast model. It is not a spot-specific estimate.</span>`
-        : '<span>Calculated by Frenchy Review from current marine, wind and tide inputs.</span>';
+        : '<span>Calculated by Frenchy Surf Report from current marine, wind and tide inputs.</span>';
       $('freshnessRow').innerHTML = `<span>Issued ${report.issued_at}</span><span>Valid until ${report.valid_until}</span><span class="${report.status === 'current' ? '' : 'freshness-warning'}">Status: ${report.status}</span>`;
     }
 
