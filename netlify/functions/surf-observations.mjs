@@ -118,7 +118,6 @@ function csvExport(records) {
     ["location", record => record.location], ["actual_ft", record => record.actualFt], ["predicted_ft", record => record.predictedFt],
     ["error_ft_actual_minus_predicted", record => record.errorFt], ["condition", record => record.condition], ["note", record => record.note],
     ["calculation_version", record => record.calculationVersion], ["forecast_time", record => record.snapshot?.forecastTime],
-    ["evaluation_details_json", record => record.evaluationDetails], ["evaluation_provenance_json", record => record.snapshot?.evaluationProvenance],
     ["swell_height_m", record => record.snapshot?.activeDriver?.heightM], ["swell_direction_deg", record => record.snapshot?.activeDriver?.directionDeg],
     ["swell_period_s", record => record.snapshot?.activeDriver?.periodS], ["wind_speed_kmh", record => record.snapshot?.windContext?.speedKmh ?? record.snapshot?.wind?.wind_speed_10m],
     ["wind_direction_deg", record => record.snapshot?.windContext?.directionDeg ?? record.snapshot?.wind?.wind_direction_10m], ["wind_direction_compass", record => record.snapshot?.windContext?.directionCompass],
@@ -130,7 +129,8 @@ function csvExport(records) {
     ["next_tide_time", record => record.snapshot?.tide?.after?.time], ["tide_range_m", record => record.snapshot?.tide?.rangeM],
     ["tide_range_class", record => record.snapshot?.tide?.rangeClass], ["tide_range_label", record => record.snapshot?.tide?.rangeLabel],
     ["weather_code", record => record.snapshot?.weather?.weatherCode],
-    ["temperature_c", record => record.snapshot?.weather?.temperatureC], ["calculation_snapshot_json", record => record.snapshot]
+    ["temperature_c", record => record.snapshot?.weather?.temperatureC], ["calculation_snapshot_json", record => record.snapshot],
+    ["evaluation_details_json", record => record.evaluationDetails], ["evaluation_provenance_json", record => record.snapshot?.evaluationProvenance]
   ];
   return [columns.map(([name]) => csvCell(name)).join(","), ...records.map(record => columns.map(([, getter]) => csvCell(getter(record))).join(","))].join("\r\n");
 }
