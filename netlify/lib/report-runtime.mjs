@@ -1,5 +1,7 @@
 import vm from 'node:vm';
 import { readProjectText } from './project-files.mjs';
+import { evaluationProvenance } from './observation-evaluation.mjs';
+import { createHash } from 'node:crypto';
 
 const TIMEZONE = 'Australia/Adelaide';
 
@@ -390,6 +392,10 @@ export function buildObservationSnapshot(location, result, observedAt) {
     location: location === 'middleton' ? 'Middleton' : 'Seaford',
     calculatedAt: new Date().toISOString(),
     observedAt: selectedAt.toISOString(),
+    evaluationProvenance: evaluationProvenance({observedAt:selectedAt.toISOString(),forecastLocalTime:report.time,
+      sourceRetrievedAt:report.provenance?.fetchedAt || hydration.data?.lastSuccessfulFetchTime || hydration.generatedAt,
+      providerIssuedAt:report.provenance?.modelIssuedAt,revision:process.env.COMMIT_REF}),
+    calculationSourceSha256: createHash('sha256').update(extractLegacyScript(location).source).digest('hex'),
     forecastTime: report.time,
     forecastDistanceMinutes: Math.round(nearest.distanceMs / 60000),
     displayTime: `Forecast ${engine.formatTime(report.time)} · ${isNow ? 'observation now' : `observation ${engine.formatTime(nearest.localTime)}`}`,

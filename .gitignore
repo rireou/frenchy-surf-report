@@ -1,3 +1,9 @@
 node_modules/
 .netlify/
 *.log
+__pycache__/
+*.pyc
+analysis.json
+record-audit.csv
+*-surf-observations-*.csv
+*-surf-observations-*.json

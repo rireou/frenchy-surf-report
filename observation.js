@@ -45,6 +45,15 @@
           <fieldset class="obs-fieldset"><legend>Quick correction <small>fastest option</small></legend><div class="obs-chips" id="obsCorrections">${correctionChoices.map(choice => `<button class="obs-chip" type="button" data-delta="${choice.delta}"><strong>${choice.label}</strong><small data-result>--</small></button>`).join("")}</div></fieldset>
           <fieldset class="obs-fieldset"><legend>Or tap the actual size</legend><div class="obs-chips obs-size-chips" id="obsSizes">${sizeChoices.map(size => `<button class="obs-chip" type="button" data-size="${size}"><strong>${size}</strong><small>ft</small></button>`).join("")}<button class="obs-chip" type="button" data-size="other"><strong>Other</strong><small>type size</small></button></div><div class="obs-other obs-hidden" id="obsOther"><input class="obs-input" id="obsOtherSize" type="number" min="0" max="8" step="0.25" inputmode="decimal" placeholder="Actual size in feet"><button class="obs-primary" type="button" id="obsUseOther">Use</button></div></fieldset>
           <fieldset class="obs-fieldset"><legend>Wave quality <small>optional</small></legend><div class="obs-chips obs-condition-chips" id="obsQuality">${conditions.map(item => `<button class="obs-chip" type="button" data-condition="${item.value}"><strong>${item.label}</strong></button>`).join("")}</div></fieldset>
+          <details id="obsEvaluation"><summary>Optional accuracy details</summary><p class="obs-help">Keep typical waves and occasional sets separate. Leave unknown values blank. These details apply to new checks only.</p>
+            <label>Size scale<select class="obs-input" id="obsSizeDefinition"><option value="unknown">Not specified</option><option value="local-surf-feet">Local surf-size scale (ft)</option><option value="wave-face-feet">Wave face height (ft)</option></select></label>
+            <label>The actual size above describes<select class="obs-input" id="obsActualMeaning"><option value="unspecified">Not specified</option><option value="typical">Typical waves</option><option value="occasional-sets">Occasional sets</option></select></label>
+            <label>Typical size (ft, optional)<input class="obs-input" id="obsTypical" type="number" min="0" max="8" step="0.25" inputmode="decimal"></label>
+            <label>Occasional sets (ft, optional)<input class="obs-input" id="obsSets" type="number" min="0" max="8" step="0.25" inputmode="decimal"></label>
+            <label>Observation confidence<select class="obs-input" id="obsConfidence"><option value="unknown">Not specified</option><option value="low">Low — brief or obstructed view</option><option value="medium">Medium — reasonable view</option><option value="high">High — clear view over several sets</option></select></label>
+            <label>Observer label (optional, self-reported)<input class="obs-input" id="obsObserverLabel" maxlength="80" autocomplete="off"></label>
+            <label>Unusual local factors (optional)<input class="obs-input" id="obsLocalFactors" maxlength="300" placeholder="e.g. long gaps between sets, bank or viewing limitations"></label>
+          </details>
           <div class="obs-save-row"><button class="obs-primary" id="obsSave" type="submit" disabled>Loading prediction…</button><button class="obs-ghost obs-cancel obs-hidden" id="obsCancelEdit" type="button">Cancel edit</button></div>
           <div class="obs-message" id="obsSaveMessage"></div><p class="obs-help">The chosen date and time, location, forecast inputs, wind, tide, weather and calculation version are saved automatically.</p>
         </form>
@@ -263,6 +272,10 @@
     state.clientToken = makeToken();
     state.snapshot = null;
     state.actualFt = null;
+    // New observation times must not inherit the previous check's measured sizes.
+    ["obsTypical","obsSets","obsLocalFactors"].forEach(id => { $(id).value = ""; });
+    $("obsConfidence").value = "unknown";
+    $("obsActualMeaning").value = "unspecified";
     renderSelectedTime();
     if (revealSelection) $("obsSelectedTimeCard").scrollIntoView?.({ behavior: "smooth", block: "center" });
     $("obsSelectedTimeCard").classList.remove("ready", "error");
@@ -403,6 +416,7 @@
     const record = state.records.find(item => item.id === id);
     if (!record) return;
     state.editingId = id; state.condition = record.condition || ""; state.saved = false;
+    $("obsEvaluation").hidden = true;
     state.timeOffsetMinutes = null; state.customObservedAt = record.observedAt; state.snapshot = record.snapshot;
     renderSelectedTime();
     $("obsDateTime").value = toDateTimeInput(record.observedAt);
@@ -417,6 +431,7 @@
 
   function cancelEdit() {
     state.editingId = null; state.condition = ""; state.clientToken = makeToken();
+    $("obsEvaluation").hidden = false;
     state.timeOffsetMinutes = 0; state.customObservedAt = null;
     $("obsCancelEdit").classList.add("obs-hidden");
     $("obsCustomTime").classList.add("obs-hidden");
@@ -448,7 +463,10 @@
         state.records = state.records.map(record => record.id === state.editingId ? result.observation : record);
         setMessage("obsSaveMessage", "Observation updated.", "success"); cancelEdit();
       } else {
-        const result = await request(API, { method: "POST", body: JSON.stringify({ actualFt: state.actualFt, condition: state.condition, observedAt: state.snapshot.observedAt || selectedObservedAt(), clientToken: state.clientToken, snapshot: state.snapshot }) });
+        const evaluationDetails={measurementDefinition:$("obsSizeDefinition").value,actualValueMeaning:$("obsActualMeaning").value,
+          typicalFt:$("obsTypical").value,occasionalSetFt:$("obsSets").value,observationConfidence:$("obsConfidence").value,
+          observerLabel:$("obsObserverLabel").value,unusualLocalFactors:$("obsLocalFactors").value};
+        const result = await request(API, { method: "POST", body: JSON.stringify({ actualFt: state.actualFt, condition: state.condition, observedAt: state.snapshot.observedAt || selectedObservedAt(), clientToken: state.clientToken, snapshot: state.snapshot, evaluationDetails }) });
         if (!state.records.some(record => record.id === result.observation.id)) state.records.unshift(result.observation);
         state.saved = true;
         button.textContent = result.deduplicated ? "Already saved ✓" : "Saved ✓";

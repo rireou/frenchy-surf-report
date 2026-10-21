@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { getStore } from "@netlify/blobs";
 import { isObservationAdmin, verifySameOrigin } from "../lib/observation-auth.mjs";
+import { validateEvaluationDetails } from "../lib/observation-evaluation.mjs";
 
 const STORE_NAME = "frenchy-surf-observations";
 const SCHEMA_VERSION = 3;
@@ -117,6 +118,7 @@ function csvExport(records) {
     ["location", record => record.location], ["actual_ft", record => record.actualFt], ["predicted_ft", record => record.predictedFt],
     ["error_ft_actual_minus_predicted", record => record.errorFt], ["condition", record => record.condition], ["note", record => record.note],
     ["calculation_version", record => record.calculationVersion], ["forecast_time", record => record.snapshot?.forecastTime],
+    ["evaluation_details_json", record => record.evaluationDetails], ["evaluation_provenance_json", record => record.snapshot?.evaluationProvenance],
     ["swell_height_m", record => record.snapshot?.activeDriver?.heightM], ["swell_direction_deg", record => record.snapshot?.activeDriver?.directionDeg],
     ["swell_period_s", record => record.snapshot?.activeDriver?.periodS], ["wind_speed_kmh", record => record.snapshot?.windContext?.speedKmh ?? record.snapshot?.wind?.wind_speed_10m],
     ["wind_direction_deg", record => record.snapshot?.windContext?.directionDeg ?? record.snapshot?.wind?.wind_direction_10m], ["wind_direction_compass", record => record.snapshot?.windContext?.directionCompass],
@@ -146,7 +148,8 @@ function validateCreate(input) {
   const observedAt = validateObservedAt(input.observedAt);
   validateSnapshotTime(snapshot, observedAt);
   const calculationVersion = cleanText(snapshot?.calculationVersion || "unknown", 100);
-  return { actualFt, predictedFt, condition, note: cleanText(input.note, 300), clientToken, snapshot, calculationVersion, observedAt, location };
+  const evaluationDetails=validateEvaluationDetails(input.evaluationDetails,actualFt);
+  return { actualFt, predictedFt, condition, note: cleanText(input.note, 300), clientToken, snapshot, calculationVersion, observedAt, location, evaluationDetails };
 }
 
 function validateUpdate(input, current) {
@@ -222,6 +225,7 @@ export default async (request) => {
       predictedFt: validated.predictedFt, errorFt: Number((validated.actualFt - validated.predictedFt).toFixed(2)),
       condition: validated.condition, note: validated.note, calculationVersion: validated.calculationVersion,
       snapshot: validated.snapshot,
+      ...(validated.evaluationDetails ? {evaluationDetails:validated.evaluationDetails} : {}),
       originalForecast: { predictedFt: validated.predictedFt, calculationVersion: validated.calculationVersion, snapshot: validated.snapshot }
     };
     await store().setJSON(`observations/${id}`, record);
