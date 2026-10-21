@@ -1,6 +1,10 @@
 /* Readability pass only: retain the existing colours, cards and surf identity. */
 .aside-stack { grid-template-rows: auto; align-self: start; }
 .report-intro { margin: 20px 0; font-size: 16px; line-height: 1.6; }
+/* Replace the generated title with a real heading in the same grid position. */
+#hero.has-report-heading::before { content: none; display: none; }
+#hero > h1.report-heading { display: block; grid-column: 1; grid-row: 1; max-width: none; min-height: 0; margin: 0; font-family: inherit; font-size: clamp(26px, 3vw, 38px); font-weight: inherit; line-height: 1.12; letter-spacing: -.035em; text-shadow: none; }
+@media(max-width:800px) { #hero > h1.report-heading { font-size: 26px; } }
 .mobile-report-links { display: none; }
 .desktop-weather-emoji { display: none; }
 .hero-card > div:first-of-type { height: 100%; display: flex; flex-direction: column; }
