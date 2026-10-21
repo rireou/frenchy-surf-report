@@ -20,24 +20,28 @@ const LOCATION_MAP = {
   seaford: {
     engine: 'seaford',
     name: 'Seaford',
+    searchTitle: 'Seaford Surf Report – Adelaide Mid Coast | Frenchy Surf Report',
     slug: 'seaford',
     scope: 'spot-specific'
   },
   middleton: {
     engine: 'middleton',
     name: 'Middleton',
+    searchTitle: 'Middleton Surf Report – South Coast SA | Frenchy Surf Report',
     slug: 'middleton',
     scope: 'spot-specific'
   },
   'mid-coast': {
     engine: 'seaford',
     name: 'Adelaide Mid Coast',
+    searchTitle: 'Adelaide Mid Coast Surf Report | Frenchy Surf Report',
     slug: 'mid-coast',
     scope: 'regional-mid-coast'
   },
   'south-port': {
     engine: 'seaford',
     name: 'South Port',
+    searchTitle: 'South Port Surf Report – Adelaide Mid Coast | Frenchy Surf Report',
     slug: 'south-port',
     scope: 'regional-mid-coast'
   }
@@ -244,14 +248,33 @@ function renderReportHtml(config, result) {
   let html = readProjectText(fileName);
   const regional = config.scope !== 'spot-specific';
   const display = report.wave?.display || 'Unavailable';
+  const title = config.searchTitle;
+  const region = config.engine === 'middleton' ? "South Australia's South Coast" : "Adelaide's Mid Coast";
   const description = report.status === 'unavailable'
     ? `${config.name} surf report is temporarily unavailable; Frenchy Surf Report is not presenting stale conditions as current.`
-    : `${config.name} surf report: ${display} ft, ${report.wind?.label || 'wind unavailable'}, ${report.tide?.positionLabel || 'tide unavailable'}. Updated ${report.issued_at}.`;
+    : `${config.name} surf report for ${region}: ${display} ft, ${report.wind?.label || 'wind unavailable'}, ${report.tide?.positionLabel || 'tide unavailable'}. Updated ${report.issued_at}.`;
   html = html
-    .replace(/<title>[\s\S]*?<\/title>/i, `<title>${escapeHtml(config.name)} Surf Report | Frenchy Surf Report</title>`)
+    .replace(/<title>[\s\S]*?<\/title>/i, `<title>${escapeHtml(title)}</title>`)
     .replace(/<link rel="canonical" href="[^"]+"\s*\/?>/i, `<link rel="canonical" href="${report.canonical_url}" />`);
   html = replaceMeta(html, 'description', description);
   html = html.replace(/(<meta property="og:url" content=")[^"]*("\s*\/?>)/i, `$1${escapeHtml(report.canonical_url)}$2`);
+  html = html.replace(/(<meta property="og:title" content=")[^"]*("\s*\/?>)/i, `$1${escapeHtml(title)}$2`);
+  html = html.replace(/(<meta property="og:description" content=")[^"]*("\s*\/?>)/i, `$1${escapeHtml(description)}$2`);
+  // Regional pages reuse the Seaford shell, but must describe their own URL.
+  html = html.replace(/(<script type="application\/ld\+json">)([\s\S]*?)(<\/script>)/g, (_, open, json, close) => {
+    const schema = JSON.parse(json);
+    for (const node of schema['@graph'] || []) {
+      if (node['@type'] !== 'WebPage') continue;
+      Object.assign(node, {
+        '@id': `${report.canonical_url}#webpage`,
+        url: report.canonical_url,
+        name: title,
+        description,
+        about: { '@id': `${report.canonical_url}#place` }
+      });
+    }
+    return open + safeJson(schema) + close;
+  });
   html = replaceMeta(html, 'frenchy:report-status', report.status);
   html = replaceMeta(html, 'frenchy:issued-at', report.issued_at);
   html = replaceMeta(html, 'frenchy:valid-until', report.valid_until);
