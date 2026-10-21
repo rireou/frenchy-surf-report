@@ -27,7 +27,7 @@
   root.id = "observationRoot";
   root.innerHTML = `
     <header class="obs-header">
-      <div class="obs-brand"><div class="obs-logo">≈</div><div><small>Frenchy Review</small><b>${spot.name} observation</b></div></div>
+      <div class="obs-brand"><div class="obs-logo">≈</div><div><small>Frenchy Surf Report</small><b>${spot.name} observation</b></div></div>
       <div class="obs-header-actions"><nav class="obs-location-switch" aria-label="Observation location"><a class="active" href="${spot.observationHref}" aria-current="page">${spot.name}</a><a href="${spot.otherHref}">${spot.otherName}</a></nav><a class="obs-link" href="${spot.reportHref}">View report</a><button class="obs-ghost obs-hidden" id="obsLogout" type="button">Log out</button></div>
     </header>
     <section class="obs-card obs-login" id="obsLogin">

@@ -3,19 +3,19 @@
 Frenchy Surf Report publishes current surf reports for Seaford and Middleton in South Australia.
 
 Canonical HTML:
-- https://frenchyreview.netlify.app/
-- https://frenchyreview.netlify.app/middleton.html
-- https://frenchyreview.netlify.app/surf-reports
-- https://frenchyreview.netlify.app/surf-report/mid-coast
-- https://frenchyreview.netlify.app/surf-report/south-port
+- https://report.frenchysurfschool.com.au/
+- https://report.frenchysurfschool.com.au/middleton.html
+- https://report.frenchysurfschool.com.au/surf-reports
+- https://report.frenchysurfschool.com.au/surf-report/mid-coast
+- https://report.frenchysurfschool.com.au/surf-report/south-port
 
 JSON:
-- https://frenchyreview.netlify.app/api/surf-reports/index.json
-- https://frenchyreview.netlify.app/api/surf-reports/seaford.json
-- https://frenchyreview.netlify.app/api/surf-reports/middleton.json
+- https://report.frenchysurfschool.com.au/api/surf-reports/index.json
+- https://report.frenchysurfschool.com.au/api/surf-reports/seaford.json
+- https://report.frenchysurfschool.com.au/api/surf-reports/middleton.json
 
 Freshness and methodology:
-- https://frenchyreview.netlify.app/surf-report-data
+- https://report.frenchysurfschool.com.au/surf-report-data
 
 Seaford and Middleton have spot-specific calculations. Mid Coast and South Port use the regional Mid Coast report calibrated at Seaford and must not be described as separately calibrated spot forecasts.
 

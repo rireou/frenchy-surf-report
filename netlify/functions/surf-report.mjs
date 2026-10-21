@@ -2,7 +2,7 @@ import { getSurfReport } from '../lib/report-source.mjs';
 import { readProjectText } from '../lib/project-files.mjs';
 import { buildObservationSnapshot } from '../lib/report-runtime.mjs';
 
-const SITE = 'https://frenchyreview.netlify.app';
+const SITE = 'https://report.frenchysurfschool.com.au';
 const SCHOOL = 'https://www.frenchysurfschool.com.au/';
 const HTML_HEADERS = {
   'Content-Type': 'text/html; charset=utf-8',
@@ -251,6 +251,7 @@ function renderReportHtml(config, result) {
     .replace(/<title>[\s\S]*?<\/title>/i, `<title>${escapeHtml(config.name)} Surf Report | Frenchy Surf Report</title>`)
     .replace(/<link rel="canonical" href="[^"]+"\s*\/?>/i, `<link rel="canonical" href="${report.canonical_url}" />`);
   html = replaceMeta(html, 'description', description);
+  html = html.replace(/(<meta property="og:url" content=")[^"]*("\s*\/?>)/i, `$1${escapeHtml(report.canonical_url)}$2`);
   html = replaceMeta(html, 'frenchy:report-status', report.status);
   html = replaceMeta(html, 'frenchy:issued-at', report.issued_at);
   html = replaceMeta(html, 'frenchy:valid-until', report.valid_until);

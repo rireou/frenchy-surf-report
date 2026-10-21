@@ -320,10 +320,10 @@ function buildCanonical(location, engine, source, reportState, now) {
     calculation_version: isMiddleton
       ? engine.MIDDLETON_CALCULATION_VERSION
       : engine.SEAFORD_CALCULATION_VERSION,
-    methodology_url: 'https://frenchyreview.netlify.app/surf-report-data',
+    methodology_url: 'https://report.frenchysurfschool.com.au/surf-report-data',
     canonical_url: isMiddleton
-      ? 'https://frenchyreview.netlify.app/middleton.html'
-      : 'https://frenchyreview.netlify.app/',
+      ? 'https://report.frenchysurfschool.com.au/middleton.html'
+      : 'https://report.frenchysurfschool.com.au/',
     booking_url: 'https://frenchysurfschool.com.au/',
     warnings: source.warnings || []
   };
