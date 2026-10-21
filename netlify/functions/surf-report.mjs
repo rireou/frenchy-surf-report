@@ -1,6 +1,7 @@
 import { getSurfReport } from '../lib/report-source.mjs';
 import { readProjectText } from '../lib/project-files.mjs';
 import { buildObservationSnapshot } from '../lib/report-runtime.mjs';
+import { packInlineState, unpackInlineState } from '../lib/inline-state.mjs';
 
 const SITE = 'https://report.frenchysurfschool.com.au';
 const SCHOOL = 'https://www.frenchysurfschool.com.au/';
@@ -307,12 +308,14 @@ function renderReportHtml(config, result) {
       .replace(/Seaford Surf Report/g, `${escapeHtml(config.name)} Surf Report`);
   }
   const jsonLd = safeJson(reportJsonLd(report));
-  const stateScript = safeJson(result.hydration);
-  const injected = [
-    `<script type="application/ld+json" id="currentSurfReportJsonLd">${jsonLd}</script>`,
-    `<script>window.__FRENCHY_CANONICAL_REQUIRED__=true;window.__FRENCHY_SSR_STATE__=${stateScript};window.__FRENCHY_CANONICAL_REPORT__=${safeJson(report)};</script>`
-  ].join('\n  ');
-  return html.replace('</head>', `  ${injected}\n</head>`);
+  const stateScript = safeJson(packInlineState(result.hydration));
+  const hydration = `<script>window.__FRENCHY_CANONICAL_REQUIRED__=true;window.__FRENCHY_SSR_STATE__=(${unpackInlineState.toString()})(${stateScript});window.__FRENCHY_CANONICAL_REPORT__=${safeJson(report)};</script>`;
+  html = html.replace('</head>', `  <script type="application/ld+json" id="currentSurfReportJsonLd">${jsonLd}</script>\n</head>`);
+  // Keep crawlable report content before state, while defining globals before
+  // the existing application scripts execute. No forecast data is discarded.
+  const appScript = '<script src="./phase1-engine.js"></script>';
+  if (!html.includes(appScript)) throw new Error('Missing report hydration insertion point');
+  return html.replace(appScript, hydration + '\n  ' + appScript);
 }
 
 function indexJson(results) {
