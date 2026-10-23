@@ -1,9 +1,11 @@
-(() => {
+(async () => {
   const cleanPath = location.pathname.replace(/\/+$/, "").toLowerCase();
   const search = new URLSearchParams(location.search);
   const observationMode = cleanPath === "/observe" || cleanPath.startsWith("/observe-") || search.get("observe") === "1";
   if (!observationMode) return;
 
+  await import('/observation-time.js');
+  const {adelaideInput,adelaideInstant}=globalThis.FrenchyObservationTime;
   const demoMode = ["localhost", "127.0.0.1"].includes(location.hostname);
   const spotSlug = cleanPath.includes("middleton") || search.get("spot") === "middleton" ? "middleton" : "seaford";
   const spot = spotSlug === "middleton"
@@ -26,6 +28,7 @@
   root.className = "observation-root";
   root.id = "observationRoot";
   root.innerHTML = `
+    ${demoMode ? '<p class="obs-help">Synthetic preview scenarios: <a href="'+spot.observationHref+'">Available fixture</a> · <a href="'+spot.observationHref+'?archive=missing">Missing historical archive</a></p>' : ''}
     <header class="obs-header">
       <div class="obs-brand"><div class="obs-logo">≈</div><div><small>Frenchy Surf Report</small><b>${spot.name} observation</b></div></div>
       <div class="obs-header-actions"><nav class="obs-location-switch" aria-label="Observation location"><a class="active" href="${spot.observationHref}" aria-current="page">${spot.name}</a><a href="${spot.otherHref}">${spot.otherName}</a></nav><a class="obs-link" href="${spot.reportHref}">View report</a><button class="obs-ghost obs-hidden" id="obsLogout" type="button">Log out</button></div>
@@ -39,15 +42,16 @@
     <div class="obs-hidden" id="obsDashboard">
       <section class="obs-card obs-quick-card">
         <div class="obs-prediction"><div><span class="obs-eyebrow"><span class="obs-live-dot"></span>${spot.name} report for selected time</span><h1>Predicted <span id="obsPrediction">--</span> ft</h1></div><div class="obs-prediction-meta"><b id="obsForecastTime">Loading selected time...</b><br><span id="obsConditions">${spot.name}</span></div></div>
+        <p class="obs-help" id="obsForecastEvidence" aria-live="polite"></p>
         <div class="obs-context-grid" id="obsCheckContext"><div class="obs-context-item"><small>Wind at check</small><b id="obsWindSummary">Loading wind…</b><span id="obsWindDetail">Direction and strength</span></div><div class="obs-context-item"><small>Tide position</small><b id="obsTideSummary">Loading tide…</b><span id="obsTideDetail">Height and next turn</span></div><div class="obs-context-item"><small>Tide change</small><b id="obsTideRange">Loading range…</b><span id="obsTideRangeDetail">Previous to next tide</span></div></div>
         <form id="obsForm" novalidate>
-          <fieldset class="obs-fieldset"><legend>1. Choose observation time <small>defaults to now</small></legend><div class="obs-chips obs-time-chips" id="obsTimes"><button class="obs-chip selected" type="button" data-time-offset="0"><strong>Now</strong><small>current time</small></button><button class="obs-chip" type="button" data-time-offset="30"><strong>30 min</strong><small>ago</small></button><button class="obs-chip" type="button" data-time-offset="60"><strong>1 hour</strong><small>ago</small></button><button class="obs-chip" type="button" data-time-offset="120"><strong>2 hours</strong><small>ago</small></button><button class="obs-chip" type="button" data-time-custom><strong>Choose</strong><small>date & time</small></button></div><div class="obs-other obs-time-custom obs-hidden" id="obsCustomTime"><input class="obs-input" id="obsDateTime" type="datetime-local" step="60"><button class="obs-primary" type="button" id="obsUseTime">Use this time</button></div><div class="obs-selected-time-card loading" id="obsSelectedTimeCard" aria-live="polite"><span>Selected observation time</span><strong id="obsSelectedTimePrimary">Now</strong><p id="obsSelectedTime">This observation will be saved at the current time.</p><div class="obs-time-match" id="obsTimeMatch">Loading wave, wind and tide for this time...</div></div></fieldset>
+          <fieldset class="obs-fieldset"><legend>1. Choose observation time <small>Australia/Adelaide · previous 48 hours</small></legend><div class="obs-chips obs-time-chips" id="obsTimes"><button class="obs-chip selected" type="button" data-time-offset="0"><strong>Now</strong><small>current time</small></button><button class="obs-chip" type="button" data-time-offset="30"><strong>30 min</strong><small>ago</small></button><button class="obs-chip" type="button" data-time-offset="60"><strong>1 hour</strong><small>ago</small></button><button class="obs-chip" type="button" data-time-offset="120"><strong>2 hours</strong><small>ago</small></button><button class="obs-chip" type="button" data-time-custom><strong>Choose</strong><small>date & time</small></button></div><div class="obs-other obs-time-custom obs-hidden" id="obsCustomTime"><input class="obs-input" id="obsDateTime" type="datetime-local" step="60" aria-label="Observation date and time in Adelaide"><select class="obs-input" id="obsDstOccurrence" aria-label="Repeated Adelaide daylight-saving time"><option value="">DST occurrence (if needed)</option><option value="earlier">Earlier · ACDT (UTC+10:30)</option><option value="later">Later · ACST (UTC+9:30)</option></select><button class="obs-primary" type="button" id="obsUseTime">Use this time</button></div><div class="obs-selected-time-card loading" id="obsSelectedTimeCard" aria-live="polite"><span>Selected observation time</span><strong id="obsSelectedTimePrimary">Now</strong><p id="obsSelectedTime">This observation will be saved at the current time.</p><div class="obs-time-match" id="obsTimeMatch">Loading wave, wind and tide for this time...</div></div></fieldset>
           <fieldset class="obs-fieldset"><legend>Quick correction <small>fastest option</small></legend><div class="obs-chips" id="obsCorrections">${correctionChoices.map(choice => `<button class="obs-chip" type="button" data-delta="${choice.delta}"><strong>${choice.label}</strong><small data-result>--</small></button>`).join("")}</div></fieldset>
           <fieldset class="obs-fieldset"><legend>Or tap the actual size</legend><div class="obs-chips obs-size-chips" id="obsSizes">${sizeChoices.map(size => `<button class="obs-chip" type="button" data-size="${size}"><strong>${size}</strong><small>ft</small></button>`).join("")}<button class="obs-chip" type="button" data-size="other"><strong>Other</strong><small>type size</small></button></div><div class="obs-other obs-hidden" id="obsOther"><input class="obs-input" id="obsOtherSize" type="number" min="0" max="8" step="0.25" inputmode="decimal" placeholder="Actual size in feet"><button class="obs-primary" type="button" id="obsUseOther">Use</button></div></fieldset>
           <fieldset class="obs-fieldset"><legend>Wave quality <small>optional</small></legend><div class="obs-chips obs-condition-chips" id="obsQuality">${conditions.map(item => `<button class="obs-chip" type="button" data-condition="${item.value}"><strong>${item.label}</strong></button>`).join("")}</div></fieldset>
           <div id="obsQuickDetails" class="obs-quick-details"><p class="obs-help">Optional — typical waves and occasional sets are different.</p>
             <div class="obs-detail-pair"><label>Typical (ft)<input class="obs-input" id="obsTypical" type="number" min="0" max="8" step="0.25" inputmode="decimal" placeholder="Optional"></label><label>Occasional sets (ft)<input class="obs-input" id="obsSets" type="number" min="0" max="8" step="0.25" inputmode="decimal" placeholder="Optional"></label></div>
-            <label>Confidence<select class="obs-input" id="obsConfidence"><option value="unknown">Not specified</option><option value="low">Low — brief or obstructed view</option><option value="medium">Medium — reasonable view</option><option value="high">High — clear view over several sets</option></select></label>
+            <label>Confidence<select class="obs-input" id="obsConfidence"><option value="unknown">Not specified</option><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option></select></label>
           </div>
           <details id="obsEvaluation"><summary>Optional accuracy details</summary><p class="obs-help">Keep typical waves and occasional sets separate. Leave unknown values blank. Size scale and meaning are remembered on this device; measured sizes and confidence reset for each check.</p>
             <label>Size scale<select class="obs-input" id="obsSizeDefinition"><option value="unknown">Not specified</option><option value="local-surf-feet">Local surf-size scale (ft)</option><option value="wave-face-feet">Wave face height (ft)</option></select></label>
@@ -68,13 +72,11 @@
   const $ = id => document.getElementById(id);
   const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
   const escapeHtml = value => String(value ?? "").replace(/[&<>'"]/g, character => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" }[character]));
-  const formatFt = value => Number(value).toFixed(Number(value) % 1 ? 1 : 0);
+  const formatFt = value => Number(value).toLocaleString('en-AU',{maximumFractionDigits:2});
   const roundQuarter = value => Math.round(Number(value) * 4) / 4;
 
   function toDateTimeInput(value) {
-    const date = new Date(value);
-    const pad = number => String(number).padStart(2, "0");
-    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+    return adelaideInput(value);
   }
 
   function selectedObservedAt() {
@@ -96,7 +98,7 @@
     $("obsSelectedTimePrimary").textContent = state.timeOffsetMinutes === 0 ? `Now · ${label}` : label;
     $("obsSelectedTime").textContent = `This observation will be saved for ${label}.`;
     $("obsDateTime").max = toDateTimeInput(new Date());
-    $("obsDateTime").min = `${toDateTimeInput(new Date()).slice(0, 10)}T00:00`;
+    $("obsDateTime").min = toDateTimeInput(Date.now() - 48 * 3600000);
     document.querySelectorAll("[data-time-offset]").forEach(button => button.classList.toggle("selected", state.timeOffsetMinutes === Number(button.dataset.timeOffset)));
     document.querySelector("[data-time-custom]")?.classList.toggle("selected", state.timeOffsetMinutes == null);
   }
@@ -151,7 +153,7 @@
       const sameDay = records.filter(record => adelaideDateKey(record.observedAt) === adelaideDateKey(input.observedAt));
       if (sameDay.length >= 3) { const error = new Error(`Three ${spot.name} observations are already saved for that day. Edit one if a correction is needed.`); error.status = 409; error.result = { dailyLimit: true }; throw error; }
       const now = new Date().toISOString();
-      const record = { id: makeToken(), revision: 1, schemaVersion: 3, observedAt: input.observedAt, createdAt: now, updatedAt: now, timezone: "Australia/Adelaide", location: spot.name, actualFt: input.actualFt, predictedFt: input.snapshot.predictedFt, errorFt: Number((input.actualFt - input.snapshot.predictedFt).toFixed(2)), condition: input.condition || "", note: input.note || "", calculationVersion: input.snapshot.calculationVersion, snapshot: input.snapshot, evaluationDetails: input.evaluationDetails, validationStatus: input.validationStatus };
+      const record = { id: makeToken(), revision: 1, schemaVersion: 3, observedAt: input.observedAt, createdAt: now, updatedAt: now, timezone: "Australia/Adelaide", location: spot.name, actualFt: input.actualFt, predictedFt: input.snapshot.predictedFt, errorFt: Number((input.actualFt - input.snapshot.predictedFt).toFixed(2)), condition: input.condition || "", note: input.note || "", calculationVersion: input.snapshot.calculationVersion, snapshot: input.snapshot, forecastEvidence:input.snapshot.forecastEvidence, evaluationDetails: input.evaluationDetails, validationStatus: input.validationStatus };
       records.unshift(record); saveDemoRecords(records); return { observation: record };
     }
     const id = new URL(path, location.href).searchParams.get("id");
@@ -166,7 +168,7 @@
   }
 
   async function fetchServerSnapshot(observedAt) {
-    const url = `/api/surf-reports/${encodeURIComponent(spot.slug)}.json?full=1&at=${encodeURIComponent(observedAt)}`;
+    const url = `${API}&action=snapshot&at=${encodeURIComponent(observedAt)}`;
     const response = await fetch(url, { credentials: "same-origin", cache: "no-store" });
     const payload = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(payload.error || `${spot.name} forecast request failed`);
@@ -177,23 +179,21 @@
   }
 
   async function waitForSnapshot(observedAt = selectedObservedAt()) {
-    let serverError = null;
-    if (!demoMode) {
-      try {
-        return await fetchServerSnapshot(observedAt);
-      } catch (error) {
-        serverError = error;
-      }
-    }
+    if (!demoMode) return fetchServerSnapshot(observedAt);
+    if(search.get('archive')==='missing')throw new Error('No valid forecast archived before this observation time is available. No later forecast has been substituted.');
     for (let attempt = 0; attempt < 80; attempt += 1) {
       const snapshot = window.FrenchyObservation?.getSnapshotAt
         ? window.FrenchyObservation.getSnapshotAt(observedAt)
         : window.FrenchyObservation?.getCurrentSnapshot?.();
+      if(demoMode && snapshot?.calculationVersion==='synthetic-ui-fixture') {
+        snapshot.forecastTime=adelaideInput(observedAt);snapshot.location=spot.name;
+        snapshot.forecastEvidence={status:'unverified-comparison',verifiedAdvanceForecast:false,reason:'synthetic-ui-fixture'};
+      }
       if (snapshot?.predictedFt != null && snapshot.location === spot.name) return snapshot;
       if (demoMode && attempt === 5) return { schemaVersion: 3, calculationVersion: "local-preview", location: spot.name, calculatedAt: new Date().toISOString(), observedAt, forecastTime: toDateTimeInput(observedAt).slice(0, 13) + ":00", displayTime: `Local preview · observed ${dateTime(observedAt)}`, predictedFt: spot.slug === "middleton" ? 3 : 1.5, modelPredictedFt: spot.slug === "middleton" ? 3 : 1.5, predictedText: spot.slug === "middleton" ? "3" : "1.5", calibration: "normal", activeDriver: { heightM: 2.1, directionDeg: 232, periodS: 11.4 }, offshore: {}, local: {}, wind: { wind_speed_10m: 21, wind_direction_10m: 5 }, windContext: { speedKmh: 21, directionDeg: 5, directionCompass: "N", directionName: "north", strength: "moderate", label: "Moderate N wind · 21 km/h" }, tide: { heightM: 1.14, stage: "falling", movement: "dropping", positionLabel: "Dropping · 2 hr before low", minutesToNext: 120, minutesSincePrevious: 240, cycleProgressPct: 67, rangeM: 1.42, rangeClass: "big", rangeLabel: "Big 1.42 m tide change", source: "Preview", before: { time: "14:15", type: "High", heightM: 1.85 }, after: { time: "20:15", type: "Low", heightM: 0.43 } }, weather: { temperatureC: 16, weatherCode: 1 }, dataContext: { dataSource: "local-preview" }, calculationResult: {} };
       await new Promise(resolve => setTimeout(resolve, 250));
     }
-    throw new Error(serverError?.message || `The ${spot.name} forecast did not finish loading. Refresh this page and try again.`);
+    throw new Error(`The ${spot.name} forecast did not finish loading. Refresh this page and try again.`);
   }
 
   function showAuthenticated(authenticated) {
@@ -220,6 +220,10 @@
     document.querySelectorAll("[data-condition]").forEach(button => button.classList.toggle("selected", button === sourceButton && state.condition === value));
   }
 
+  function forecastEvidenceLabel(record) {
+    const evidence=record.forecastEvidence||record.snapshot?.forecastEvidence;
+    return evidence?.status==='verified-advance'?'Verified advance forecast':evidence?.status==='unverified-comparison'?'Unverified comparison - no advance archive':'Advance forecast not verified (legacy record)';
+  }
   function capitalise(value) { const text = String(value || "unknown"); return text ? `${text[0].toUpperCase()}${text.slice(1)}` : "Unknown"; }
   function clockLabel(value) { const [hourText, minute = "00"] = String(value || "").split(":"); const hour = Number(hourText); if (!Number.isFinite(hour)) return "unknown time"; const suffix = hour >= 12 ? "pm" : "am"; return `${hour % 12 || 12}:${minute} ${suffix}`; }
   function windContextFor(snapshot) {
@@ -259,7 +263,8 @@
     $("obsTideRangeDetail").textContent = tide.before?.heightM != null && tide.after?.heightM != null ? `${Number(tide.before.heightM).toFixed(2)} m ${String(tide.before.type).toLowerCase()} → ${Number(tide.after.heightM).toFixed(2)} m ${String(tide.after.type).toLowerCase()}` : "Range unavailable";
     $("obsSelectedTimeCard").classList.remove("loading", "error");
     $("obsSelectedTimeCard").classList.add("ready");
-    $("obsTimeMatch").textContent = `✓ Matched ${spot.name} data: ${formatFt(prediction)} ft · ${wind.label} · ${tide.positionLabel}`;
+    $("obsForecastEvidence").textContent=forecastEvidenceLabel(state.snapshot)+(state.snapshot.forecastEvidence?.status==='verified-advance'?'.':'. This comparison is not verified advance-forecast accuracy.');
+    $("obsTimeMatch").textContent = `${state.snapshot.archiveReference ? `Archived ${dateTime(state.snapshot.archiveReference.sealedAt)} Adelaide · ` : (demoMode ? "Synthetic preview · " : "Unverified current-report comparison · ")}✓ Matched ${spot.name} data: ${formatFt(prediction)} ft · ${wind.label} · ${tide.positionLabel}`;
     document.querySelectorAll("[data-delta]").forEach(button => {
       const result = clamp(roundQuarter(prediction + Number(button.dataset.delta)), 0, 8);
       button.querySelector("[data-result]").textContent = `${formatFt(result)} ft`;
@@ -283,6 +288,7 @@
     $("obsSelectedTimeCard").classList.remove("ready", "error");
     $("obsSelectedTimeCard").classList.add("loading");
     $("obsTimeMatch").textContent = `Loading wave, wind and tide for ${observationTimeLabel(observedAt)}...`;
+    $("obsForecastEvidence").textContent=spot.slug==='middleton'?'Middleton uses an unverified current-report comparison until advance archives are supported.':'Matching a verified archive recorded before the observation.';
     $("obsPrediction").textContent = "--";
     $("obsForecastTime").textContent = `Loading ${spot.name} data for ${observationTimeLabel(observedAt)}...`;
     $("obsSave").disabled = true;
@@ -302,7 +308,7 @@
       $("obsSave").textContent = "Prediction unavailable";
       $("obsSelectedTimeCard").classList.remove("loading", "ready");
       $("obsSelectedTimeCard").classList.add("error");
-      $("obsTimeMatch").textContent = `Could not load ${spot.name} data for ${observationTimeLabel(observedAt)}.`;
+      $("obsTimeMatch").textContent = spot.slug==='middleton'?`Current Middleton comparison unavailable for ${observationTimeLabel(observedAt)}. No verified advance archive is available.`:`No valid pre-observation archive available for ${observationTimeLabel(observedAt)}. No later forecast substituted.`;
       setMessage("obsSaveMessage", error.message, "error");
     }
   }
@@ -322,12 +328,11 @@
   }
 
   function useCustomTime() {
-    const selected = new Date($("obsDateTime").value);
-    const now = new Date();
-    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    if (!Number.isFinite(selected.getTime()) || selected > now || selected < startOfToday) {
-      setMessage("obsSaveMessage", "Choose a time from today that is not in the future.", "error");
-      return;
+    let selected;
+    try { selected = new Date(adelaideInstant($("obsDateTime").value, $("obsDstOccurrence").value)); }
+    catch(error) { setMessage("obsSaveMessage", error.message, "error"); return; }
+    if (+selected > Date.now() || Date.now() - selected > 48 * 3600000) {
+      setMessage("obsSaveMessage", "Choose an Adelaide time within the previous 48 hours, not in the future.", "error"); return;
     }
     state.timeOffsetMinutes = null;
     state.customObservedAt = selected.toISOString();
@@ -379,8 +384,10 @@
   function renderAnalysis() {
     const container = $("obsAnalysis");
     const count = state.records.length;
+    const verified=state.records.filter(r=>(r.forecastEvidence||r.snapshot?.forecastEvidence)?.status==='verified-advance').length;
+    const evidenceSummary=`<p class="obs-help">${verified} verified advance checks; ${count-verified} unverified comparisons or legacy records. These comparison statistics are not verified advance-forecast accuracy; use the private research dashboard for that evaluation.</p>`;
     if (count < 30) {
-      container.innerHTML = `<div class="obs-locked"><b>${30 - count} more observations before the first full report</b><p>Early results are deliberately held back so a few unusual days do not lead us to change the calculation too soon.</p></div>`;
+      container.innerHTML = evidenceSummary+`<div class="obs-locked"><b>${30 - count} more observations before the first full report</b><p>Early results are deliberately held back so a few unusual days do not lead us to change the calculation too soon.</p></div>`;
       return;
     }
     const errors = state.records.map(record => Number(record.errorFt));
@@ -396,10 +403,10 @@
     const allGroups = [...direction, ...period, ...tide, ...tideRange, ...wind].filter(group => group.count >= 4 && Math.abs(group.bias) >= 0.3).sort((a, b) => Math.abs(b.bias) - Math.abs(a.bias));
     const suggestions = allGroups.slice(0, 4).map(group => `${group.bias > 0 ? "The report tends to underestimate" : "The report tends to overestimate"} by ${Math.abs(group.bias).toFixed(2)} ft during ${group.name.toLowerCase()} ${group.category} conditions (${group.count} observations). Test a ${group.bias > 0 ? "small increase" : "small reduction"} for this band against the full saved dataset before publishing.`);
     const milestone = count >= 100 ? 100 : count >= 60 ? 60 : 30;
-    container.innerHTML = `<span class="obs-eyebrow">${milestone}-observation report · ${count} total</span><div class="obs-analysis-summary"><div class="obs-metric"><small>Mean error</small><b>${mae.toFixed(2)} ft</b></div><div class="obs-metric"><small>Average bias</small><b>${bias >= 0 ? "+" : ""}${bias.toFixed(2)} ft</b></div><div class="obs-metric"><small>Exact ±0.25</small><b>${Math.round(exact)}%</b></div><div class="obs-metric"><small>Within ±0.5</small><b>${Math.round(withinHalf)}%</b></div></div><div class="obs-analysis-grid">${breakdownHtml("Swell direction", direction)}${breakdownHtml("Swell period", period)}${breakdownHtml("Tide movement", tide)}${breakdownHtml("Tide range", tideRange)}${breakdownHtml("Wind conditions", wind)}</div><h3 style="margin-top:18px">Suggested calibration checks</h3>${suggestions.length ? `<ul class="obs-suggestions">${suggestions.map(text => `<li>${escapeHtml(text)}</li>`).join("")}</ul>` : `<p>No condition group has a large enough repeated bias yet. Keep collecting a wider spread of conditions.</p>`}`;
+    container.innerHTML = evidenceSummary+`<span class="obs-eyebrow">${milestone}-observation report · ${count} total</span><div class="obs-analysis-summary"><div class="obs-metric"><small>Mean error</small><b>${mae.toFixed(2)} ft</b></div><div class="obs-metric"><small>Average bias</small><b>${bias >= 0 ? "+" : ""}${bias.toFixed(2)} ft</b></div><div class="obs-metric"><small>Exact ±0.25</small><b>${Math.round(exact)}%</b></div><div class="obs-metric"><small>Within ±0.5</small><b>${Math.round(withinHalf)}%</b></div></div><div class="obs-analysis-grid">${breakdownHtml("Swell direction", direction)}${breakdownHtml("Swell period", period)}${breakdownHtml("Tide movement", tide)}${breakdownHtml("Tide range", tideRange)}${breakdownHtml("Wind conditions", wind)}</div><h3 style="margin-top:18px">Suggested calibration checks</h3>${suggestions.length ? `<ul class="obs-suggestions">${suggestions.map(text => `<li>${escapeHtml(text)}</li>`).join("")}</ul>` : `<p>No condition group has a large enough repeated bias yet. Keep collecting a wider spread of conditions.</p>`}`;
   }
 
-  function dateTime(value) { return new Intl.DateTimeFormat("en-AU", { timeZone: "Australia/Adelaide", day: "numeric", month: "short", hour: "numeric", minute: "2-digit" }).format(new Date(value)); }
+  function dateTime(value) { return new Intl.DateTimeFormat("en-AU", { timeZone: "Australia/Adelaide", year: "numeric", day: "numeric", month: "short", hour: "numeric", minute: "2-digit" }).format(new Date(value)); }
   function renderHistory() {
     const container = $("obsHistory");
     if (!state.records.length) { container.innerHTML = `<div class="obs-empty">No observations yet. Your first beach check will appear here.</div>`; return; }
@@ -410,7 +417,7 @@
       const wind = windContextFor(record.snapshot);
       const tide = tideContextFor(record.snapshot);
       const tideHeight = Number.isFinite(Number(tide.heightM)) ? `${Number(tide.heightM).toFixed(2)} m` : "height unavailable";
-      return `<article class="obs-record" data-record="${escapeHtml(record.id)}"><div class="obs-record-size ${errorClass}">${escapeHtml(errorText)}</div><div><b>Actual ${formatFt(record.actualFt)} ft · predicted ${formatFt(record.predictedFt)} ft</b><small>${escapeHtml(dateTime(record.observedAt))}${record.condition ? ` · ${escapeHtml(record.condition)}` : ""} · ${escapeHtml(record.calculationVersion)}</small><small class="obs-record-context">${escapeHtml(wind.label)} · ${escapeHtml(tide.positionLabel)} · ${escapeHtml(tideHeight)} · ${escapeHtml(tide.rangeLabel)}</small></div><div class="obs-record-actions"><button type="button" data-edit="${escapeHtml(record.id)}">Edit</button><button type="button" data-delete="${escapeHtml(record.id)}" class="${armed ? "delete-armed" : ""}">${armed ? "Tap again to delete" : "Delete"}</button></div></article>`;
+      return `<article class="obs-record" data-record="${escapeHtml(record.id)}"><div class="obs-record-size ${errorClass}">${escapeHtml(errorText)}</div><div><b>Actual ${formatFt(record.actualFt)} ft · predicted ${formatFt(record.predictedFt)} ft</b><small>${escapeHtml(dateTime(record.observedAt))}${record.condition ? ` · ${escapeHtml(record.condition)}` : ""} · ${escapeHtml(record.calculationVersion)}</small><small>${escapeHtml(forecastEvidenceLabel(record))}</small><small>Confidence: ${escapeHtml(record.evaluationDetails?.observationConfidence||"Not specified")} · Typical: ${record.evaluationDetails?.typicalFt == null ? "—" : formatFt(record.evaluationDetails.typicalFt)+" ft"} · Occasional sets: ${record.evaluationDetails?.occasionalSetFt == null ? "—" : formatFt(record.evaluationDetails.occasionalSetFt)+" ft"}</small><small class="obs-record-context">${escapeHtml(wind.label)} · ${escapeHtml(tide.positionLabel)} · ${escapeHtml(tideHeight)} · ${escapeHtml(tide.rangeLabel)}</small></div><div class="obs-record-actions"><button type="button" data-edit="${escapeHtml(record.id)}">Edit</button><button type="button" data-delete="${escapeHtml(record.id)}" class="${armed ? "delete-armed" : ""}">${armed ? "Tap again to delete" : "Delete"}</button></div></article>`;
     }).join("");
   }
 
@@ -418,12 +425,15 @@
     const record = state.records.find(item => item.id === id);
     if (!record) return;
     state.editingId = id; state.condition = record.condition || ""; state.saved = false;
-    $("obsEvaluation").hidden = true; $("obsQuickDetails").hidden = true;
+    $("obsEvaluation").hidden = false; $("obsQuickDetails").hidden = false;
     state.timeOffsetMinutes = null; state.customObservedAt = record.observedAt; state.snapshot = record.snapshot;
     renderSelectedTime();
     $("obsDateTime").value = toDateTimeInput(record.observedAt);
     renderSnapshot();
     selectActual(record.actualFt);
+    state.validationStatus = record.validationStatus || 'unspecified';
+    const details=record.evaluationDetails||{};
+    for(const [id,key] of Object.entries({obsTypical:'typicalFt',obsSets:'occasionalSetFt',obsConfidence:'observationConfidence',obsSizeDefinition:'measurementDefinition',obsActualMeaning:'actualValueMeaning',obsObserverLabel:'observerLabel',obsLocalFactors:'unusualLocalFactors'})) $(id).value=details[key]??(id==='obsConfidence'||id==='obsSizeDefinition'?'unknown':id==='obsActualMeaning'?'unspecified':'');
     document.querySelectorAll("[data-condition]").forEach(button => button.classList.toggle("selected", button.dataset.condition === state.condition));
     $("obsCancelEdit").classList.remove("obs-hidden");
     $("obsSave").textContent = "Save changes";
@@ -460,19 +470,26 @@
     if (!state.snapshot || state.actualFt == null || state.saved) return;
     const button = $("obsSave"); button.disabled = true; button.textContent = state.editingId ? "Saving changes…" : "Saving observation…";
     try {
+      const snapshotInput=state.snapshot.schemaVersion===4?{schemaVersion:4,observedAt:state.snapshot.observedAt,archiveReference:{id:state.snapshot.archiveReference.id}}:state.snapshot;
+      const evaluationDetails={measurementDefinition:$("obsSizeDefinition").value,actualValueMeaning:$("obsActualMeaning").value,
+        typicalFt:$("obsTypical").value,occasionalSetFt:$("obsSets").value,observationConfidence:$("obsConfidence").value,
+        observerLabel:$("obsObserverLabel").value,unusualLocalFactors:$("obsLocalFactors").value};
+      const sizes=['typicalFt','occasionalSetFt'].map(key=>evaluationDetails[key]===''?null:Number(evaluationDetails[key]));
+      if(sizes.some(value=>value!==null&&(!Number.isFinite(value)||value<0||value>8)))throw new Error('Observed sizes must be between 0 and 8 ft');
+      if(sizes[0]!==null&&sizes[1]!==null&&sizes[1]<sizes[0])throw new Error('Occasional sets cannot be smaller than typical surf');
+      if(!['unknown','low','medium','high'].includes(evaluationDetails.observationConfidence))throw new Error('Choose a valid observation confidence');
+      const target=evaluationDetails.actualValueMeaning==='typical'?sizes[0]:evaluationDetails.actualValueMeaning==='occasional-sets'?sizes[1]:null;
+      if(target!==null&&Math.abs(target-state.actualFt)>.01)throw new Error('The size definition must match the actual size entered above');
       if (state.editingId) {
-        const result = await request(apiRecordUrl(state.editingId), { method: "PUT", body: JSON.stringify({ actualFt: state.actualFt, condition: state.condition, observedAt: state.snapshot.observedAt || selectedObservedAt(), snapshot: state.snapshot }) });
+        const result = await request(apiRecordUrl(state.editingId), { method: "PUT", body: JSON.stringify({ actualFt: state.actualFt, condition: state.condition, ...(state.snapshot.observedAt !== state.records.find(r=>r.id===state.editingId)?.observedAt ? {observedAt:state.snapshot.observedAt,snapshot:snapshotInput}:{}), evaluationDetails, validationStatus:state.validationStatus }) });
         state.records = state.records.map(record => record.id === state.editingId ? result.observation : record);
         setMessage("obsSaveMessage", "Observation updated.", "success"); cancelEdit();
       } else {
-        const evaluationDetails={measurementDefinition:$("obsSizeDefinition").value,actualValueMeaning:$("obsActualMeaning").value,
-          typicalFt:$("obsTypical").value,occasionalSetFt:$("obsSets").value,observationConfidence:$("obsConfidence").value,
-          observerLabel:$("obsObserverLabel").value,unusualLocalFactors:$("obsLocalFactors").value};
-        const result = await request(API, { method: "POST", body: JSON.stringify({ actualFt: state.actualFt, condition: state.condition, observedAt: state.snapshot.observedAt || selectedObservedAt(), clientToken: state.clientToken, snapshot: state.snapshot, evaluationDetails, validationStatus: state.validationStatus }) });
+        const result = await request(API, { method: "POST", body: JSON.stringify({ actualFt: state.actualFt, condition: state.condition, observedAt: state.snapshot.observedAt || selectedObservedAt(), clientToken: state.clientToken, snapshot: snapshotInput, evaluationDetails, validationStatus: state.validationStatus }) });
         if (!state.records.some(record => record.id === result.observation.id)) state.records.unshift(result.observation);
         state.saved = true;
         button.textContent = result.deduplicated ? "Already saved ✓" : "Saved ✓";
-        setMessage("obsSaveMessage", result.deduplicated ? "This observation was already saved—no duplicate was created." : "Saved with the full forecast snapshot.", "success");
+        setMessage("obsSaveMessage", result.deduplicated ? "This observation was already saved—no duplicate was created." : result.observation.forecastEvidence?.status==='unverified-comparison'?"Saved with an unverified comparison. No advance forecast is claimed.":"Saved with the full forecast snapshot.", "success");
       }
       renderProgress(); renderAnalysis(); renderHistory();
     } catch (error) {
@@ -513,6 +530,7 @@
     $("obsLoginForm").addEventListener("submit", login);
     $("obsLogout").addEventListener("click", logout);
     $("obsForm").addEventListener("submit", saveObservation);
+    ["obsConfidence","obsTypical","obsSets","obsSizeDefinition","obsActualMeaning","obsObserverLabel","obsLocalFactors"].forEach(id=>$(id).addEventListener('input',()=>{state.saved=false;$("obsSave").disabled=!state.snapshot;$("obsSave").textContent=state.editingId?'Save changes':'Save observation';}));
     $("obsCancelEdit").addEventListener("click", cancelEdit);
     $("obsTimes").addEventListener("click", event => { const quick = event.target.closest("[data-time-offset]"); const custom = event.target.closest("[data-time-custom]"); if (quick) chooseQuickTime(quick.dataset.timeOffset); if (custom) showCustomTime(); });
     $("obsUseTime").addEventListener("click", useCustomTime);

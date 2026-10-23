@@ -1,0 +1,16 @@
+# Frenchy Surf Report 3.1 — review only
+
+Branch: `codex/surf-report-3-1-observations`. No deployment or production configuration change is authorized by this PR.
+
+- Observation times use Australia/Adelaide regardless of device timezone. UTC values include an explicit offset; repeated autumn times require choosing the ACDT or ACST occurrence, and nonexistent spring times are rejected. Custom time selection spans the preceding 48 elapsed hours across midnight/DST.
+- The authenticated observation API reads existing sealed archives, verifies payload hashes and returns stored production output. It never fetches a new provider response as historical evidence. Save re-resolves authoritative archive data. Missing/stale/corrupt/post-observation archives show an unavailable message; saving waits for valid evidence. The existing prospective 10-minute minimum lead, six-hour archive-to-check horizon and 30-minute valid-row tolerance remain in place.
+- The existing collector currently archives Seaford only. Middleton retains its current-report comparison workflow, explicitly marked unverified advance evidence. It never claims this comparison was archived before the observation. Extending collector coverage remains a separate reviewed scope.
+- Confidence now remains accessible when editing, is hydrated from the saved record, submitted on update, validated against its enum and shown in history. Native options use readable colours and short labels on mobile. Separate optional typical/set sizes survive create/edit/display; contradictory sizes are rejected. Original evaluation metadata is retained in revision history. Legacy observation edits preserve their original time/snapshot when only metadata changes.
+- Historical observations, archives, the 31 original research events, collection cadence and retention are not migrated, deleted or shortened. The 48-hour limit applies to entering a new observation, not archive retention.
+- Period research consults all original memory records, compares controlled 9/14-second inputs in private copies and reports negative as well as positive arithmetic historical sensitivities. Populated results remain private, with a new local append-only finding; no evidence/model is seeded to production by this PR. No candidate is promoted.
+
+Preview: run `node research/memory/preview.mjs ../frenchy-research-private 4188`; owner-only loopback routes `/observe`, `/research`, `/research/period`. Observation UI fixture saves stay in that browser's local storage; no production database is involved. The full server handlers are tested separately with isolated stores. No HTTPS deployment is made. Opening a localhost server from a tool environment may require launching it in normal Windows PowerShell; never claim browser QA succeeded until verified there.
+
+Browser QA and the current production NO-GO decision are recorded in [observations-31-qa.md](observations-31-qa.md). Middleton archive coverage is a release blocker, not a passed observation workflow.
+
+The Middleton compatibility blocker is resolved in the subsequent [release fix](observations-31-release-fix.md). Authenticated HTTPS validation subsequently passed on the isolated preview; separate production merge/deployment approval remains required.

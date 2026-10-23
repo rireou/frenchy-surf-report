@@ -26,3 +26,11 @@ body.observation-mode>.wrap{display:none}
 
 /* Keep the isolated observation form independent of the public shell reset. */
 body.observation-mode{margin:0}.observation-root,.observation-root *{box-sizing:border-box}
+
+/* Native confidence/date controls remain usable on narrow Android screens. */
+.obs-input option{background:#041d26;color:#fff}.obs-time-custom{display:flex;flex-wrap:wrap}.obs-time-custom .obs-input{min-width:0;max-width:100%;flex:1 1 220px}.obs-time-custom .obs-primary{flex:1 1 180px}
+
+@media(max-width:430px){.obs-selected-time-card.ready::after{position:static;display:inline-block;margin-top:10px}}
+
+/* Keep sign-out available on phones without altering the public report. */
+@media(max-width:760px){.obs-header-actions #obsLogout{display:inline-flex;align-items:center;justify-content:center;min-height:44px}.obs-header-actions:has(#obsLogout:not(.obs-hidden)) .obs-location-switch{flex-basis:100%}}

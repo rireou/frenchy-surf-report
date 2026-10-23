@@ -1,0 +1,9 @@
+{
+  "purpose": "Observation metadata/time integrity and private period investigation; no production forecast formula change",
+  "consultedLedgerSha256": "eedd7b891389329569f9718e7afe4463fccfcf89682ef3113a3f752b99c6aed9",
+  "consultedOriginalRecords": 31,
+  "consultedFindingIds": ["pr72-period-tide", "phase2-model-period-bounded", "phase2-model-period-proportional", "phase2-retain-decision", "pr72-preserve-calibration", "prospective-protocol-v1"],
+  "decision": "Retain public baseline; fixed private sensitivities do not justify promotion. Consult the full private ledger and new local period finding for results and uncertainty.",
+  "publicForecastFilesChanged": false,
+  "deploymentApproved": false
+}
