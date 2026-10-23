@@ -1,0 +1,8 @@
+{
+  "privateLedgerDigest": "39d6dd9eb6485ef2041ebd21e33ca4d2215d7cc1399958d616673f75431a2398",
+  "consultedFindingIds": [
+    "pr72-preserve-calibration"
+  ],
+  "rationale": "Only hide the viewingTimeLabel markup in both static shells. No formula, coefficient, provider or scientific conclusion changes; forecast parity is required.",
+  "productionChangeApproved": false
+}
