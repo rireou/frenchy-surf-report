@@ -41,7 +41,8 @@ test('observation interface clearly confirms and guards the selected time', () =
   assert.match(source, /Selected observation time/);
   assert.match(source, /Matched \$\{spot\.name\} data/);
   assert.match(source, /snapshotRequestId/);
-  assert.match(source, /api\/surf-reports\/\$\{encodeURIComponent\(spot\.slug\)\}\.json\?full=1&at=/);
+  assert.match(source, /action=snapshot&at=/);
+  assert.doesNotMatch(source, /api\/surf-reports/);
   assert.match(source, /Loading wave, wind and tide/);
   assert.match(source, /scrollIntoView/);
 });

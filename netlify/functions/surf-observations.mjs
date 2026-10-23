@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { isObservationAdmin, verifySameOrigin } from "../lib/observation-auth.mjs";
 import { validateEvaluationDetails } from "../lib/observation-evaluation.mjs";
+import { resolveArchivedObservation } from "../lib/observation-archive.mjs";
 import { observationStore } from "../lib/observation-store.mjs";
 
 const SCHEMA_VERSION = 3;
@@ -34,12 +35,13 @@ function cleanText(value, max = 500) {
 }
 
 function validateObservedAt(value, maxAgeMs = MAX_NEW_OBSERVATION_AGE_MS) {
+  if(!/Z$|[+-]\d\d:\d\d$/.test(value||""))throw new Error("Observation timestamps must include UTC or an explicit offset");
   const timestamp = new Date(value);
   const time = timestamp.getTime();
   if (!Number.isFinite(time)) throw new Error("Choose a valid observation time");
   const age = Date.now() - time;
   if (age < -MAX_FUTURE_SKEW_MS) throw new Error("The observation time cannot be in the future");
-  if (age > maxAgeMs) throw new Error("Choose an observation time from today or yesterday");
+  if (age > maxAgeMs) throw new Error("Choose an observation time within the previous 48 hours");
   return timestamp.toISOString();
 }
 
@@ -155,7 +157,7 @@ function validateUpdate(input, current) {
   const actualFt = finiteNumber(input.actualFt, 0, 8);
   if (actualFt == null) throw new Error("Choose the actual wave size");
   const condition = ["clean", "average", "messy", ""].includes(input.condition) ? input.condition : "";
-  const result = { actualFt, condition, note: cleanText(input.note, 300) };
+  const result = { actualFt, condition, note: cleanText(input.note ?? current.note, 300) };
   if (input.observedAt != null || input.snapshot != null) {
     const observedAt = validateObservedAt(input.observedAt, 400 * 24 * 60 * 60 * 1000);
     const snapshot = cleanJson(input.snapshot);
@@ -166,10 +168,16 @@ function validateUpdate(input, current) {
     validateSnapshotTime(snapshot, observedAt);
     Object.assign(result, { observedAt, snapshot, predictedFt, calculationVersion: cleanText(snapshot?.calculationVersion || current.calculationVersion || "unknown", 100), schemaVersion: SCHEMA_VERSION, location });
   }
+  if(input.evaluationDetails!==undefined)result.evaluationDetails=validateEvaluationDetails(input.evaluationDetails,actualFt);
+  if(input.validationStatus!==undefined) {
+    if(!['confirmed','corrected','unspecified'].includes(input.validationStatus))throw Error('Invalid validation status');
+    if(input.validationStatus==='confirmed' && Math.abs(actualFt-Number(result.predictedFt??current.predictedFt))>0.000001)throw Error('A confirmed check must preserve the model value');
+    result.validationStatus=input.validationStatus;
+  }
   return result;
 }
 
-export function createObservationHandler({openStore=observationStore,authorize=isObservationAdmin}={}) {
+export function createObservationHandler({openStore=observationStore,authorize=isObservationAdmin,resolveArchive=resolveArchivedObservation}={}) {
 return async (request, context) => {
   if (!authorize(request)) return send(401, { error: "Please log in to the observation page." });
   const database=openStore(context),store=()=>database;
@@ -178,6 +186,10 @@ return async (request, context) => {
   const requestedSlug = requestedLocation.toLowerCase();
 
   if (request.method === "GET") {
+    if(url.searchParams.get('action')==='snapshot') {
+      try{return send(200,{observation:await resolveArchive({context,location:requestedLocation,observedAt:url.searchParams.get('at')})});}
+      catch(error){return send(error.status||503,{error:error.status?error.message:'Historical archive is temporarily unavailable',code:error.code||'ARCHIVE_UNAVAILABLE'});}
+    }
     const records = await listObservations(store, requestedLocation);
     const format = url.searchParams.get("format");
     if (format === "csv") {
@@ -195,6 +207,13 @@ return async (request, context) => {
   let input;
   try { input = JSON.parse(raw || "{}"); } catch { return send(400, { error: "Invalid request" }); }
 
+  if ((request.method==='POST'||request.method==='PUT') && input.snapshot?.schemaVersion===4) {
+    try {
+      // Resolve authoritative stored bytes again; never trust client-edited predictions or provenance.
+      const snapshot=await resolveArchive({context,location:requestedLocation,observedAt:input.observedAt});
+      input.snapshot=snapshot;
+    } catch(error) {return send(error.status||503,{error:error.status?error.message:'Historical archive is temporarily unavailable',code:error.code||'ARCHIVE_UNAVAILABLE'});}
+  }
   if (request.method === "POST") {
     let validated;
     try { validated = validateCreate(input); } catch (error) { return send(400, { error: error.message }); }
@@ -258,10 +277,10 @@ return async (request, context) => {
     // An edit is not another explicit Looks right/Correct it validation. Preserve
     // the original research target/status before clearing now-ambiguous details.
     const researchChanged=updated.actualFt!==current.actualFt||updated.predictedFt!==current.predictedFt||updated.observedAt!==current.observedAt;
-    if(researchChanged&&(current.evaluationDetails||current.validationStatus)) {
+    if((researchChanged||JSON.stringify(updated.evaluationDetails)!==JSON.stringify(current.evaluationDetails)||updated.validationStatus!==current.validationStatus)&&(current.evaluationDetails||current.validationStatus)) {
       updated.evaluationHistory=[...(current.evaluationHistory||[]),{revision:current.revision,observedAt:current.observedAt,actualFt:current.actualFt,predictedFt:current.predictedFt,validationStatus:current.validationStatus||'unspecified',evaluationDetails:current.evaluationDetails||null}];
-      if(current.evaluationDetails)updated.evaluationDetails=validateEvaluationDetails({measurementDefinition:current.evaluationDetails.measurementDefinition,observerLabel:current.evaluationDetails.observerLabel});
-      updated.validationStatus='unspecified';
+      if(researchChanged && input.evaluationDetails===undefined && current.evaluationDetails)updated.evaluationDetails=validateEvaluationDetails({measurementDefinition:current.evaluationDetails.measurementDefinition,observerLabel:current.evaluationDetails.observerLabel});
+      if(researchChanged && input.validationStatus===undefined)updated.validationStatus='unspecified';
     }
     await store().setJSON(`observations/${id}`, updated);
     return send(200, { observation: updated });

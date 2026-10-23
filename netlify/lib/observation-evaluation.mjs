@@ -4,7 +4,8 @@ export function validateEvaluationDetails(value, actualFt=null) {
   if(value==null)return undefined;
   if(typeof value!=='object'||Array.isArray(value))throw Error('Invalid observation evaluation details');
   const definition=['unknown','local-surf-feet','wave-face-feet'].includes(value.measurementDefinition)?value.measurementDefinition:'unknown';
-  const confidence=['unknown','low','medium','high'].includes(value.observationConfidence)?value.observationConfidence:'unknown';
+  if(value.observationConfidence!=null&&!['unknown','low','medium','high'].includes(value.observationConfidence))throw Error('Choose a valid observation confidence');
+  const confidence=value.observationConfidence||'unknown';
   const target=['unspecified','typical','occasional-sets'].includes(value.actualValueMeaning)?value.actualValueMeaning:'unspecified';
   const size=key=>{if(value[key]==null||value[key]==='')return null;const n=finite(value[key],0,8);if(n==null)throw Error('Observed sizes must be between 0 and 8 ft');return n;};
   let typicalFt=size('typicalFt'),occasionalSetFt=size('occasionalSetFt');

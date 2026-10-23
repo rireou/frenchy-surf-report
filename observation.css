@@ -26,3 +26,6 @@ body.observation-mode>.wrap{display:none}
 
 /* Keep the isolated observation form independent of the public shell reset. */
 body.observation-mode{margin:0}.observation-root,.observation-root *{box-sizing:border-box}
+
+/* Native confidence/date controls remain usable on narrow Android screens. */
+.obs-input option{background:#041d26;color:#fff}.obs-time-custom{flex-wrap:wrap}.obs-time-custom .obs-input{min-width:0;max-width:100%;flex:1 1 220px}
