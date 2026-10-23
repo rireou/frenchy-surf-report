@@ -1,5 +1,7 @@
 # Frenchy 3.1: Middleton compatibility fix
 
+Current status: GO for owner release approval. The isolated HTTPS test passed; production is unchanged.
+
 This follow-up supersedes the Middleton blocker in observations-31-qa.md. The earlier QA report remains an accurate record of the pre-fix state.
 
 ## Behavior
@@ -23,3 +25,17 @@ Read-only production checks preserve the original 333 observation/Beach Check ob
 ## Release gate
 
 The local Middleton blocker is fixed. Production remains NO-GO until this revision passes an isolated authenticated HTTPS preview and the owner separately approves a release. No merge or deployment is authorized by this document. The current mission explicitly says not to deploy until approved; preparing a new immutable HTTPS preview therefore requires preview-only approval. Existing preview credentials and deploy-specific synthetic stores must be used, never production data/secrets. Automatic collection must remain disabled in the preview and unchanged in production.
+
+## Authenticated HTTPS verification completed
+
+The owner subsequently approved the isolated preview only. Runtime commit 22884be was deployed to the existing separate phone-preview project as draft deployment 6adaf72d8c6e269ee93f0e0c. Preview URL: https://research-pr74--frenchy-phone-preview-20261003.netlify.app/observe (Middleton: /observe-middleton). It was not published to production or merged.
+
+All 12 hosted test groups passed across 51 requests: anonymous rejection, login and secure host-only cookies, wrong password, foreign origin, forged/expired sessions, the 47-hour Seaford archive lookup, both confirmation/correction statuses at both spots, cloud reread/edit/export, frozen snapshots, production-ID isolation, protected assets, disabled preview collection and logout. Two clearly marked synthetic archive fixtures were seeded only into the deploy-specific private preview store. They are not real forecasts or timer executions. No actual observation or research data was copied.
+
+Browser tests on the actual HTTPS origin also passed: login; historical Seaford selection/save/reload/edit; current Middleton confirmation/save/reload/edit with the unverified label; confidence and distinct typical/set fields; and both authenticated forms at 320, 360, 390, 768 and 1440 px. The authenticated research panel confirmed disabled preview collection and no real research/model imports. No browser warning/error console messages were captured. A separate synthetic legacy Middleton cloud record retained its old UTC time and snapshot through a metadata edit.
+
+Preview storage audit: 17 small test objects, 223964 logical bytes, all observation identities explicitly synthetic. No paid service, subscription or auto-recharge was enabled. The before/after production audit again matched all 333 original observation/Beach Check objects and all 31 original research records, with unchanged hashes, published deployment and frozen Model D. Automatic Seaford archiving remained healthy and unchanged.
+
+Final recommendation: GO for owner review and separate production-release approval. The Middleton blocker and authenticated HTTPS gate have passed. Physical Samsung Internet/device-keyboard testing remains an explicit limitation; phone-sized Chromium browser testing passed. No production merge or deployment is authorized by this recommendation.
+
+Known existing usability issue: the observation stylesheet hides the Log out header button at phone widths. Desktop browser logout and API cookie clearing passed; the unchanged mobile hiding rule predates this PR. This is recorded separately from the resolved archive/observation blocker.
