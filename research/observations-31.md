@@ -12,3 +12,5 @@ Branch: `codex/surf-report-3-1-observations`. No deployment or production config
 Preview: run `node research/memory/preview.mjs ../frenchy-research-private 4188`; owner-only loopback routes `/observe`, `/research`, `/research/period`. Observation UI fixture saves stay in that browser's local storage; no production database is involved. The full server handlers are tested separately with isolated stores. No HTTPS deployment is made. Opening a localhost server from a tool environment may require launching it in normal Windows PowerShell; never claim browser QA succeeded until verified there.
 
 Browser QA and the current production NO-GO decision are recorded in [observations-31-qa.md](observations-31-qa.md). Middleton archive coverage is a release blocker, not a passed observation workflow.
+
+The Middleton compatibility blocker is resolved in the subsequent [release fix](observations-31-release-fix.md). Authenticated HTTPS validation and separate production approval remain release gates.

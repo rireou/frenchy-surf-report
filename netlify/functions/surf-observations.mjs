@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { isObservationAdmin, verifySameOrigin } from "../lib/observation-auth.mjs";
 import { validateEvaluationDetails } from "../lib/observation-evaluation.mjs";
 import { resolveArchivedObservation } from "../lib/observation-archive.mjs";
+import {middletonComparison,snapshotEvidence} from "../lib/observation-comparison.mjs";
 import { observationStore } from "../lib/observation-store.mjs";
 
 const SCHEMA_VERSION = 3;
@@ -130,7 +131,7 @@ function csvExport(records) {
     ["tide_range_class", record => record.snapshot?.tide?.rangeClass], ["tide_range_label", record => record.snapshot?.tide?.rangeLabel],
     ["weather_code", record => record.snapshot?.weather?.weatherCode],
     ["temperature_c", record => record.snapshot?.weather?.temperatureC], ["calculation_snapshot_json", record => record.snapshot],
-    ["evaluation_details_json", record => record.evaluationDetails], ["evaluation_provenance_json", record => record.snapshot?.evaluationProvenance], ["validation_status", record => record.validationStatus]
+    ["evaluation_details_json", record => record.evaluationDetails], ["evaluation_provenance_json", record => record.snapshot?.evaluationProvenance], ["validation_status", record => record.validationStatus], ["forecast_evidence_status", record => record.forecastEvidence?.status || "not-verified-legacy"], ["forecast_evidence_json", record => record.forecastEvidence]
   ];
   return [columns.map(([name]) => csvCell(name)).join(","), ...records.map(record => columns.map(([, getter]) => csvCell(getter(record))).join(","))].join("\r\n");
 }
@@ -177,7 +178,7 @@ function validateUpdate(input, current) {
   return result;
 }
 
-export function createObservationHandler({openStore=observationStore,authorize=isObservationAdmin,resolveArchive=resolveArchivedObservation}={}) {
+export function createObservationHandler({openStore=observationStore,authorize=isObservationAdmin,resolveArchive=resolveArchivedObservation,resolveComparison=middletonComparison}={}) {
 return async (request, context) => {
   if (!authorize(request)) return send(401, { error: "Please log in to the observation page." });
   const database=openStore(context),store=()=>database;
@@ -187,8 +188,12 @@ return async (request, context) => {
 
   if (request.method === "GET") {
     if(url.searchParams.get('action')==='snapshot') {
-      try{return send(200,{observation:await resolveArchive({context,location:requestedLocation,observedAt:url.searchParams.get('at')})});}
-      catch(error){return send(error.status||503,{error:error.status?error.message:'Historical archive is temporarily unavailable',code:error.code||'ARCHIVE_UNAVAILABLE'});}
+      try{
+        const query={context,location:requestedLocation,observedAt:url.searchParams.get('at')};
+        const snapshot=requestedLocation==='Middleton'?await resolveComparison(query):snapshotEvidence(await resolveArchive(query),true);
+        return send(200,{observation:snapshot});
+      }
+      catch(error){return send(error.status||503,{error:error.status?error.message:(requestedLocation==='Middleton'?'Current report comparison is temporarily unavailable':'Historical archive is temporarily unavailable'),code:error.code||(requestedLocation==='Middleton'?'COMPARISON_UNAVAILABLE':'ARCHIVE_UNAVAILABLE')});}
     }
     const records = await listObservations(store, requestedLocation);
     const format = url.searchParams.get("format");
@@ -196,7 +201,7 @@ return async (request, context) => {
       return new Response(csvExport(records), { status: 200, headers: { "Content-Type": "text/csv; charset=utf-8", "Content-Disposition": `attachment; filename="${requestedSlug}-surf-observations-${new Date().toISOString().slice(0, 10)}.csv"`, "Cache-Control": "no-store" } });
     }
     if (format === "json") {
-      return new Response(JSON.stringify({ exportedAt: new Date().toISOString(), schemaVersion: SCHEMA_VERSION, location: requestedLocation, observations: records }, null, 2), { status: 200, headers: { "Content-Type": "application/json; charset=utf-8", "Content-Disposition": `attachment; filename="${requestedSlug}-surf-observations-${new Date().toISOString().slice(0, 10)}.json"`, "Cache-Control": "no-store" } });
+      return new Response(JSON.stringify({ exportedAt: new Date().toISOString(), schemaVersion: SCHEMA_VERSION, location: requestedLocation, forecastEvidencePolicy: "Missing forecastEvidence means advance availability is not verified; historical records have not been backfilled.", observations: records }, null, 2), { status: 200, headers: { "Content-Type": "application/json; charset=utf-8", "Content-Disposition": `attachment; filename="${requestedSlug}-surf-observations-${new Date().toISOString().slice(0, 10)}.json"`, "Cache-Control": "no-store" } });
     }
     return send(200, { observations: records, progress: milestoneProgress(records.length), collection: collectionProgress(records) });
   }
@@ -211,8 +216,12 @@ return async (request, context) => {
     try {
       // Resolve authoritative stored bytes again; never trust client-edited predictions or provenance.
       const snapshot=await resolveArchive({context,location:requestedLocation,observedAt:input.observedAt});
-      input.snapshot=snapshot;
+      input.snapshot=snapshotEvidence(snapshot,true);
     } catch(error) {return send(error.status||503,{error:error.status?error.message:'Historical archive is temporarily unavailable',code:error.code||'ARCHIVE_UNAVAILABLE'});}
+  }
+  if ((request.method==='POST'||request.method==='PUT') && input.snapshot && input.snapshot.schemaVersion!==4) {
+    // Legacy/current-report comparisons cannot self-assert verified archive status.
+    input.snapshot=snapshotEvidence(input.snapshot,false);
   }
   if (request.method === "POST") {
     let validated;
@@ -244,7 +253,7 @@ return async (request, context) => {
       timezone: "Australia/Adelaide", location: validated.location, actualFt: validated.actualFt,
       predictedFt: validated.predictedFt, errorFt: Number((validated.actualFt - validated.predictedFt).toFixed(2)),
       condition: validated.condition, note: validated.note, calculationVersion: validated.calculationVersion,
-      snapshot: validated.snapshot,
+      snapshot: validated.snapshot, forecastEvidence: validated.snapshot.forecastEvidence,
       ...(validated.evaluationDetails ? {evaluationDetails:validated.evaluationDetails} : {}),
       validationStatus: input.validationStatus === "confirmed" ? "confirmed" : input.validationStatus === "corrected" ? "corrected" : "unspecified",
       originalForecast: { predictedFt: validated.predictedFt, calculationVersion: validated.calculationVersion, snapshot: validated.snapshot }
@@ -270,6 +279,7 @@ return async (request, context) => {
     }
     const updated = {
       ...current, ...validated, updatedAt: new Date().toISOString(), revision: Number(current.revision || 1) + 1,
+      ...(validated.snapshot?{forecastEvidence:validated.snapshot.forecastEvidence}:{}),
       originalForecast: current.originalForecast || { predictedFt: current.predictedFt, calculationVersion: current.calculationVersion, snapshot: current.snapshot },
       forecastHistory: validated.snapshot ? [...(current.forecastHistory || []), { revision: current.revision, observedAt: current.observedAt, predictedFt: current.predictedFt, calculationVersion: current.calculationVersion, snapshot: current.snapshot }] : (current.forecastHistory || []),
       errorFt: Number((validated.actualFt - Number(validated.predictedFt ?? current.predictedFt)).toFixed(2))
