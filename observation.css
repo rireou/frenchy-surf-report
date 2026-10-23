@@ -34,3 +34,5 @@ body.observation-mode{margin:0}.observation-root,.observation-root *{box-sizing:
 
 /* Keep sign-out available on phones without altering the public report. */
 @media(max-width:760px){.obs-header-actions #obsLogout{display:inline-flex;align-items:center;justify-content:center;min-height:44px}.obs-header-actions:has(#obsLogout:not(.obs-hidden)) .obs-location-switch{flex-basis:100%}}
+
+#obsAdelaideTimeChoice{min-width:0;max-width:100%;flex:1 1 220px}#obsAdelaideTimeChoice:not(.obs-hidden){display:grid;gap:6px}

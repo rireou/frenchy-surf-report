@@ -5,7 +5,7 @@
   if (!observationMode) return;
 
   await import('/observation-time.js');
-  const {adelaideInput,adelaideInstant}=globalThis.FrenchyObservationTime;
+  const {adelaideInput,adelaideInstant,adelaideCandidates}=globalThis.FrenchyObservationTime;
   const demoMode = ["localhost", "127.0.0.1"].includes(location.hostname);
   const spotSlug = cleanPath.includes("middleton") || search.get("spot") === "middleton" ? "middleton" : "seaford";
   const spot = spotSlug === "middleton"
@@ -45,7 +45,7 @@
         <p class="obs-help" id="obsForecastEvidence" aria-live="polite"></p>
         <div class="obs-context-grid" id="obsCheckContext"><div class="obs-context-item"><small>Wind at check</small><b id="obsWindSummary">Loading wind…</b><span id="obsWindDetail">Direction and strength</span></div><div class="obs-context-item"><small>Tide position</small><b id="obsTideSummary">Loading tide…</b><span id="obsTideDetail">Height and next turn</span></div><div class="obs-context-item"><small>Tide change</small><b id="obsTideRange">Loading range…</b><span id="obsTideRangeDetail">Previous to next tide</span></div></div>
         <form id="obsForm" novalidate>
-          <fieldset class="obs-fieldset"><legend>1. Choose observation time <small>Australia/Adelaide · previous 48 hours</small></legend><div class="obs-chips obs-time-chips" id="obsTimes"><button class="obs-chip selected" type="button" data-time-offset="0"><strong>Now</strong><small>current time</small></button><button class="obs-chip" type="button" data-time-offset="30"><strong>30 min</strong><small>ago</small></button><button class="obs-chip" type="button" data-time-offset="60"><strong>1 hour</strong><small>ago</small></button><button class="obs-chip" type="button" data-time-offset="120"><strong>2 hours</strong><small>ago</small></button><button class="obs-chip" type="button" data-time-custom><strong>Choose</strong><small>date & time</small></button></div><div class="obs-other obs-time-custom obs-hidden" id="obsCustomTime"><input class="obs-input" id="obsDateTime" type="datetime-local" step="60" aria-label="Observation date and time in Adelaide"><select class="obs-input" id="obsDstOccurrence" aria-label="Repeated Adelaide daylight-saving time"><option value="">DST occurrence (if needed)</option><option value="earlier">Earlier · ACDT (UTC+10:30)</option><option value="later">Later · ACST (UTC+9:30)</option></select><button class="obs-primary" type="button" id="obsUseTime">Use this time</button></div><div class="obs-selected-time-card loading" id="obsSelectedTimeCard" aria-live="polite"><span>Selected observation time</span><strong id="obsSelectedTimePrimary">Now</strong><p id="obsSelectedTime">This observation will be saved at the current time.</p><div class="obs-time-match" id="obsTimeMatch">Loading wave, wind and tide for this time...</div></div></fieldset>
+          <fieldset class="obs-fieldset"><legend>1. Choose observation time <small>Australia/Adelaide · previous 48 hours</small></legend><div class="obs-chips obs-time-chips" id="obsTimes"><button class="obs-chip selected" type="button" data-time-offset="0"><strong>Now</strong><small>current time</small></button><button class="obs-chip" type="button" data-time-offset="30"><strong>30 min</strong><small>ago</small></button><button class="obs-chip" type="button" data-time-offset="60"><strong>1 hour</strong><small>ago</small></button><button class="obs-chip" type="button" data-time-offset="120"><strong>2 hours</strong><small>ago</small></button><button class="obs-chip" type="button" data-time-custom><strong>Choose</strong><small>date & time</small></button></div><div class="obs-other obs-time-custom obs-hidden" id="obsCustomTime"><input class="obs-input" id="obsDateTime" type="datetime-local" step="60" aria-label="Observation date and time in Adelaide"><label id="obsAdelaideTimeChoice" class="obs-hidden">Adelaide Time<select class="obs-input" id="obsDstOccurrence" aria-label="Adelaide Time"><option value="">Adelaide Time</option><option value="earlier">☀️ Summer Time (ACDT, UTC+10:30)</option><option value="later">❄️ Winter Time (ACST, UTC+9:30)</option></select></label><button class="obs-primary" type="button" id="obsUseTime">Use this time</button></div><div class="obs-selected-time-card loading" id="obsSelectedTimeCard" aria-live="polite"><span>Selected observation time</span><strong id="obsSelectedTimePrimary">Now</strong><p id="obsSelectedTime">This observation will be saved at the current time.</p><div class="obs-time-match" id="obsTimeMatch">Loading wave, wind and tide for this time...</div></div></fieldset>
           <fieldset class="obs-fieldset"><legend>Quick correction <small>fastest option</small></legend><div class="obs-chips" id="obsCorrections">${correctionChoices.map(choice => `<button class="obs-chip" type="button" data-delta="${choice.delta}"><strong>${choice.label}</strong><small data-result>--</small></button>`).join("")}</div></fieldset>
           <fieldset class="obs-fieldset"><legend>Or tap the actual size</legend><div class="obs-chips obs-size-chips" id="obsSizes">${sizeChoices.map(size => `<button class="obs-chip" type="button" data-size="${size}"><strong>${size}</strong><small>ft</small></button>`).join("")}<button class="obs-chip" type="button" data-size="other"><strong>Other</strong><small>type size</small></button></div><div class="obs-other obs-hidden" id="obsOther"><input class="obs-input" id="obsOtherSize" type="number" min="0" max="8" step="0.25" inputmode="decimal" placeholder="Actual size in feet"><button class="obs-primary" type="button" id="obsUseOther">Use</button></div></fieldset>
           <fieldset class="obs-fieldset"><legend>Wave quality <small>optional</small></legend><div class="obs-chips obs-condition-chips" id="obsQuality">${conditions.map(item => `<button class="obs-chip" type="button" data-condition="${item.value}"><strong>${item.label}</strong></button>`).join("")}</div></fieldset>
@@ -320,10 +320,16 @@
     refreshSnapshotForTime(true);
   }
 
+  function updateAdelaideTimeChoice() {
+    const ambiguous=adelaideCandidates($("obsDateTime").value).length===2;
+    $("obsAdelaideTimeChoice").classList.toggle("obs-hidden",!ambiguous);
+    $("obsDstOccurrence").value="";
+  }
   function showCustomTime() {
     $("obsCustomTime").classList.remove("obs-hidden");
     $("obsDateTime").value = toDateTimeInput(selectedObservedAt());
     $("obsDateTime").max = toDateTimeInput(new Date());
+    updateAdelaideTimeChoice();
     $("obsDateTime").focus();
   }
 
@@ -534,6 +540,8 @@
     $("obsCancelEdit").addEventListener("click", cancelEdit);
     $("obsTimes").addEventListener("click", event => { const quick = event.target.closest("[data-time-offset]"); const custom = event.target.closest("[data-time-custom]"); if (quick) chooseQuickTime(quick.dataset.timeOffset); if (custom) showCustomTime(); });
     $("obsUseTime").addEventListener("click", useCustomTime);
+    $("obsDateTime").addEventListener("input",updateAdelaideTimeChoice);
+    $("obsDateTime").addEventListener("change",updateAdelaideTimeChoice);
     $("obsDateTime").addEventListener("keydown", event => { if (event.key === "Enter") { event.preventDefault(); useCustomTime(); } });
     $("obsCorrections").addEventListener("click", event => { const button = event.target.closest("[data-delta]"); if (button && state.snapshot) selectActual(Number(state.snapshot.predictedFt) + Number(button.dataset.delta), button); });
     $("obsSizes").addEventListener("click", event => { const button = event.target.closest("[data-size]"); if (!button) return; if (button.dataset.size === "other") { $("obsOther").classList.remove("obs-hidden"); $("obsOtherSize").focus(); return; } selectActual(Number(button.dataset.size), button); });
