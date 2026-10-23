@@ -63,3 +63,5 @@ test('unavailable HTML never contains an invented wave value', () => {
   assert.match(html, /Report unavailable/);
   assert.match(html, /No old value is being presented as current/);
 });
+
+for(const location of ['seaford','middleton'])test(location+' hides the date/time/model label without removing the forecast data',()=>{const result=fixtureResult(location);const html=__test.renderReportHtml(__test.LOCATION_MAP[location],result);assert.match(html,/id="viewingTimeLabel" hidden aria-hidden="true" style="display:none!important"/);assert.ok(result.canonical.forecast_for);assert.ok(result.canonical.issued_at);assert.match(html,/id="mainSize"/);assert.match(html,/id="windMain"/);assert.match(html,/id="bestWindowStat"/);});

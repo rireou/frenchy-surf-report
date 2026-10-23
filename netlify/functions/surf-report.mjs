@@ -281,6 +281,8 @@ function renderReportHtml(config, result) {
   html = replaceMeta(html, 'frenchy:valid-until', report.valid_until);
   html = setElement(html, 'statusText', report.status === 'current' ? 'Current report' : report.status === 'expired' ? 'Report expired' : 'Report unavailable');
   html = setElement(html, 'mainSize', escapeHtml(display));
+  // Retain the metadata/update target while removing this visual label at every selected time.
+  html = html.replace('id="viewingTimeLabel"', 'id="viewingTimeLabel" hidden aria-hidden="true" style="display:none!important"');
   html = setElement(html, 'viewingTimeLabel', report.forecast_for ? `Forecast for ${escapeHtml(report.forecast_for)}` : 'No current forecast time');
   html = setElement(html, 'dailyHeadline', escapeHtml(report.summary.headline));
   html = setElement(html, 'plainWhy', escapeHtml(report.summary.text));
