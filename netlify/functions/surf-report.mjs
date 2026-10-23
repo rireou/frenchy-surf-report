@@ -246,7 +246,7 @@ async function loadLocation(config, force = false) {
 function renderReportHtml(config, result) {
   const report = result.canonical;
   const fileName = config.engine === 'middleton' ? 'middleton.html' : 'index.html';
-  let html = readProjectText(fileName);
+  let html = readProjectText(fileName).replaceAll('observation.css?v=20260724.1','observation.css?v=3.1-20261023').replaceAll('observation.js?v=20260724.2','observation.js?v=3.1-20261023');
   const regional = config.scope !== 'spot-specific';
   const display = report.wave?.display || 'Unavailable';
   const title = config.searchTitle;
