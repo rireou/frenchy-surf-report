@@ -10,3 +10,5 @@ Branch: `codex/surf-report-3-1-observations`. No deployment or production config
 - Period research consults all original memory records, compares controlled 9/14-second inputs in private copies and reports negative as well as positive arithmetic historical sensitivities. Populated results remain private, with a new local append-only finding; no evidence/model is seeded to production by this PR. No candidate is promoted.
 
 Preview: run `node research/memory/preview.mjs ../frenchy-research-private 4188`; owner-only loopback routes `/observe`, `/research`, `/research/period`. Observation UI fixture saves stay in that browser's local storage; no production database is involved. The full server handlers are tested separately with isolated stores. No HTTPS deployment is made. Opening a localhost server from a tool environment may require launching it in normal Windows PowerShell; never claim browser QA succeeded until verified there.
+
+Browser QA and the current production NO-GO decision are recorded in [observations-31-qa.md](observations-31-qa.md). Middleton archive coverage is a release blocker, not a passed observation workflow.

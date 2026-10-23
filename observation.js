@@ -28,6 +28,7 @@
   root.className = "observation-root";
   root.id = "observationRoot";
   root.innerHTML = `
+    ${demoMode ? '<p class="obs-help">Synthetic preview scenarios: <a href="'+spot.observationHref+'">Available fixture</a> · <a href="'+spot.observationHref+'?archive=missing">Missing historical archive</a></p>' : ''}
     <header class="obs-header">
       <div class="obs-brand"><div class="obs-logo">≈</div><div><small>Frenchy Surf Report</small><b>${spot.name} observation</b></div></div>
       <div class="obs-header-actions"><nav class="obs-location-switch" aria-label="Observation location"><a class="active" href="${spot.observationHref}" aria-current="page">${spot.name}</a><a href="${spot.otherHref}">${spot.otherName}</a></nav><a class="obs-link" href="${spot.reportHref}">View report</a><button class="obs-ghost obs-hidden" id="obsLogout" type="button">Log out</button></div>
@@ -49,7 +50,7 @@
           <fieldset class="obs-fieldset"><legend>Wave quality <small>optional</small></legend><div class="obs-chips obs-condition-chips" id="obsQuality">${conditions.map(item => `<button class="obs-chip" type="button" data-condition="${item.value}"><strong>${item.label}</strong></button>`).join("")}</div></fieldset>
           <div id="obsQuickDetails" class="obs-quick-details"><p class="obs-help">Optional — typical waves and occasional sets are different.</p>
             <div class="obs-detail-pair"><label>Typical (ft)<input class="obs-input" id="obsTypical" type="number" min="0" max="8" step="0.25" inputmode="decimal" placeholder="Optional"></label><label>Occasional sets (ft)<input class="obs-input" id="obsSets" type="number" min="0" max="8" step="0.25" inputmode="decimal" placeholder="Optional"></label></div>
-            <label>Confidence<select class="obs-input" id="obsConfidence"><option value="unknown">Not specified</option><option value="low">Low — brief or obstructed view</option><option value="medium">Medium — reasonable view</option><option value="high">High — clear view over several sets</option></select></label>
+            <label>Confidence<select class="obs-input" id="obsConfidence"><option value="unknown">Not specified</option><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option></select></label>
           </div>
           <details id="obsEvaluation"><summary>Optional accuracy details</summary><p class="obs-help">Keep typical waves and occasional sets separate. Leave unknown values blank. Size scale and meaning are remembered on this device; measured sizes and confidence reset for each check.</p>
             <label>Size scale<select class="obs-input" id="obsSizeDefinition"><option value="unknown">Not specified</option><option value="local-surf-feet">Local surf-size scale (ft)</option><option value="wave-face-feet">Wave face height (ft)</option></select></label>
@@ -178,10 +179,14 @@
 
   async function waitForSnapshot(observedAt = selectedObservedAt()) {
     if (!demoMode) return fetchServerSnapshot(observedAt);
+    if(search.get('archive')==='missing')throw new Error('No valid forecast archived before this observation time is available. No later forecast has been substituted.');
     for (let attempt = 0; attempt < 80; attempt += 1) {
       const snapshot = window.FrenchyObservation?.getSnapshotAt
         ? window.FrenchyObservation.getSnapshotAt(observedAt)
         : window.FrenchyObservation?.getCurrentSnapshot?.();
+      if(demoMode && snapshot?.calculationVersion==='synthetic-ui-fixture') {
+        snapshot.forecastTime=adelaideInput(observedAt);snapshot.location=spot.name;
+      }
       if (snapshot?.predictedFt != null && snapshot.location === spot.name) return snapshot;
       if (demoMode && attempt === 5) return { schemaVersion: 3, calculationVersion: "local-preview", location: spot.name, calculatedAt: new Date().toISOString(), observedAt, forecastTime: toDateTimeInput(observedAt).slice(0, 13) + ":00", displayTime: `Local preview · observed ${dateTime(observedAt)}`, predictedFt: spot.slug === "middleton" ? 3 : 1.5, modelPredictedFt: spot.slug === "middleton" ? 3 : 1.5, predictedText: spot.slug === "middleton" ? "3" : "1.5", calibration: "normal", activeDriver: { heightM: 2.1, directionDeg: 232, periodS: 11.4 }, offshore: {}, local: {}, wind: { wind_speed_10m: 21, wind_direction_10m: 5 }, windContext: { speedKmh: 21, directionDeg: 5, directionCompass: "N", directionName: "north", strength: "moderate", label: "Moderate N wind · 21 km/h" }, tide: { heightM: 1.14, stage: "falling", movement: "dropping", positionLabel: "Dropping · 2 hr before low", minutesToNext: 120, minutesSincePrevious: 240, cycleProgressPct: 67, rangeM: 1.42, rangeClass: "big", rangeLabel: "Big 1.42 m tide change", source: "Preview", before: { time: "14:15", type: "High", heightM: 1.85 }, after: { time: "20:15", type: "Low", heightM: 0.43 } }, weather: { temperatureC: 16, weatherCode: 1 }, dataContext: { dataSource: "local-preview" }, calculationResult: {} };
       await new Promise(resolve => setTimeout(resolve, 250));
@@ -459,6 +464,12 @@
       const evaluationDetails={measurementDefinition:$("obsSizeDefinition").value,actualValueMeaning:$("obsActualMeaning").value,
         typicalFt:$("obsTypical").value,occasionalSetFt:$("obsSets").value,observationConfidence:$("obsConfidence").value,
         observerLabel:$("obsObserverLabel").value,unusualLocalFactors:$("obsLocalFactors").value};
+      const sizes=['typicalFt','occasionalSetFt'].map(key=>evaluationDetails[key]===''?null:Number(evaluationDetails[key]));
+      if(sizes.some(value=>value!==null&&(!Number.isFinite(value)||value<0||value>8)))throw new Error('Observed sizes must be between 0 and 8 ft');
+      if(sizes[0]!==null&&sizes[1]!==null&&sizes[1]<sizes[0])throw new Error('Occasional sets cannot be smaller than typical surf');
+      if(!['unknown','low','medium','high'].includes(evaluationDetails.observationConfidence))throw new Error('Choose a valid observation confidence');
+      const target=evaluationDetails.actualValueMeaning==='typical'?sizes[0]:evaluationDetails.actualValueMeaning==='occasional-sets'?sizes[1]:null;
+      if(target!==null&&Math.abs(target-state.actualFt)>.01)throw new Error('The size definition must match the actual size entered above');
       if (state.editingId) {
         const result = await request(apiRecordUrl(state.editingId), { method: "PUT", body: JSON.stringify({ actualFt: state.actualFt, condition: state.condition, ...(state.snapshot.observedAt !== state.records.find(r=>r.id===state.editingId)?.observedAt ? {observedAt:state.snapshot.observedAt,snapshot:snapshotInput}:{}), evaluationDetails, validationStatus:state.validationStatus }) });
         state.records = state.records.map(record => record.id === state.editingId ? result.observation : record);
